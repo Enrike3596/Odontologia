@@ -4,9 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clínica Odontológica - Gestión de Citas</title>
+    
+    <!-- TailwindCSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="/css/styles.css">
+    
+    <!-- Configuración de TailwindCSS -->
     <script>
         tailwind.config = {
             theme: {
@@ -47,7 +58,7 @@
                 <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto mt-4 sm:mt-0">
                     <button id="btn-agregar-usuario" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 flex items-center space-x-2 w-full sm:w-auto justify-center">
                         <i class="fas fa-user-plus"></i>
-                        <span>Agregar Usuario</span>
+                        <span>Agregar Paciente</span>
                     </button>
                     <button id="btn-agregar-cita" class="bg-dental-500 hover:bg-dental-600 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 flex items-center space-x-2 w-full sm:w-auto justify-center">
                         <i class="fas fa-calendar-plus"></i>
@@ -63,75 +74,94 @@
         <!-- Vista Principal - Dashboard -->
         <div id="dashboard" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
             <!-- Estadísticas -->
-            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500 stat-card hover-lift">
                 <div class="flex items-center justify-between">
                     <div>
-                            <p class="text-sm text-gray-600">Total Pacientes</p>
+                        <p class="text-sm text-gray-600">Total Pacientes</p>
                         <p id="total-pacientes" class="text-3xl font-bold text-green-600">0</p>
                     </div>
                     <i class="fas fa-users text-green-500 text-3xl"></i>
                 </div>
             </div>
             
-            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-dental-500">
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-dental-500 stat-card hover-lift">
                 <div class="flex items-center justify-between">
                     <div>
-                            <p class="text-sm text-gray-600">Citas Pendientes</p>
+                        <p class="text-sm text-gray-600">Citas Pendientes</p>
                         <p id="citas-pendientes" class="text-3xl font-bold text-dental-600">0</p>
                     </div>
                     <i class="fas fa-clock text-dental-500 text-3xl"></i>
                 </div>
             </div>
             
-            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500 stat-card hover-lift">
                 <div class="flex items-center justify-between">
                     <div>
-                            <p class="text-sm text-gray-600">Citas Completadas</p>
-                        <p id="citas-completadas" class="text-3xl font-bold text-purple-600">0</p>
+                        <p class="text-sm text-gray-600">Citas Confirmadas</p>
+                        <p id="citas-confirmadas" class="text-3xl font-bold text-purple-600">0</p>
                     </div>
                     <i class="fas fa-check-circle text-purple-500 text-3xl"></i>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-lg p-6">
+        <!-- Gestión de Citas -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8 fade-in">
             <div class="flex flex-col md:flex-row md:items-center justify-between mb-6">
                 <h2 class="text-2xl font-bold text-gray-800 mb-4 md:mb-0">
                     <i class="fas fa-calendar-alt text-dental-500 mr-2"></i>
                     Gestión de Citas
                 </h2>
-                    <div class="flex flex-col sm:flex-row gap-3">
+                <div class="flex flex-col sm:flex-row gap-3">
                     <div class="relative">
                         <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                        <input type="text" id="filtro-busqueda" placeholder="Buscar por nombre o cédula..." 
-                               class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-dental-500 focus:border-transparent w-full md:w-64">
+                        <input type="text" id="filtro-busqueda" placeholder="Buscar por nombre o documento..." 
+                               class="form-input pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-dental-500 focus:border-transparent w-full md:w-64">
                     </div>
-               <select id="filtro-estado" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-dental-500 focus:border-transparent w-full min-w-0 sm:w-auto">
+                    <select id="filtro-estado" class="form-input px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-dental-500 focus:border-transparent w-full min-w-0 sm:w-auto">
                         <option value="">Todos los estados</option>
-                        <option value="pendiente">Pendiente</option>
-                        <option value="completada">Completada</option>
-                        <option value="cancelada">Cancelada</option>
+                        <option value="PENDIENTE">Pendiente</option>
+                        <option value="CONFIRMADA">Confirmada</option>
+                        <option value="CANCELADA">Cancelada</option>
                     </select>
                 </div>
             </div>
             
-            <div id="lista-citas-container" class="overflow-x-auto">
+            <div id="lista-citas-container" class="overflow-x-auto custom-scrollbar">
                 <div id="lista-citas" class="space-y-4">
                     <!-- Las citas se cargarán aquí dinámicamente -->
                 </div>
             </div>
         </div>
-        </div>
 
-    <!-- Modal para Agregar Usuario -->
+        <!-- Sección de Pacientes -->
+        <div class="bg-white rounded-xl shadow-lg p-6 fade-in">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 md:mb-0">
+                    <i class="fas fa-users text-green-500 mr-2"></i>
+                    Pacientes Registrados
+                </h2>
+                <div class="relative px-2">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    <input type="text" id="filtro-pacientes" placeholder="Buscar por nombre o documento..." 
+                           class="form-input pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent w-full md:w-64">
+                </div>
+            </div>
+            <div id="lista-pacientes" class="overflow-x-auto divide-y divide-gray-200 custom-scrollbar">
+                <!-- Los pacientes se cargarán aquí dinámicamente -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal para Agregar Paciente -->
     <div id="modal-usuario" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
-        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4 transform transition-all duration-300 scale-95">
+        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4 transform transition-all duration-300 scale-95 modal-content">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-2xl font-bold text-gray-800">
                     <i class="fas fa-user-plus text-green-500 mr-2"></i>
                     Registrar Paciente
                 </h3>
-                <button id="cerrar-modal-usuario" class="text-gray-400 hover:text-gray-600 text-2xl px-2">
+                <button id="cerrar-modal-usuario" class="text-gray-400 hover:text-gray-600 text-2xl px-2 focus-visible">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -140,32 +170,32 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Nombre Completo</label>
                     <input type="text" id="nombre" name="nombre" required 
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                           class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Documento</label>
                     <input type="text" id="documento" name="documento" required 
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                           class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
-                    <input type="tel" id="telefono" name="telefono" required 
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    <input type="tel" id="telefono" name="telefono" 
+                           class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico</label>
-                    <input type="email" id="correo" name="correo" required 
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    <input type="email" id="correo" name="correo" 
+                           class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
                 </div>
                 
                 <div class="flex space-x-3 pt-4">
-                    <button type="button" id="cancelar-usuario" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-lg transition-colors">
+                    <button type="button" id="cancelar-usuario" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-lg transition-colors focus-visible">
                         Cancelar
                     </button>
-                    <button type="submit" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition-colors">
+                    <button type="submit" class="flex-1 btn-primary text-white py-2 px-4 rounded-lg transition-colors focus-visible">
                         <i class="fas fa-save mr-2"></i>Registrar
                     </button>
                 </div>
@@ -173,33 +203,15 @@
         </div>
     </div>
 
-    <!-- Sección de Pacientes -->
-    <div class="bg-white rounded-xl shadow-lg p-6 mt-8 max-w-7xl mx-auto">
-        <div class="flex flex-col md:flex-row md:items-center justify-between mb-6">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4 md:mb-0">
-                <i class="fas fa-users text-green-500 mr-2"></i>
-                Pacientes Registrados
-            </h2>
-            <div class="relative px-2">
-                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                <input type="text" id="filtro-pacientes" placeholder="Buscar por nombre o documento..." 
-                       class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent w-full md:w-64">
-            </div>
-        </div>
-        <div id="lista-pacientes" class="overflow-x-auto divide-y divide-gray-200">
-            <!-- Los pacientes se cargarán aquí dinámicamente -->
-        </div>
-    </div>
-
     <!-- Modal para Agendar Cita -->
     <div id="modal-cita" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
-        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4 transform transition-all duration-300 scale-95">
+        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4 transform transition-all duration-300 scale-95 modal-content">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-2xl font-bold text-gray-800">
                     <i class="fas fa-calendar-plus text-dental-500 mr-2"></i>
                     Agendar Cita
                 </h3>
-                <button id="cerrar-modal-cita" class="text-gray-400 hover:text-gray-600 text-2xl px-2">
+                <button id="cerrar-modal-cita" class="text-gray-400 hover:text-gray-600 text-2xl px-2 focus-visible">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -207,8 +219,8 @@
             <form id="form-cita" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Seleccionar Paciente</label>
-                    <select id="paciente_id" name="paciente_id" required 
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-dental-500 focus:border-transparent">
+                    <select id="paciente_id" name="pacienteId" required 
+                            class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-dental-500 focus:border-transparent">
                         <option value="">Seleccione un paciente...</option>
                     </select>
                 </div>
@@ -216,19 +228,19 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Fecha</label>
                     <input type="date" id="fecha" name="fecha" required 
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-dental-500 focus:border-transparent">
+                           class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-dental-500 focus:border-transparent">
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Hora</label>
                     <input type="time" id="hora" name="hora" required 
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-dental-500 focus:border-transparent">
+                           class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-dental-500 focus:border-transparent">
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Odontólogo</label>
                     <select id="odontologo" name="odontologo" required 
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-dental-500 focus:border-transparent">
+                            class="form-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-dental-500 focus:border-transparent">
                         <option value="">Seleccione un odontólogo...</option>
                         <option value="Dr. García">Dr. García</option>
                         <option value="Dra. Martínez">Dra. Martínez</option>
@@ -236,15 +248,12 @@
                         <option value="Dra. Rodríguez">Dra. Rodríguez</option>
                     </select>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Observaciones</label>
-                    <textarea id="observaciones" name="observaciones" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-dental-500 focus:border-transparent"></textarea>
-                </div>
+                
                 <div class="flex space-x-3 pt-4">
-                    <button type="button" id="cancelar-cita" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-lg transition-colors">
+                    <button type="button" id="cancelar-cita" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-lg transition-colors focus-visible">
                         Cancelar
                     </button>
-                    <button type="submit" class="flex-1 bg-dental-500 hover:bg-dental-600 text-white py-2 px-4 rounded-lg transition-colors">
+                    <button type="submit" class="flex-1 btn-primary text-white py-2 px-4 rounded-lg transition-colors focus-visible">
                         <i class="fas fa-calendar-check mr-2"></i>Agendar
                     </button>
                 </div>
@@ -252,438 +261,12 @@
         </div>
     </div>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-5 right-5 z-50 px-6 py-4 rounded-lg min-w-[300px] text-center transform translate-y-full opacity-0 transition-all duration-300"></div>
-
-<script>
-/* ============================
-   Variables globales & DOM
-   ============================ */
-let pacientes = [];
-let citas = [];
-let citasFiltradas = [];
-let citaEditandoId = null; // id de la cita en edición (aunque PHP decide por paciente)
-
-const modalUsuario = document.getElementById('modal-usuario');
-const modalCita = document.getElementById('modal-cita');
-const formUsuario = document.getElementById('form-usuario');
-const formCita = document.getElementById('form-cita');
-const listaCitas = document.getElementById('lista-citas');
-const filtroBusqueda = document.getElementById('filtro-busqueda');
-const filtroEstado = document.getElementById('filtro-estado');
-const selectPaciente = document.getElementById('paciente_id');
-const listaPacientes = document.getElementById('lista-pacientes');
-
-// botón submit del formulario de cita
-const btnSubmitCita = formCita ? formCita.querySelector('button[type="submit"]') : null;
-
-/* ============================
-   SweetAlert2 helper
-   ============================ */
-function mostrarToast(mensaje, tipo = 'success') {
-    Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: tipo === 'success' ? 'success' : 'error',
-        title: mensaje,
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        background: tipo === 'success' ? '#22c55e' : '#ef4444',
-        color: '#fff',
-        customClass: {
-            popup: 'rounded-lg shadow-lg',
-            title: 'text-lg font-semibold',
-        }
-    });
-}
-
-/* ============================
-   Abrir / cerrar modales
-   ============================ */
-document.getElementById('btn-agregar-usuario').addEventListener('click', () => {
-    modalUsuario.classList.remove('hidden');
-    setTimeout(() => modalUsuario.querySelector('.bg-white').style.transform = 'scale(1)', 10);
-});
-
-document.getElementById('btn-agregar-cita').addEventListener('click', async () => {
-    await cargarPacientesSelect();
-    citaEditandoId = null;
-    formCita.reset();
-    habilitarSelectPaciente(); 
-    setSubmitButtonToCreate();
-    modalCita.classList.remove('hidden');
-    setTimeout(() => modalCita.querySelector('.bg-white').style.transform = 'scale(1)', 10);
-});
-
-function cerrarModalCita() {
-    if (!modalCita) return;
-    modalCita.querySelector('.bg-white').style.transform = 'scale(0.95)';
-    setTimeout(() => {
-        modalCita.classList.add('hidden');
-        formCita.reset();
-        citaEditandoId = null;
-        habilitarSelectPaciente();
-        setSubmitButtonToCreate();
-    }, 150);
-}
-
-[document.getElementById('cerrar-modal-usuario'), document.getElementById('cancelar-usuario')].forEach(btn => {
-    if (!btn) return;
-    btn.addEventListener('click', () => {
-        modalUsuario.querySelector('.bg-white').style.transform = 'scale(0.95)';
-        setTimeout(() => {
-            modalUsuario.classList.add('hidden');
-            formUsuario.reset();
-        }, 150);
-    });
-});
-
-[document.getElementById('cerrar-modal-cita'), document.getElementById('cancelar-cita')].forEach(btn => {
-    if (!btn) return;
-    btn.addEventListener('click', cerrarModalCita);
-});
-
-/* ============================
-   Abrir modal de cita desde pacientes
-   ============================ */
-function abrirModalCitaConPaciente(pacienteId) {
-    cargarPacientesSelect().then(() => {
-        formCita.reset(); // Resetear antes de asignar el valor
-        if (selectPaciente) {
-            selectPaciente.value = pacienteId;
-            selectPaciente.disabled = true;
-        }
-        citaEditandoId = null;
-        setSubmitButtonToCreate();
-        modalCita.classList.remove('hidden');
-        setTimeout(() => modalCita.querySelector('.bg-white').style.transform = 'scale(1)', 10);
-    });
-}
-
-function abrirModalModificarCita(pacienteId) {
-    const cita = citas.find(c => c.paciente_id == pacienteId && c.estado === 'pendiente');
-    if (!cita) return;
-
-    cargarPacientesSelect().then(() => {
-        if (selectPaciente) {
-            selectPaciente.value = pacienteId;
-            selectPaciente.disabled = true;
-        }
-
-        citaEditandoId = cita.id;
-        document.getElementById('fecha').value = cita.fecha || '';
-        document.getElementById('hora').value = cita.hora || '';
-        document.getElementById('odontologo').value = cita.odontologo || '';
-        document.getElementById('observaciones').value = cita.observaciones || '';
-
-        setSubmitButtonToUpdate();
-        modalCita.classList.remove('hidden');
-        setTimeout(() => modalCita.querySelector('.bg-white').style.transform = 'scale(1)', 10);
-    });
-}
-
-/* ============================
-   Helpers botón y select
-   ============================ */
-function habilitarSelectPaciente() {
-    if (selectPaciente) selectPaciente.disabled = false;
-}
-function setSubmitButtonToUpdate() {
-    if (!btnSubmitCita) return;
-    btnSubmitCita.innerHTML = `<i class="fas fa-edit mr-2"></i>Actualizar`;
-}
-function setSubmitButtonToCreate() {
-    if (!btnSubmitCita) return;
-    btnSubmitCita.innerHTML = `<i class="fas fa-calendar-check mr-2"></i>Agendar`;
-}
-
-/* ============================
-   Formulario Paciente
-   ============================ */
-if (formUsuario) {
-    formUsuario.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(formUsuario);
-        try {
-            const response = await fetch('crear_paciente.php', { method: 'POST', body: formData });
-            const data = await response.json();
-            if (data.success) {
-                mostrarToast('Paciente registrado exitosamente');
-                modalUsuario.classList.add('hidden');
-                formUsuario.reset();
-                await cargarPacientes();
-                actualizarEstadisticas();
-            } else {
-                mostrarToast(data.message || 'Error al registrar paciente', 'error');
-            }
-        } catch (error) {
-            mostrarToast('Error al registrar paciente', 'error');
-            console.error('Error:', error);
-        }
-    });
-}
-
-/* ============================
-   Formulario Cita
-   ============================ */
-if (formCita) {
-    formCita.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        // Habilitar el select de paciente antes de enviar para asegurar que se envía el patient_id
-        if (selectPaciente && selectPaciente.disabled) {
-            selectPaciente.disabled = false;
-        }
-        const formData = new FormData(formCita);
-
-        try {
-            const response = await fetch('crear_cita.php', {
-                method: 'POST',
-                body: formData
-            });
-            const data = await response.json();
-
-            if (data.success) {
-                mostrarToast(data.message);
-                cerrarModalCita();
-                await cargarCitas();
-                await cargarPacientes();
-                actualizarEstadisticas();
-            } else {
-                mostrarToast(data.message || 'Error al guardar cita', 'error');
-            }
-        } catch (error) {
-            mostrarToast('Error al guardar cita', 'error');
-            console.error('Error:', error);
-        }
-    });
-}
-
-/* ============================
-   Cargar pacientes
-   ============================ */
-async function cargarPacientes() {
-    try {
-        const response = await fetch('listar_pacientes.php');
-        pacientes = await response.json();
-        renderizarPacientes();
-    } catch (error) {
-        console.error('Error al cargar pacientes:', error);
-    }
-}
-
-function renderizarPacientes(lista = pacientes) {
-    if (!lista || lista.length === 0) {
-        listaPacientes.innerHTML = `
-            <div class="text-center py-8 text-gray-500">
-                <i class="fas fa-user-slash text-4xl mb-3"></i>
-                <p>No hay pacientes registrados</p>
-            </div>`;
-        return;
-    }
-
-    listaPacientes.innerHTML = lista.map(paciente => {
-        const citaPendiente = citas.find(c => c.paciente_id == paciente.id && c.estado === 'pendiente');
-        const boton = citaPendiente
-            ? `<button onclick="abrirModalModificarCita(${paciente.id})" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg text-sm shadow">
-                   <i class="fas fa-edit mr-1"></i> Modificar cita
-               </button>`
-            : `<button onclick="abrirModalCitaConPaciente(${paciente.id})" class="bg-dental-500 hover:bg-dental-600 text-white px-3 py-1 rounded-lg text-sm shadow">
-                   <i class="fas fa-calendar-plus mr-1"></i> Citar
-               </button>`;
-
-        return `
-            <div class="flex items-center justify-between py-4 px-2 hover:bg-gray-50 transition">
-                <div>
-                    <p class="font-semibold text-gray-800">${paciente.nombre}</p>
-                    <p class="text-sm text-gray-600">Documento: ${paciente.documento}</p>
-                    <p class="text-sm text-gray-600">Tel: ${paciente.telefono || '—'} | ${paciente.correo || '—'}</p>
-                </div>
-                ${boton}
-            </div>`;
-    }).join('');
-}
-
-/* ============================
-   Cargar select pacientes
-   ============================ */
-async function cargarPacientesSelect() {
-    if (!selectPaciente) return;
-    selectPaciente.innerHTML = '<option value="">Seleccione un paciente...</option>';
-    if (!pacientes || pacientes.length === 0) await cargarPacientes();
-
-    pacientes.forEach(paciente => {
-        const option = document.createElement('option');
-        option.value = paciente.id;
-        option.textContent = `${paciente.nombre} (${paciente.documento || '—'})`;
-        selectPaciente.appendChild(option);
-    });
-}
-
-/* ============================
-   Citas
-   ============================ */
-async function cargarCitas() {
-    try {
-        const response = await fetch('listar_citas.php');
-        citas = await response.json();
-        citasFiltradas = [...citas];
-        renderizarCitas();
-        renderizarPacientes();
-    } catch (error) {
-        console.error('Error al cargar citas:', error);
-    }
-}
-
-function renderizarCitas() {
-    if (!citasFiltradas || citasFiltradas.length === 0) {
-        listaCitas.innerHTML = `
-            <div class="text-center py-12">
-                <i class="fas fa-calendar-times text-6xl text-gray-300 mb-4"></i>
-                <p class="text-gray-500 text-lg">No hay citas registradas</p>
-            </div>`;
-        return;
-    }
-
-    listaCitas.innerHTML = citasFiltradas.map(cita => {
-        const estadoClass = {
-            'pendiente': 'bg-yellow-100 text-yellow-800',
-            'completada': 'bg-green-100 text-green-800',
-            'cancelada': 'bg-red-100 text-red-800'
-        }[cita.estado] || 'bg-yellow-100 text-yellow-800';
-
-        const iconoEstado = {
-            'pendiente': 'fas fa-clock',
-            'completada': 'fas fa-check-circle',
-            'cancelada': 'fas fa-times-circle'
-        }[cita.estado] || 'fas fa-clock';
-
-        return `
-            <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 hover:shadow-md transition-shadow">
-                <div class="flex flex-col md:flex-row md:items-center justify-between">
-                    <div class="flex-1">
-                        <div class="flex items-center space-x-3 mb-2">
-                            <i class="fas fa-user text-dental-500"></i>
-                            <h4 class="text-lg font-semibold text-gray-800">${cita.paciente || cita.paciente_nombre || 'Paciente'}</h4>
-                            <span class="px-3 py-1 rounded-full text-xs font-medium ${estadoClass}">
-                                <i class="${iconoEstado} mr-1"></i>
-                                ${cita.estado || 'pendiente'}
-                            </span>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-600">
-                            <div class="flex items-center">
-                                <i class="fas fa-calendar text-dental-500 mr-2"></i>
-                                ${formatearFecha(cita.fecha)}
-                            </div>
-                            <div class="flex items-center">
-                                <i class="fas fa-clock text-dental-500 mr-2"></i>
-                                ${cita.hora || '—'}
-                            </div>
-                            <div class="flex items-center">
-                                <i class="fas fa-user-md text-dental-500 mr-2"></i>
-                                ${cita.odontologo || '—'}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex space-x-2 mt-4 md:mt-0">
-                        <select onchange="cambiarEstadoCita(${cita.id}, this.value)" class="px-3 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-dental-500">
-                            <option value="pendiente" ${cita.estado === 'pendiente' ? 'selected' : ''}>Pendiente</option>
-                            <option value="completada" ${cita.estado === 'completada' ? 'selected' : ''}>Completada</option>
-                            <option value="cancelada" ${cita.estado === 'cancelada' ? 'selected' : ''}>Cancelada</option>
-                        </select>
-                    </div>
-                </div>
-            </div>`;
-    }).join('');
-}
-
-/* ============================
-   Cambiar estado
-   ============================ */
-async function cambiarEstadoCita(citaId, nuevoEstado) {
-    try {
-        const response = await fetch('cambiar_estado_cita.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `cita_id=${encodeURIComponent(citaId)}&estado=${encodeURIComponent(nuevoEstado)}`
-        });
-        const data = await response.json();
-        if (data.success) {
-            mostrarToast('Estado actualizado');
-            await cargarCitas();
-            actualizarEstadisticas();
-        } else {
-            mostrarToast(data.message || 'Error al actualizar estado', 'error');
-        }
-    } catch (error) {
-        mostrarToast('Error al actualizar estado', 'error');
-        console.error('Error:', error);
-    }
-}
-
-/* ============================
-   Filtros
-   ============================ */
-function aplicarFiltros() {
-    const textoBusqueda = (filtroBusqueda ? filtroBusqueda.value : '').toLowerCase();
-    const estadoSeleccionado = filtroEstado ? filtroEstado.value : '';
-
-    citasFiltradas = citas.filter(cita => {
-        const coincideTexto = !textoBusqueda ||
-            (cita.paciente || cita.paciente_nombre || '').toLowerCase().includes(textoBusqueda) ||
-            (cita.documento || '').toLowerCase().includes(textoBusqueda);
-
-        const coincideEstado = !estadoSeleccionado || (cita.estado || 'pendiente') === estadoSeleccionado;
-        return coincideTexto && coincideEstado;
-    });
-
-    renderizarCitas();
-}
-if (filtroBusqueda) filtroBusqueda.addEventListener('input', aplicarFiltros);
-if (filtroEstado) filtroEstado.addEventListener('change', aplicarFiltros);
-
-/* ============================
-   Estadísticas
-   ============================ */
-function actualizarEstadisticas() {
-    const totalElem = document.getElementById('total-pacientes');
-    const pendientesElem = document.getElementById('citas-pendientes');
-    const completadasElem = document.getElementById('citas-completadas');
-
-    if (totalElem) totalElem.textContent = pacientes.length;
-    if (pendientesElem) pendientesElem.textContent = citas.filter(c => (c.estado || 'pendiente') === 'pendiente').length;
-    if (completadasElem) completadasElem.textContent = citas.filter(c => c.estado === 'completada').length;
-}
-
-function formatearFecha(fecha) {
-    if (!fecha) return '—';
-    return new Date(fecha + 'T00:00:00').toLocaleDateString('es-ES', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
-}
-
-const fechaEl = document.getElementById('fecha');
-if (fechaEl) fechaEl.min = new Date().toISOString().split('T')[0];
-
-/* ============================
-   Init
-   ============================ */
-document.addEventListener('DOMContentLoaded', async () => {
-    await cargarPacientes();
-    await cargarCitas();
-    actualizarEstadisticas();
-});
-
-/* ============================
-   Expose globals
-   ============================ */
-window.cambiarEstadoCita = cambiarEstadoCita;
-window.abrirModalCitaConPaciente = abrirModalCitaConPaciente;
-window.abrirModalModificarCita = abrirModalModificarCita;
-</script>
-
+    <!-- Scripts JavaScript -->
+    <script src="/js/variables.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/modales.js"></script>
+    <script src="/js/pacientes.js"></script>
+    <script src="/js/citas.js"></script>
+    <script src="/js/app.js"></script>
 </body>
 </html>
