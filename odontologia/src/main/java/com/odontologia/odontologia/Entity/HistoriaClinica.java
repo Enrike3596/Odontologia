@@ -17,9 +17,8 @@ public class HistoriaClinica {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Relación uno a uno con paciente
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "paciente_id", nullable = false, unique = true)
+    @JoinColumn(name = "paciente_id", nullable = false)
     private Paciente2 paciente;
 
     @Column(length = 255)
