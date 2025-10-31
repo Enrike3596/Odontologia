@@ -7,6 +7,20 @@ CREATE DATABASE odontologia;
 
 -- Conectarse a la base de datos
 \c odontologia;
+-- ============================================
+CREATE TABLE rol (
+    id_rol SERIAL PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL UNIQUE -- Ej: 'Recepcionista', 'Odontólogo'
+);
+-- ============================================
+CREATE TABLE usuario (
+    id_usuario SERIAL PRIMARY KEY,
+    nombre_usuario VARCHAR(50) UNIQUE NOT NULL,
+    contrasena VARCHAR(200) NOT NULL, -- encriptada (bcrypt o similar)
+    id_rol INT NOT NULL REFERENCES rol(id_rol),
+    activo BOOLEAN DEFAULT TRUE
+);
+
 
 -- ============================================
 -- 🧱 TABLA: pacientes
@@ -18,6 +32,42 @@ CREATE TABLE pacientes (
   telefono VARCHAR(20),
   correo VARCHAR(100)
 );
+
+-- -- ============================================
+-- CREATE TABLE paciente (
+--     id_paciente SERIAL PRIMARY KEY,
+--     tipo_documento VARCHAR(10) NOT NULL,
+--     numero_documento VARCHAR(20) UNIQUE NOT NULL,
+--     nombres VARCHAR(100) NOT NULL,
+--     apellidos VARCHAR(100) NOT NULL,
+--     telefono VARCHAR(20),
+--     correo VARCHAR(100),
+--     direccion VARCHAR(200),
+--     fecha_nacimiento DATE,
+--     genero VARCHAR(10),
+--     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- );
+
+-- ============================================
+CREATE TABLE odontologo (
+    id_odontologo SERIAL PRIMARY KEY,
+    numero_licencia VARCHAR(50) UNIQUE NOT NULL,
+    nombres VARCHAR(100) NOT NULL,
+    apellidos VARCHAR(100) NOT NULL,
+    especialidad VARCHAR(100),
+    telefono VARCHAR(20),
+    correo VARCHAR(100),
+    estado BOOLEAN DEFAULT TRUE
+);
+
+-- ============================================
+CREATE TABLE tipo_cita (
+    id_tipo_cita SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    duracion_estimada INT -- minutos
+);
+
 
 -- ============================================
 -- 🧱 TABLA: citas
@@ -31,6 +81,33 @@ CREATE TABLE citas (
   estado VARCHAR(20) DEFAULT 'pendiente' CHECK (estado IN ('pendiente','confirmada','cancelada')),
   CONSTRAINT fk_paciente FOREIGN KEY (paciente_id) REFERENCES pacientes(id) ON DELETE CASCADE
 );
+-- -- ============================================
+-- CREATE TABLE cita (
+--     id_cita SERIAL PRIMARY KEY,
+--     id_paciente INT NOT NULL REFERENCES paciente(id_paciente),
+--     id_odontologo INT NOT NULL REFERENCES odontologo(id_odontologo),
+--     id_tipo_cita INT NOT NULL REFERENCES tipo_cita(id_tipo_cita),
+--     fecha_cita DATE NOT NULL,
+--     hora_inicio TIME NOT NULL,
+--     hora_fin TIME,
+--     estado VARCHAR(20) DEFAULT 'Pendiente', -- Pendiente, Confirmada, Atendida, Cancelada
+--     observaciones TEXT,
+--     creada_por INT REFERENCES usuario(id_usuario), -- recepcionista que registró
+--     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- );
+
+-- ============================================
+CREATE TABLE historia_clinica (
+    id_historia SERIAL PRIMARY KEY,
+    id_paciente INT NOT NULL REFERENCES paciente(id_paciente),
+    id_cita INT REFERENCES cita(id_cita),
+    diagnostico TEXT,
+    tratamiento TEXT,
+    receta TEXT,
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
 
 -- ============================================
 -- 👩‍⚕️ INSERTAR DATOS DE PACIENTES
