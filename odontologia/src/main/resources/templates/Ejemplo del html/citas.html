@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Odontología · Gestión de Citas</title>
+
+  <!-- Tailwind CDN (para desarrollo/prototipo) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Alpine.js para interactividad ligera -->
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" th:href="@{/css/app.css}" />
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased" data-page="citas">
+
+  <!-- Layout: Sidebar + Main -->
+  <div class="min-h-screen flex">
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="w-72 bg-white border-r hidden md:flex md:flex-col">
+      <div class="p-6 flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-semibold text-indigo-700">Clínica <span class="text-indigo-500">Odontología</span></h1>
+          <p class="text-sm text-gray-500 mt-1">Panel de administración</p>
+        </div>
+        <button id="sidebarCollapse" class="md:hidden block p-2 rounded bg-gray-100" aria-label="Cerrar sidebar">✕</button>
+      </div>
+
+      <nav class="mt-4 px-2 flex-1 overflow-auto" aria-label="Main navigation">
+        <ul class="space-y-1">
+          <li><a href="#" class="nav-link block px-4 py-2 rounded-lg hover:bg-indigo-50" data-view="dashboard">
+            <i class="fas fa-chart-line mr-3 text-indigo-500"></i>Dashboard
+          </a></li>
+          <li><a href="#" class="nav-link block px-4 py-2 rounded-lg hover:bg-emerald-50 text-emerald-600 font-medium bg-emerald-50" data-view="citas">
+            <i class="fas fa-calendar-alt mr-3 text-emerald-500"></i>Citas Médicas
+          </a></li>
+          <li><a href="#" class="nav-link block px-4 py-2 rounded-lg hover:bg-gray-50" data-view="pacientes">
+            <i class="fas fa-user-injured mr-3 text-gray-500"></i>Pacientes
+          </a></li>
+          <li><a href="#" class="nav-link block px-4 py-2 rounded-lg hover:bg-gray-50" data-view="odontologos">
+            <i class="fas fa-user-md mr-3 text-gray-500"></i>Odontólogos
+          </a></li>
+          <li><a href="#" class="nav-link block px-4 py-2 rounded-lg hover:bg-gray-50" data-view="historia">
+            <i class="fas fa-file-medical mr-3 text-gray-500"></i>Historia Clínica
+          </a></li>
+          <li><a href="#" class="nav-link block px-4 py-2 rounded-lg hover:bg-gray-50" data-view="usuarios">
+            <i class="fas fa-users mr-3 text-gray-500"></i>Usuarios
+          </a></li>
+          <li><a href="#" class="nav-link block px-4 py-2 rounded-lg hover:bg-gray-50" data-view="configuracion">
+            <i class="fas fa-cog mr-3 text-gray-500"></i>Configuración
+          </a></li>
+        </ul>
+      </nav>
+      <div class="p-4 border-t">
+        <div class="text-sm text-gray-500">Usuario</div>
+        <div class="flex items-center gap-3 mt-2">
+          <img src="https://i.pravatar.cc/40?img=5" alt="avatar" class="w-9 h-9 rounded-full" />
+          <div class="text-sm">
+            <div class="font-medium">Administrador</div>
+            <div class="text-xs text-gray-400">admin@clinica.com</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="flex-1 p-6">
+      <!-- Topbar -->
+      <header class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-xl font-semibold text-emerald-700">
+            <i class="fas fa-calendar-alt mr-2 text-emerald-500"></i>
+            Gestión de Citas Médicas
+          </h2>
+          <p class="text-sm text-gray-500">Programa, administra y gestiona las citas odontológicas de la clínica.</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <!-- Mobile menu toggle -->
+          <button id="mobileMenuToggle" class="md:hidden p-2 rounded-lg bg-gray-100" aria-label="Abrir menú">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+
+          <!-- Actions -->
+          <div class="flex items-center gap-3">
+            <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" onclick="openNewAppointmentModal()">
+              <i class="fas fa-plus mr-2"></i>
+              Nueva Cita
+            </button>
+            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" onclick="openCalendarView()">
+              <i class="fas fa-calendar mr-2"></i>
+              Vista Calendario
+            </button>
+          </div>
+
+          <!-- User -->
+          <div class="flex items-center gap-3">
+            <img src="https://i.pravatar.cc/40?img=5" alt="avatar" class="w-9 h-9 rounded-full" />
+            <div class="text-right">
+              <div class="text-sm font-medium">Administrador</div>
+              <div class="text-xs text-gray-500">Sistema</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Cards de resumen de citas -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div class="bg-white p-6 rounded-lg shadow-sm border">
+          <div class="flex items-center">
+            <div class="p-3 rounded-full bg-emerald-100 text-emerald-600">
+              <i class="fas fa-calendar-check text-xl"></i>
+            </div>
+            <div class="ml-4">
+              <p class="text-2xl font-semibold text-gray-900">24</p>
+              <p class="text-sm text-gray-500">Citas Hoy</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-sm border">
+          <div class="flex items-center">
+            <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+              <i class="fas fa-clock text-xl"></i>
+            </div>
+            <div class="ml-4">
+              <p class="text-2xl font-semibold text-gray-900">8</p>
+              <p class="text-sm text-gray-500">Pendientes</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-sm border">
+          <div class="flex items-center">
+            <div class="p-3 rounded-full bg-green-100 text-green-600">
+              <i class="fas fa-check-circle text-xl"></i>
+            </div>
+            <div class="ml-4">
+              <p class="text-2xl font-semibold text-gray-900">16</p>
+              <p class="text-sm text-gray-500">Completadas</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-sm border">
+          <div class="flex items-center">
+            <div class="p-3 rounded-full bg-red-100 text-red-600">
+              <i class="fas fa-times-circle text-xl"></i>
+            </div>
+            <div class="ml-4">
+              <p class="text-2xl font-semibold text-gray-900">2</p>
+              <p class="text-sm text-gray-500">Canceladas</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vista rápida del día -->
+      <div class="bg-white rounded-lg shadow-sm border mb-6">
+        <div class="p-6 border-b">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-900">
+              <i class="fas fa-calendar-day mr-2 text-emerald-500"></i>
+              Agenda de Hoy - <span class="text-emerald-600" id="todayDate">4 de Noviembre, 2024</span>
+            </h3>
+            <div class="flex gap-2">
+              <button class="text-sm px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full hover:bg-emerald-200 transition-colors" onclick="goToPreviousDay()">
+                <i class="fas fa-chevron-left mr-1"></i>Anterior
+              </button>
+              <button class="text-sm px-3 py-1 bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors" onclick="goToToday()">
+                Hoy
+              </button>
+              <button class="text-sm px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full hover:bg-emerald-200 transition-colors" onclick="goToNextDay()">
+                Siguiente<i class="fas fa-chevron-right ml-1"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline de citas del día -->
+        <div class="p-6">
+          <div class="space-y-4" id="todayTimeline">
+            <!-- Cita 1 -->
+            <div class="flex items-center p-4 bg-emerald-50 border border-emerald-200 rounded-lg hover:shadow-md transition-shadow">
+              <div class="flex-shrink-0 text-center mr-4">
+                <div class="text-sm font-semibold text-emerald-700">08:00</div>
+                <div class="text-xs text-emerald-600">AM</div>
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h4 class="font-medium text-gray-900">María González Pérez</h4>
+                    <p class="text-sm text-gray-600">
+                      <i class="fas fa-tooth mr-1 text-emerald-500"></i>
+                      Limpieza dental y revisión general
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">
+                      <i class="fas fa-user-md mr-1"></i>Dr. Roberto Martínez
+                    </p>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Confirmada</span>
+                    <div class="flex gap-1">
+                      <button class="p-2 text-blue-600 hover:bg-blue-100 rounded-full" onclick="viewAppointment(1)" title="Ver detalles">
+                        <i class="fas fa-eye text-sm"></i>
+                      </button>
+                      <button class="p-2 text-emerald-600 hover:bg-emerald-100 rounded-full" onclick="editAppointment(1)" title="Editar">
+                        <i class="fas fa-edit text-sm"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cita 2 -->
+            <div class="flex items-center p-4 bg-blue-50 border border-blue-200 rounded-lg hover:shadow-md transition-shadow">
+              <div class="flex-shrink-0 text-center mr-4">
+                <div class="text-sm font-semibold text-blue-700">10:30</div>
+                <div class="text-xs text-blue-600">AM</div>
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h4 class="font-medium text-gray-900">Carlos Ramírez López</h4>
+                    <p class="text-sm text-gray-600">
+                      <i class="fas fa-procedures mr-1 text-blue-500"></i>
+                      Tratamiento de conducto - Sesión 2
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">
+                      <i class="fas fa-user-md mr-1"></i>Dra. María López
+                    </p>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">Pendiente</span>
+                    <div class="flex gap-1">
+                      <button class="p-2 text-blue-600 hover:bg-blue-100 rounded-full" onclick="viewAppointment(2)" title="Ver detalles">
+                        <i class="fas fa-eye text-sm"></i>
+                      </button>
+                      <button class="p-2 text-emerald-600 hover:bg-emerald-100 rounded-full" onclick="editAppointment(2)" title="Editar">
+                        <i class="fas fa-edit text-sm"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cita 3 -->
+            <div class="flex items-center p-4 bg-purple-50 border border-purple-200 rounded-lg hover:shadow-md transition-shadow">
+              <div class="flex-shrink-0 text-center mr-4">
+                <div class="text-sm font-semibold text-purple-700">14:00</div>
+                <div class="text-xs text-purple-600">PM</div>
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h4 class="font-medium text-gray-900">Ana Sofía Herrera</h4>
+                    <p class="text-sm text-gray-600">
+                      <i class="fas fa-smile mr-1 text-purple-500"></i>
+                      Consulta de ortodoncia - Evaluación inicial
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">
+                      <i class="fas fa-user-md mr-1"></i>Dr. Luis García
+                    </p>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Confirmada</span>
+                    <div class="flex gap-1">
+                      <button class="p-2 text-blue-600 hover:bg-blue-100 rounded-full" onclick="viewAppointment(3)" title="Ver detalles">
+                        <i class="fas fa-eye text-sm"></i>
+                      </button>
+                      <button class="p-2 text-emerald-600 hover:bg-emerald-100 rounded-full" onclick="editAppointment(3)" title="Editar">
+                        <i class="fas fa-edit text-sm"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de todas las citas -->
+      <div class="bg-white rounded-lg shadow-sm border">
+        <div class="p-6 border-b">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold">Lista de Citas</h3>
+            <button class="text-gray-500 hover:text-gray-700" onclick="toggleFilters()">
+              <i class="fas fa-filter"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filtros colapsables -->
+        <div class="px-6 py-4 bg-gray-50 border-b hidden" id="filtersSection">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Buscar paciente</label>
+              <input type="text" placeholder="Nombre del paciente..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+              <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+                <option value="">Todos los estados</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="confirmada">Confirmada</option>
+                <option value="completada">Completada</option>
+                <option value="cancelada">Cancelada</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Odontólogo</label>
+              <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+                <option value="">Todos los odontólogos</option>
+                <option value="1">Dr. Roberto Martínez</option>
+                <option value="2">Dra. María López</option>
+                <option value="3">Dr. Luis García</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Fecha</label>
+              <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+                <option value="">Todas las fechas</option>
+                <option value="hoy">Hoy</option>
+                <option value="esta-semana">Esta semana</option>
+                <option value="este-mes">Este mes</option>
+                <option value="personalizada">Fecha personalizada</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="flex justify-end mt-4 space-x-3">
+            <button class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors" onclick="applyFilters()">
+              <i class="fas fa-search mr-2"></i>
+              Aplicar Filtros
+            </button>
+            <button class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors" onclick="clearFilters()">
+              <i class="fas fa-times mr-2"></i>
+              Limpiar
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paciente</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha y Hora</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Odontólogo</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tratamiento</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center mr-3">
+                      <span class="text-emerald-600 font-semibold text-sm">MG</span>
+                    </div>
+                    <div>
+                      <div class="text-sm font-medium text-gray-900">María González Pérez</div>
+                      <div class="text-sm text-gray-500">CC: 1234567890</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">
+                    <div class="font-medium">04 Nov 2024</div>
+                    <div class="text-gray-500">08:00 AM</div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">
+                    <div class="font-medium">Dr. Roberto Martínez</div>
+                    <div class="text-gray-500">Odontología General</div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">Limpieza dental</div>
+                  <div class="text-sm text-gray-500">Revisión general</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                    Confirmada
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <div class="flex space-x-2">
+                    <button class="text-blue-600 hover:text-blue-900" onclick="viewAppointment(1)" title="Ver detalles">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="text-emerald-600 hover:text-emerald-900" onclick="editAppointment(1)" title="Editar">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="text-purple-600 hover:text-purple-900" onclick="confirmAppointment(1)" title="Confirmar">
+                      <i class="fas fa-check-circle"></i>
+                    </button>
+                    <button class="text-red-600 hover:text-red-900" onclick="cancelAppointment(1)" title="Cancelar">
+                      <i class="fas fa-times-circle"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                      <span class="text-blue-600 font-semibold text-sm">CR</span>
+                    </div>
+                    <div>
+                      <div class="text-sm font-medium text-gray-900">Carlos Ramírez López</div>
+                      <div class="text-sm text-gray-500">CC: 9876543210</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">
+                    <div class="font-medium">04 Nov 2024</div>
+                    <div class="text-gray-500">10:30 AM</div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">
+                    <div class="font-medium">Dra. María López</div>
+                    <div class="text-gray-500">Endodoncia</div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">Tratamiento de conducto</div>
+                  <div class="text-sm text-gray-500">Sesión 2 de 3</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                    Pendiente
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <div class="flex space-x-2">
+                    <button class="text-blue-600 hover:text-blue-900" onclick="viewAppointment(2)" title="Ver detalles">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="text-emerald-600 hover:text-emerald-900" onclick="editAppointment(2)" title="Editar">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="text-purple-600 hover:text-purple-900" onclick="confirmAppointment(2)" title="Confirmar">
+                      <i class="fas fa-check-circle"></i>
+                    </button>
+                    <button class="text-red-600 hover:text-red-900" onclick="cancelAppointment(2)" title="Cancelar">
+                      <i class="fas fa-times-circle"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mr-3">
+                      <span class="text-purple-600 font-semibold text-sm">AH</span>
+                    </div>
+                    <div>
+                      <div class="text-sm font-medium text-gray-900">Ana Sofía Herrera</div>
+                      <div class="text-sm text-gray-500">CC: 5555666677</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">
+                    <div class="font-medium">04 Nov 2024</div>
+                    <div class="text-gray-500">14:00 PM</div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">
+                    <div class="font-medium">Dr. Luis García</div>
+                    <div class="text-gray-500">Ortodoncia</div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">Consulta de ortodoncia</div>
+                  <div class="text-sm text-gray-500">Evaluación inicial</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                    Confirmada
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <div class="flex space-x-2">
+                    <button class="text-blue-600 hover:text-blue-900" onclick="viewAppointment(3)" title="Ver detalles">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="text-emerald-600 hover:text-emerald-900" onclick="editAppointment(3)" title="Editar">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="text-purple-600 hover:text-purple-900" onclick="confirmAppointment(3)" title="Confirmar">
+                      <i class="fas fa-check-circle"></i>
+                    </button>
+                    <button class="text-red-600 hover:text-red-900" onclick="cancelAppointment(3)" title="Cancelar">
+                      <i class="fas fa-times-circle"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Paginación -->
+        <div class="px-6 py-4 border-t flex items-center justify-between">
+          <div class="text-sm text-gray-500">
+            Mostrando 1-10 de 247 citas
+          </div>
+          <div class="flex space-x-1">
+            <button class="px-3 py-1 border rounded-md text-sm bg-gray-100 text-gray-400" disabled>
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="px-3 py-1 border rounded-md text-sm bg-emerald-600 text-white">1</button>
+            <button class="px-3 py-1 border rounded-md text-sm hover:bg-gray-50">2</button>
+            <button class="px-3 py-1 border rounded-md text-sm hover:bg-gray-50">3</button>
+            <button class="px-3 py-1 border rounded-md text-sm hover:bg-gray-50">...</button>
+            <button class="px-3 py-1 border rounded-md text-sm hover:bg-gray-50">25</button>
+            <button class="px-3 py-1 border rounded-md text-sm hover:bg-gray-50">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal de Nueva Cita -->
+  <div id="newAppointmentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+      <div class="mt-3">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-medium text-gray-900">
+            <i class="fas fa-calendar-plus mr-2 text-emerald-500"></i>
+            Nueva Cita Médica
+          </h3>
+          <button onclick="closeNewAppointmentModal()" class="text-gray-400 hover:text-gray-600">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form id="newAppointmentForm" class="space-y-6">
+          <!-- Información del paciente -->
+          <div>
+            <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
+              <i class="fas fa-user-injured mr-2 text-emerald-500"></i>
+              Información del Paciente
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Paciente <span class="text-red-500">*</span></label>
+                <select id="pacienteId" name="pacienteId" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+                  <option value="">Seleccionar paciente...</option>
+                  <option value="1">María González Pérez - CC: 1234567890</option>
+                  <option value="2">Carlos Ramírez López - CC: 9876543210</option>
+                  <option value="3">Ana Sofía Herrera - CC: 5555666677</option>
+                  <option value="4">Juan Pablo Mendoza - CC: 1111222233</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Cita <span class="text-red-500">*</span></label>
+                <select id="tipoCita" name="tipoCita" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+                  <option value="">Seleccionar tipo...</option>
+                  <option value="consulta-general">Consulta General</option>
+                  <option value="limpieza">Limpieza Dental</option>
+                  <option value="endodoncia">Endodoncia</option>
+                  <option value="cirugia">Cirugía Oral</option>
+                  <option value="ortodoncia">Ortodoncia</option>
+                  <option value="periodoncia">Periodoncia</option>
+                  <option value="estetica">Odontología Estética</option>
+                  <option value="urgencia">Urgencia</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Información de la cita -->
+          <div>
+            <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
+              <i class="fas fa-calendar-alt mr-2 text-emerald-500"></i>
+              Programación de la Cita
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Fecha <span class="text-red-500">*</span></label>
+                <input type="date" id="fechaCita" name="fechaCita" required min="2024-11-04" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Hora <span class="text-red-500">*</span></label>
+                <select id="horaCita" name="horaCita" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+                  <option value="">Seleccionar hora...</option>
+                  <option value="08:00">08:00 AM</option>
+                  <option value="08:30">08:30 AM</option>
+                  <option value="09:00">09:00 AM</option>
+                  <option value="09:30">09:30 AM</option>
+                  <option value="10:00">10:00 AM</option>
+                  <option value="10:30">10:30 AM</option>
+                  <option value="11:00">11:00 AM</option>
+                  <option value="11:30">11:30 AM</option>
+                  <option value="14:00">02:00 PM</option>
+                  <option value="14:30">02:30 PM</option>
+                  <option value="15:00">03:00 PM</option>
+                  <option value="15:30">03:30 PM</option>
+                  <option value="16:00">04:00 PM</option>
+                  <option value="16:30">04:30 PM</option>
+                  <option value="17:00">05:00 PM</option>
+                  <option value="17:30">05:30 PM</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Duración (min) <span class="text-red-500">*</span></label>
+                <select id="duracion" name="duracion" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+                  <option value="30">30 minutos</option>
+                  <option value="60">1 hora</option>
+                  <option value="90">1.5 horas</option>
+                  <option value="120">2 horas</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Información del odontólogo -->
+          <div>
+            <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
+              <i class="fas fa-user-md mr-2 text-emerald-500"></i>
+              Asignación de Profesional
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Odontólogo <span class="text-red-500">*</span></label>
+                <select id="odontologoId" name="odontologoId" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+                  <option value="">Seleccionar odontólogo...</option>
+                  <option value="1">Dr. Roberto Martínez - Odontología General</option>
+                  <option value="2">Dra. María López - Endodoncia</option>
+                  <option value="3">Dr. Luis García - Ortodoncia</option>
+                  <option value="4">Dra. Carmen Silva - Periodoncia</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Consultorio</label>
+                <select id="consultorio" name="consultorio" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+                  <option value="">Asignar automáticamente</option>
+                  <option value="1">Consultorio 1</option>
+                  <option value="2">Consultorio 2</option>
+                  <option value="3">Consultorio 3</option>
+                  <option value="4">Consultorio 4</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Detalles adicionales -->
+          <div>
+            <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
+              <i class="fas fa-clipboard-list mr-2 text-emerald-500"></i>
+              Detalles Adicionales
+            </h4>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Motivo de la consulta</label>
+                <textarea id="motivoConsulta" name="motivoConsulta" rows="3" placeholder="Describa el motivo de la consulta..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"></textarea>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Estado inicial</label>
+                  <select id="estado" name="estado" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+                    <option value="pendiente">Pendiente</option>
+                    <option value="confirmada">Confirmada</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Prioridad</label>
+                  <select id="prioridad" name="prioridad" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+                    <option value="normal">Normal</option>
+                    <option value="alta">Alta</option>
+                    <option value="urgente">Urgente</option>
+                  </select>
+                </div>
+              </div>
+              <div class="flex items-center">
+                <input type="checkbox" id="enviarRecordatorio" name="enviarRecordatorio" class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded">
+                <label for="enviarRecordatorio" class="ml-2 block text-sm text-gray-700">
+                  Enviar recordatorio al paciente (SMS/Email)
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end space-x-3 pt-4">
+            <button type="button" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors" onclick="closeNewAppointmentModal()">
+              <i class="fas fa-times mr-2"></i>
+              Cancelar
+            </button>
+            <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors">
+              <i class="fas fa-save mr-2"></i>
+              Crear Cita
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Ver Detalles de la Cita -->
+  <div id="viewAppointmentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+      <div class="mt-3">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-medium text-gray-900" id="viewAppointmentTitle">Detalles de la Cita</h3>
+          <button onclick="closeViewAppointmentModal()" class="text-gray-400 hover:text-gray-600">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <div class="space-y-6">
+          <!-- Información básica de la cita -->
+          <div class="flex items-center space-x-4 p-4 bg-emerald-50 rounded-lg">
+            <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center" id="viewAppointmentAvatar">
+              <i class="fas fa-calendar-check text-emerald-600 text-xl"></i>
+            </div>
+            <div>
+              <h4 class="text-lg font-semibold text-gray-900" id="viewAppointmentPatient">Paciente</h4>
+              <p class="text-sm text-gray-600" id="viewAppointmentType">Tipo de cita</p>
+              <div class="flex items-center mt-2 gap-3">
+                <span class="px-2 py-1 text-xs font-medium rounded-full" id="viewAppointmentStatus">Estado</span>
+                <span class="text-sm text-gray-500" id="viewAppointmentDateTime">Fecha y hora</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Detalles -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-4">
+              <div>
+                <h5 class="font-medium text-gray-900">Información del Paciente</h5>
+                <p class="text-sm text-gray-600" id="viewPatientDocument">Documento</p>
+                <p class="text-sm text-gray-600" id="viewPatientPhone">Teléfono</p>
+              </div>
+              <div>
+                <h5 class="font-medium text-gray-900">Información de la Cita</h5>
+                <p class="text-sm text-gray-600" id="viewAppointmentDuration">Duración</p>
+                <p class="text-sm text-gray-600" id="viewAppointmentOffice">Consultorio</p>
+              </div>
+            </div>
+            <div class="space-y-4">
+              <div>
+                <h5 class="font-medium text-gray-900">Profesional Asignado</h5>
+                <p class="text-sm text-gray-600" id="viewAppointmentDoctor">Odontólogo</p>
+                <p class="text-sm text-gray-600" id="viewDoctorSpecialty">Especialidad</p>
+              </div>
+              <div>
+                <h5 class="font-medium text-gray-900">Motivo de Consulta</h5>
+                <p class="text-sm text-gray-600" id="viewAppointmentReason">Motivo</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end space-x-3 pt-4">
+            <button class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors" onclick="editAppointmentFromModal()">
+              <i class="fas fa-edit mr-2"></i>
+              Editar Cita
+            </button>
+            <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors" onclick="printAppointment()">
+              <i class="fas fa-print mr-2"></i>
+              Imprimir
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script th:src="@{/js/components.js}"></script>
+  <script th:src="@{/js/citas.js}"></script>
+</body>
+</html>
