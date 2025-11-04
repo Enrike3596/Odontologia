@@ -1,0 +1,58 @@
+<!-- Topbar - Sistema Odontológico -->
+<div class="topbar">
+    <div class="topbar-left">
+        <!-- Botón hamburguesa para móvil -->
+        <button class="hamburger-menu" onclick="toggleSidebar()" aria-label="Toggle menu">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <div class="logo-section">
+            <div class="logo">
+                <!-- Icono dental -->
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C10.18 2 8.5 2.84 7.5 4.25C7.22 4.66 7 5.18 7 5.75C7 6.97 7.84 8 9 8C9.55 8 10 8.45 10 9V20C10 21.1 10.9 22 12 22S14 21.1 14 20V9C14 8.45 14.45 8 15 8C16.16 8 17 6.97 17 5.75C17 5.18 16.78 4.66 16.5 4.25C15.5 2.84 13.82 2 12 2Z"/>
+                    <path d="M8.5 10C8.22 10 8 10.22 8 10.5V19.5C8 19.78 8.22 20 8.5 20S9 19.78 9 19.5V10.5C9 10.22 8.78 10 8.5 10Z"/>
+                    <path d="M15.5 10C15.22 10 15 10.22 15 10.5V19.5C15 19.78 15.22 20 15.5 20S16 19.78 16 19.5V10.5C16 10.22 15.78 10 15.5 10Z"/>
+                </svg>
+            </div>
+            <div class="brand-text">
+                <h2>Clínica Odontológica</h2>
+                <!-- <p>Sistema de Gestión Dental</p> -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="topbar-right">
+        <div class="user-info">
+            <div class="user-avatar">
+                <i class="fas fa-user-md"></i>
+            </div>
+            <button class="dropdown-toggle" onclick="toggleUserDropdown()">
+                <i class="fas fa-chevron-down"></i>
+            </button>
+            <div class="user-dropdown">
+                <div class="user-details" id="user-details-container">
+                    <h4 id="user-display-name">Cargando...</h4>
+                    <p id="user-display-email">Cargando...</p>
+                    <span id="user-display-role" class="text-xs text-gray-500">Rol</span>
+                </div>
+                <a href="#" onclick="goToProfile()">
+                    <i class="fas fa-user-circle"></i>
+                    Mi Perfil
+                </a>
+                <a href="#" onclick="goToSettings()">
+                    <i class="fas fa-cog"></i>
+                    Configuración
+                </a>
+                <a href="#" onclick="showClinicInfo()">
+                    <i class="fas fa-info-circle"></i>
+                    Info. Clínica
+                </a>
+                <a href="#" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Cerrar Sesión
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
