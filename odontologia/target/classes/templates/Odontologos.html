@@ -19,6 +19,44 @@
 
   <!-- Custom CSS -->
   <link rel="stylesheet" th:href="@{/css/app.css}" />
+  
+  <style>
+    /* Asegurar que el sidebar se muestre correctamente */
+    #sidebar {
+      min-height: 100vh;
+      box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Responsivo para móviles */
+    @media (max-width: 768px) {
+      #sidebar {
+        position: fixed;
+        left: -288px;
+        z-index: 1000;
+        transition: left 0.3s ease;
+      }
+      
+      #sidebar.show {
+        left: 0;
+      }
+      
+      main {
+        margin-left: 0 !important;
+      }
+    }
+    
+    @media (min-width: 769px) {
+      #sidebar {
+        position: relative;
+      }
+    }
+    
+    /* Efectos hover para navegación */
+    .nav-link:hover {
+      transform: translateX(4px);
+      transition: all 0.2s ease;
+    }
+  </style>
 </head>
 <body class="bg-gray-50 text-gray-800 antialiased" data-page="odontologos">
 
@@ -26,24 +64,37 @@
   <div class="min-h-screen flex">
 
     <!-- SIDEBAR -->
-    <aside id="sidebar" class="w-72 bg-white border-r hidden md:flex md:flex-col">
+    <aside id="sidebar" class="w-72 bg-white border-r flex flex-col">
       <div class="p-6 flex items-center justify-between">
         <div>
           <h1 class="text-2xl font-semibold text-indigo-700">Clínica <span class="text-indigo-500">Odontología</span></h1>
           <p class="text-sm text-gray-500 mt-1">Panel de administración</p>
         </div>
-        <button id="sidebarCollapse" class="md:hidden block p-2 rounded bg-gray-100" aria-label="Cerrar sidebar">✕</button>
       </div>
 
       <nav class="mt-4 px-2 flex-1 overflow-auto" aria-label="Main navigation">
         <ul class="space-y-1">
-          <li><a href="#" class="nav-link block px-4 py-2 rounded-lg hover:bg-indigo-50" data-view="dashboard">Dashboard</a></li>
-          <li><a href="#" class="nav-link block px-4 py-2 rounded-lg hover:bg-gray-50" data-view="citas">Citas</a></li>
-          <li><a href="#" class="nav-link block px-4 py-2 rounded-lg hover:bg-gray-50" data-view="pacientes">Pacientes</a></li>
-          <li><a href="#" class="nav-link block px-4 py-2 rounded-lg hover:bg-indigo-50 text-indigo-600 font-medium" data-view="odontologos">Odontólogos</a></li>
-          <li><a href="#" class="nav-link block px-4 py-2 rounded-lg hover:bg-gray-50" data-view="historia">Historia Clínica</a></li>
-          <li><a href="#" class="nav-link block px-4 py-2 rounded-lg hover:bg-gray-50" data-view="usuarios">Usuarios</a></li>
-          <li><a href="#" class="nav-link block px-4 py-2 rounded-lg hover:bg-gray-50" data-view="configuracion">Configuración</a></li>
+          <li><a href="/dashboard" class="nav-link block px-4 py-2 rounded-lg hover:bg-indigo-50" data-view="dashboard">
+            <i class="fas fa-chart-line mr-3 text-gray-500"></i>Dashboard
+          </a></li>
+          <li><a href="/citas" class="nav-link block px-4 py-2 rounded-lg hover:bg-emerald-50" data-view="citas">
+            <i class="fas fa-calendar-alt mr-3 text-gray-500"></i>Citas Médicas
+          </a></li>
+          <li><a href="/pacientes" class="nav-link block px-4 py-2 rounded-lg hover:bg-blue-50" data-view="pacientes">
+            <i class="fas fa-user-injured mr-3 text-gray-500"></i>Pacientes
+          </a></li>
+          <li><a href="/odontologos" class="nav-link block px-4 py-2 rounded-lg hover:bg-purple-50 text-purple-600 font-medium bg-purple-50" data-view="odontologos">
+            <i class="fas fa-user-md mr-3 text-purple-500"></i>Odontólogos
+          </a></li>
+          <li><a href="/historias-clinicas" class="nav-link block px-4 py-2 rounded-lg hover:bg-teal-50" data-view="historia">
+            <i class="fas fa-file-medical mr-3 text-gray-500"></i>Historia Clínica
+          </a></li>
+          <li><a href="/usuarios" class="nav-link block px-4 py-2 rounded-lg hover:bg-orange-50" data-view="usuarios">
+            <i class="fas fa-users mr-3 text-gray-500"></i>Usuarios
+          </a></li>
+          <li><a href="/configuracion" class="nav-link block px-4 py-2 rounded-lg hover:bg-gray-50" data-view="configuracion">
+            <i class="fas fa-cog mr-3 text-gray-500"></i>Configuración
+          </a></li>
         </ul>
       </nav>
       <div class="p-4 border-t">
@@ -644,7 +695,28 @@
   </div>
 
   <!-- Scripts -->
-  <script th:src="@{/js/components.js}"></script>
   <script th:src="@{/js/odontologos.js}"></script>
+  <script>
+    // Mobile sidebar functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+      const sidebar = document.getElementById('sidebar');
+      
+      if (mobileMenuToggle && sidebar) {
+        mobileMenuToggle.addEventListener('click', function() {
+          if (window.innerWidth <= 768) {
+            sidebar.classList.toggle('show');
+          }
+        });
+      }
+      
+      // Handle window resize
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+          sidebar.classList.remove('show');
+        }
+      });
+    });
+  </script>
 </body>
 </html>

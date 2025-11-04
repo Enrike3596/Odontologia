@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Odontología · Dashboard</title>
+
+  <!-- Tailwind CDN (para desarrollo/prototipo) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Alpine.js para interactividad ligera -->
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <!-- Chart.js para gráficas -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" th:href="@{/css/app.css}" />
+  
+  <style>
+    /* Asegurar que el sidebar se muestre correctamente */
+    #sidebar {
+      min-height: 100vh;
+      box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Responsivo para móviles */
+    @media (max-width: 768px) {
+      #sidebar {
+        position: fixed;
+        left: -288px;
+        z-index: 1000;
+        transition: left 0.3s ease;
+      }
+      
+      #sidebar.show {
+        left: 0;
+      }
+      
+      main {
+        margin-left: 0 !important;
+      }
+    }
+    
+    @media (min-width: 769px) {
+      #sidebar {
+        position: relative;
+      }
+    }
+    
+    /* Efectos hover para navegación */
+    .nav-link:hover {
+      transform: translateX(4px);
+      transition: all 0.2s ease;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased" data-page="dashboard">
+
+  <!-- Layout: Sidebar + Main -->
+  <div class="min-h-screen flex">
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="w-72 bg-white border-r flex flex-col">
+      <div class="p-6 flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-semibold text-indigo-700">Clínica <span class="text-indigo-500">Odontología</span></h1>
+          <p class="text-sm text-gray-500 mt-1">Panel de administración</p>
+        </div>
+      </div>
+
+      <nav class="mt-4 px-2 flex-1 overflow-auto" aria-label="Main navigation">
+        <ul class="space-y-1">
+          <li><a href="/dashboard" class="nav-link block px-4 py-2 rounded-lg hover:bg-indigo-50 text-indigo-600 font-medium bg-indigo-50" data-view="dashboard">
+            <i class="fas fa-chart-line mr-3 text-indigo-500"></i>Dashboard
+          </a></li>
+          <li><a href="/citas" class="nav-link block px-4 py-2 rounded-lg hover:bg-emerald-50" data-view="citas">
+            <i class="fas fa-calendar-alt mr-3 text-gray-500"></i>Citas Médicas
+          </a></li>
+          <li><a href="/pacientes" class="nav-link block px-4 py-2 rounded-lg hover:bg-blue-50" data-view="pacientes">
+            <i class="fas fa-user-injured mr-3 text-gray-500"></i>Pacientes
+          </a></li>
+          <li><a href="/odontologos" class="nav-link block px-4 py-2 rounded-lg hover:bg-purple-50" data-view="odontologos">
+            <i class="fas fa-user-md mr-3 text-gray-500"></i>Odontólogos
+          </a></li>
+          <li><a href="/historias-clinicas" class="nav-link block px-4 py-2 rounded-lg hover:bg-teal-50" data-view="historia">
+            <i class="fas fa-file-medical mr-3 text-gray-500"></i>Historia Clínica
+          </a></li>
+          <li><a href="/usuarios" class="nav-link block px-4 py-2 rounded-lg hover:bg-orange-50" data-view="usuarios">
+            <i class="fas fa-users mr-3 text-gray-500"></i>Usuarios
+          </a></li>
+          <li><a href="/configuracion" class="nav-link block px-4 py-2 rounded-lg hover:bg-gray-50" data-view="configuracion">
+            <i class="fas fa-cog mr-3 text-gray-500"></i>Configuración
+          </a></li>
+        </ul>
+      </nav>
+      <div class="p-4 border-t">
+        <div class="text-sm text-gray-500">Usuario Activo</div>
+        <div class="flex items-center gap-3 mt-2">
+          <img src="https://i.pravatar.cc/40?img=5" alt="avatar" class="w-9 h-9 rounded-full" />
+          <div class="text-sm">
+            <div class="font-medium">Administrador</div>
+            <div class="text-xs text-gray-400">admin@clinica.com</div>
+          </div>
+        </div>
+        <div class="mt-3">
+          <button class="w-full text-xs text-red-600 hover:text-red-800 flex items-center justify-center gap-1" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i>
+            Cerrar Sesión
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="flex-1 p-6">
+      <!-- Topbar -->
+      <header class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-xl font-semibold text-indigo-700">
+            <i class="fas fa-chart-line mr-2 text-indigo-500"></i>
+            Dashboard Clínica Odontológica
+          </h2>
+          <p class="text-sm text-gray-500">Resumen general de la actividad de la clínica - <span id="currentDate">4 de Noviembre, 2024</span></p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <!-- Mobile menu toggle -->
+          <button id="mobileMenuToggle" class="md:hidden p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors" aria-label="Abrir menú">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+
+          <!-- Quick Actions -->
+          <div class="flex items-center gap-3">
+            <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" onclick="openQuickAppointmentModal()">
+              <i class="fas fa-plus mr-2"></i>
+              Cita Rápida
+            </button>
+            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" onclick="refreshDashboard()">
+              <i class="fas fa-sync-alt mr-2"></i>
+              Actualizar
+            </button>
+          </div>
+
+          <!-- Notifications -->
+          <div class="relative">
+            <button class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors relative" onclick="toggleNotifications()">
+              <i class="fas fa-bell text-gray-600"></i>
+              <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
+            </button>
+          </div>
+
+          <!-- User -->
+          <div class="flex items-center gap-3">
+            <img src="https://i.pravatar.cc/40?img=5" alt="avatar" class="w-9 h-9 rounded-full" />
+            <div class="text-right hidden sm:block">
+              <div class="text-sm font-medium">Administrador</div>
+              <div class="text-xs text-gray-500">Sistema</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Statistics Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <!-- Citas de Hoy -->
+        <div class="bg-gradient-to-r from-emerald-500 to-emerald-600 p-6 rounded-lg shadow-sm text-white">
+          <div class="flex items-center">
+            <div class="p-3 rounded-full bg-white bg-opacity-20">
+              <i class="fas fa-calendar-check text-xl"></i>
+            </div>
+            <div class="ml-4">
+              <p class="text-2xl font-bold" id="todayAppointments">24</p>
+              <p class="text-emerald-100">Citas de Hoy</p>
+            </div>
+          </div>
+          <div class="mt-4">
+            <div class="flex items-center text-emerald-100">
+              <i class="fas fa-arrow-up text-xs mr-1"></i>
+              <span class="text-xs">+12% vs ayer</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pacientes Activos -->
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-lg shadow-sm text-white">
+          <div class="flex items-center">
+            <div class="p-3 rounded-full bg-white bg-opacity-20">
+              <i class="fas fa-user-injured text-xl"></i>
+            </div>
+            <div class="ml-4">
+              <p class="text-2xl font-bold" id="activePatients">1,247</p>
+              <p class="text-blue-100">Pacientes Activos</p>
+            </div>
+          </div>
+          <div class="mt-4">
+            <div class="flex items-center text-blue-100">
+              <i class="fas fa-arrow-up text-xs mr-1"></i>
+              <span class="text-xs">+8% este mes</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ingresos del Mes -->
+        <div class="bg-gradient-to-r from-purple-500 to-purple-600 p-6 rounded-lg shadow-sm text-white">
+          <div class="flex items-center">
+            <div class="p-3 rounded-full bg-white bg-opacity-20">
+              <i class="fas fa-dollar-sign text-xl"></i>
+            </div>
+            <div class="ml-4">
+              <p class="text-2xl font-bold" id="monthlyRevenue">$45,230</p>
+              <p class="text-purple-100">Ingresos del Mes</p>
+            </div>
+          </div>
+          <div class="mt-4">
+            <div class="flex items-center text-purple-100">
+              <i class="fas fa-arrow-up text-xs mr-1"></i>
+              <span class="text-xs">+15% vs mes anterior</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Odontólogos Disponibles -->
+        <div class="bg-gradient-to-r from-orange-500 to-orange-600 p-6 rounded-lg shadow-sm text-white">
+          <div class="flex items-center">
+            <div class="p-3 rounded-full bg-white bg-opacity-20">
+              <i class="fas fa-user-md text-xl"></i>
+            </div>
+            <div class="ml-4">
+              <p class="text-2xl font-bold" id="availableDoctors">8</p>
+              <p class="text-orange-100">Odontólogos Disponibles</p>
+            </div>
+          </div>
+          <div class="mt-4">
+            <div class="flex items-center text-orange-100">
+              <i class="fas fa-check-circle text-xs mr-1"></i>
+              <span class="text-xs">4 activos ahora</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Content Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        
+        <!-- Citas de Hoy -->
+        <div class="lg:col-span-2 bg-white rounded-lg shadow-sm border">
+          <div class="p-6 border-b">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-semibold text-gray-900">
+                <i class="fas fa-calendar-day mr-2 text-emerald-500"></i>
+                Agenda de Hoy
+              </h3>
+              <div class="flex gap-2">
+                <button class="text-sm px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full hover:bg-emerald-200 transition-colors" onclick="viewAllAppointments()">
+                  Ver todas
+                </button>
+                <button class="text-sm px-3 py-1 bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors" onclick="openCalendarView()">
+                  <i class="fas fa-calendar mr-1"></i>Calendario
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="p-6">
+            <div class="space-y-4" id="todayAppointmentsList">
+              <!-- Cita 1 -->
+              <div class="flex items-center p-4 bg-emerald-50 border border-emerald-200 rounded-lg hover:shadow-md transition-shadow">
+                <div class="flex-shrink-0 text-center mr-4">
+                  <div class="text-sm font-semibold text-emerald-700">08:00</div>
+                  <div class="text-xs text-emerald-600">AM</div>
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h4 class="font-medium text-gray-900">María González Pérez</h4>
+                      <p class="text-sm text-gray-600">
+                        <i class="fas fa-tooth mr-1 text-emerald-500"></i>
+                        Limpieza dental - Dr. Roberto Martínez
+                      </p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Confirmada</span>
+                      <button class="p-2 text-blue-600 hover:bg-blue-100 rounded-full" onclick="viewAppointmentQuick(1)" title="Ver detalles">
+                        <i class="fas fa-eye text-sm"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Cita 2 -->
+              <div class="flex items-center p-4 bg-blue-50 border border-blue-200 rounded-lg hover:shadow-md transition-shadow">
+                <div class="flex-shrink-0 text-center mr-4">
+                  <div class="text-sm font-semibold text-blue-700">10:30</div>
+                  <div class="text-xs text-blue-600">AM</div>
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h4 class="font-medium text-gray-900">Carlos Ramírez López</h4>
+                      <p class="text-sm text-gray-600">
+                        <i class="fas fa-procedures mr-1 text-blue-500"></i>
+                        Endodoncia - Dra. María López
+                      </p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">Pendiente</span>
+                      <button class="p-2 text-blue-600 hover:bg-blue-100 rounded-full" onclick="viewAppointmentQuick(2)" title="Ver detalles">
+                        <i class="fas fa-eye text-sm"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Cita 3 -->
+              <div class="flex items-center p-4 bg-purple-50 border border-purple-200 rounded-lg hover:shadow-md transition-shadow">
+                <div class="flex-shrink-0 text-center mr-4">
+                  <div class="text-sm font-semibold text-purple-700">14:00</div>
+                  <div class="text-xs text-purple-600">PM</div>
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h4 class="font-medium text-gray-900">Ana Sofía Herrera</h4>
+                      <p class="text-sm text-gray-600">
+                        <i class="fas fa-smile mr-1 text-purple-500"></i>
+                        Ortodoncia - Dr. Luis García
+                      </p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Confirmada</span>
+                      <button class="p-2 text-blue-600 hover:bg-blue-100 rounded-full" onclick="viewAppointmentQuick(3)" title="Ver detalles">
+                        <i class="fas fa-eye text-sm"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Ver más citas -->
+              <div class="text-center pt-4">
+                <button class="text-sm text-gray-500 hover:text-gray-700 underline" onclick="viewAllAppointments()">
+                  Ver las 21 citas restantes del día
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resumen Rápido -->
+        <div class="space-y-6">
+          
+          <!-- Estado de Consultorios -->
+          <div class="bg-white rounded-lg shadow-sm border">
+            <div class="p-6 border-b">
+              <h3 class="text-lg font-semibold text-gray-900">
+                <i class="fas fa-hospital mr-2 text-blue-500"></i>
+                Estado de Consultorios
+              </h3>
+            </div>
+            <div class="p-6">
+              <div class="space-y-4">
+                <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                  <div class="flex items-center">
+                    <div class="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                    <span class="text-sm font-medium">Consultorio 1</span>
+                  </div>
+                  <span class="text-xs text-green-700 bg-green-100 px-2 py-1 rounded">Ocupado</span>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                  <div class="flex items-center">
+                    <div class="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
+                    <span class="text-sm font-medium">Consultorio 2</span>
+                  </div>
+                  <span class="text-xs text-yellow-700 bg-yellow-100 px-2 py-1 rounded">En Limpieza</span>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div class="flex items-center">
+                    <div class="w-3 h-3 bg-gray-400 rounded-full mr-3"></div>
+                    <span class="text-sm font-medium">Consultorio 3</span>
+                  </div>
+                  <span class="text-xs text-gray-700 bg-gray-100 px-2 py-1 rounded">Disponible</span>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                  <div class="flex items-center">
+                    <div class="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                    <span class="text-sm font-medium">Consultorio 4</span>
+                  </div>
+                  <span class="text-xs text-green-700 bg-green-100 px-2 py-1 rounded">Ocupado</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Alertas y Notificaciones -->
+          <div class="bg-white rounded-lg shadow-sm border">
+            <div class="p-6 border-b">
+              <h3 class="text-lg font-semibold text-gray-900">
+                <i class="fas fa-bell mr-2 text-orange-500"></i>
+                Alertas y Notificaciones
+              </h3>
+            </div>
+            <div class="p-6">
+              <div class="space-y-4">
+                <div class="flex items-start p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <i class="fas fa-exclamation-triangle text-red-500 mt-1 mr-3"></i>
+                  <div>
+                    <p class="text-sm font-medium text-red-800">Cita urgente pendiente</p>
+                    <p class="text-xs text-red-600">Juan Pablo - Dolor severo</p>
+                  </div>
+                </div>
+                <div class="flex items-start p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <i class="fas fa-clock text-yellow-500 mt-1 mr-3"></i>
+                  <div>
+                    <p class="text-sm font-medium text-yellow-800">Recordatorio de cita</p>
+                    <p class="text-xs text-yellow-600">3 pacientes para mañana</p>
+                  </div>
+                </div>
+                <div class="flex items-start p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <i class="fas fa-info-circle text-blue-500 mt-1 mr-3"></i>
+                  <div>
+                    <p class="text-sm font-medium text-blue-800">Inventario bajo</p>
+                    <p class="text-xs text-blue-600">Reabastecer materiales</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts and Analytics -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        
+        <!-- Gráfica de Citas por Mes -->
+        <div class="bg-white rounded-lg shadow-sm border">
+          <div class="p-6 border-b">
+            <h3 class="text-lg font-semibold text-gray-900">
+              <i class="fas fa-chart-bar mr-2 text-indigo-500"></i>
+              Citas por Mes
+            </h3>
+          </div>
+          <div class="p-6">
+            <canvas id="appointmentsChart" width="400" height="200"></canvas>
+          </div>
+        </div>
+
+        <!-- Gráfica de Tratamientos Más Solicitados -->
+        <div class="bg-white rounded-lg shadow-sm border">
+          <div class="p-6 border-b">
+            <h3 class="text-lg font-semibold text-gray-900">
+              <i class="fas fa-chart-pie mr-2 text-green-500"></i>
+              Tratamientos Más Solicitados
+            </h3>
+          </div>
+          <div class="p-6">
+            <canvas id="treatmentsChart" width="400" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="bg-white rounded-lg shadow-sm border">
+        <div class="p-6 border-b">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-900">
+              <i class="fas fa-history mr-2 text-gray-500"></i>
+              Actividad Reciente
+            </h3>
+            <button class="text-sm text-blue-600 hover:text-blue-800" onclick="viewAllActivity()">
+              Ver todo el historial
+            </button>
+          </div>
+        </div>
+        <div class="p-6">
+          <div class="space-y-4" id="recentActivityList">
+            <div class="flex items-center p-4 hover:bg-gray-50 rounded-lg transition-colors">
+              <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                <i class="fas fa-user-plus text-green-600"></i>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-medium text-gray-900">Nuevo paciente registrado</p>
+                <p class="text-xs text-gray-500">Pedro Rodríguez se registró en el sistema</p>
+              </div>
+              <span class="text-xs text-gray-400">Hace 15 min</span>
+            </div>
+            
+            <div class="flex items-center p-4 hover:bg-gray-50 rounded-lg transition-colors">
+              <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                <i class="fas fa-calendar-check text-blue-600"></i>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-medium text-gray-900">Cita completada</p>
+                <p class="text-xs text-gray-500">Limpieza dental de María González</p>
+              </div>
+              <span class="text-xs text-gray-400">Hace 1 hora</span>
+            </div>
+            
+            <div class="flex items-center p-4 hover:bg-gray-50 rounded-lg transition-colors">
+              <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-4">
+                <i class="fas fa-file-medical text-purple-600"></i>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-medium text-gray-900">Historia clínica actualizada</p>
+                <p class="text-xs text-gray-500">Dr. Martínez actualizó el expediente de Carlos Ramírez</p>
+              </div>
+              <span class="text-xs text-gray-400">Hace 2 horas</span>
+            </div>
+            
+            <div class="flex items-center p-4 hover:bg-gray-50 rounded-lg transition-colors">
+              <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mr-4">
+                <i class="fas fa-dollar-sign text-orange-600"></i>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-medium text-gray-900">Pago recibido</p>
+                <p class="text-xs text-gray-500">Ana Herrera pagó $150.000 por ortodoncia</p>
+              </div>
+              <span class="text-xs text-gray-400">Hace 3 horas</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Mobile Sidebar Overlay -->
+  <div id="sidebarOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 hidden md:hidden">
+    <aside class="w-72 bg-white h-full shadow-lg">
+      <div class="p-6 flex items-center justify-between border-b">
+        <div>
+          <h1 class="text-2xl font-semibold text-indigo-700">Clínica <span class="text-indigo-500">Odontología</span></h1>
+          <p class="text-sm text-gray-500 mt-1">Panel de administración</p>
+        </div>
+        <button id="closeMobileSidebar" class="p-2 rounded bg-gray-100" aria-label="Cerrar sidebar">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <nav class="mt-4 px-2 flex-1 overflow-auto" aria-label="Mobile navigation">
+        <ul class="space-y-1">
+          <li><a href="/dashboard" class="nav-link block px-4 py-2 rounded-lg hover:bg-indigo-50 text-indigo-600 font-medium bg-indigo-50" data-view="dashboard">
+            <i class="fas fa-chart-line mr-3 text-indigo-500"></i>Dashboard
+          </a></li>
+          <li><a href="/citas" class="nav-link block px-4 py-2 rounded-lg hover:bg-emerald-50" data-view="citas">
+            <i class="fas fa-calendar-alt mr-3 text-gray-500"></i>Citas Médicas
+          </a></li>
+          <li><a href="/pacientes" class="nav-link block px-4 py-2 rounded-lg hover:bg-blue-50" data-view="pacientes">
+            <i class="fas fa-user-injured mr-3 text-gray-500"></i>Pacientes
+          </a></li>
+          <li><a href="/odontologos" class="nav-link block px-4 py-2 rounded-lg hover:bg-purple-50" data-view="odontologos">
+            <i class="fas fa-user-md mr-3 text-gray-500"></i>Odontólogos
+          </a></li>
+          <li><a href="/historias-clinicas" class="nav-link block px-4 py-2 rounded-lg hover:bg-teal-50" data-view="historia">
+            <i class="fas fa-file-medical mr-3 text-gray-500"></i>Historia Clínica
+          </a></li>
+          <li><a href="/usuarios" class="nav-link block px-4 py-2 rounded-lg hover:bg-orange-50" data-view="usuarios">
+            <i class="fas fa-users mr-3 text-gray-500"></i>Usuarios
+          </a></li>
+          <li><a href="/configuracion" class="nav-link block px-4 py-2 rounded-lg hover:bg-gray-50" data-view="configuracion">
+            <i class="fas fa-cog mr-3 text-gray-500"></i>Configuración
+          </a></li>
+        </ul>
+      </nav>
+      
+      <div class="p-4 border-t">
+        <div class="text-sm text-gray-500">Usuario Activo</div>
+        <div class="flex items-center gap-3 mt-2">
+          <img src="https://i.pravatar.cc/40?img=5" alt="avatar" class="w-9 h-9 rounded-full" />
+          <div class="text-sm">
+            <div class="font-medium">Administrador</div>
+            <div class="text-xs text-gray-400">admin@clinica.com</div>
+          </div>
+        </div>
+        <div class="mt-3">
+          <button class="w-full text-xs text-red-600 hover:text-red-800 flex items-center justify-center gap-1" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i>
+            Cerrar Sesión
+          </button>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Modal de Cita Rápida -->
+  <div id="quickAppointmentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-md bg-white">
+      <div class="mt-3">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-medium text-gray-900">
+            <i class="fas fa-bolt mr-2 text-yellow-500"></i>
+            Agendar Cita Rápida
+          </h3>
+          <button onclick="closeQuickAppointmentModal()" class="text-gray-400 hover:text-gray-600">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form id="quickAppointmentForm" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Paciente <span class="text-red-500">*</span></label>
+              <select required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+                <option value="">Seleccionar paciente...</option>
+                <option value="1">María González Pérez</option>
+                <option value="2">Carlos Ramírez López</option>
+                <option value="3">Ana Sofía Herrera</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Odontólogo <span class="text-red-500">*</span></label>
+              <select required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+                <option value="">Seleccionar odontólogo...</option>
+                <option value="1">Dr. Roberto Martínez</option>
+                <option value="2">Dra. María López</option>
+                <option value="3">Dr. Luis García</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Fecha <span class="text-red-500">*</span></label>
+              <input type="date" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Hora <span class="text-red-500">*</span></label>
+              <select required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+                <option value="">Seleccionar hora...</option>
+                <option value="08:00">08:00 AM</option>
+                <option value="09:00">09:00 AM</option>
+                <option value="10:00">10:00 AM</option>
+                <option value="11:00">11:00 AM</option>
+                <option value="14:00">02:00 PM</option>
+                <option value="15:00">03:00 PM</option>
+                <option value="16:00">04:00 PM</option>
+                <option value="17:00">05:00 PM</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Motivo de consulta</label>
+            <textarea rows="3" placeholder="Descripción breve del motivo..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"></textarea>
+          </div>
+          
+          <div class="flex justify-end space-x-3 pt-4">
+            <button type="button" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors" onclick="closeQuickAppointmentModal()">
+              Cancelar
+            </button>
+            <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors">
+              <i class="fas fa-calendar-plus mr-2"></i>
+              Agendar Cita
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script th:src="@{/js/home.js}"></script>
+  <script>
+    // Mobile sidebar functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+      const sidebar = document.getElementById('sidebar');
+      const sidebarOverlay = document.getElementById('sidebarOverlay');
+      const closeMobileSidebar = document.getElementById('closeMobileSidebar');
+      
+      // Toggle sidebar on mobile
+      if (mobileMenuToggle && sidebar) {
+        mobileMenuToggle.addEventListener('click', function() {
+          if (window.innerWidth <= 768) {
+            if (sidebarOverlay) {
+              sidebarOverlay.classList.remove('hidden');
+            } else {
+              sidebar.classList.toggle('show');
+            }
+          }
+        });
+      }
+      
+      // Close mobile sidebar
+      if (closeMobileSidebar && sidebarOverlay) {
+        closeMobileSidebar.addEventListener('click', function() {
+          sidebarOverlay.classList.add('hidden');
+        });
+      }
+      
+      // Close sidebar when clicking overlay
+      if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', function(e) {
+          if (e.target === sidebarOverlay) {
+            sidebarOverlay.classList.add('hidden');
+          }
+        });
+      }
+      
+      // Handle window resize
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+          sidebar.classList.remove('show');
+          if (sidebarOverlay) {
+            sidebarOverlay.classList.add('hidden');
+          }
+        }
+      });
+    });
+
+    // Notifications functionality
+    function toggleNotifications() {
+      Swal.fire({
+        title: 'Notificaciones',
+        html: `
+          <div class="text-left space-y-3">
+            <div class="flex items-center p-3 bg-red-50 rounded-lg">
+              <i class="fas fa-exclamation-triangle text-red-500 mr-3"></i>
+              <div>
+                <p class="font-medium text-red-800">Cita urgente pendiente</p>
+                <p class="text-xs text-red-600">Juan Pablo - Dolor severo</p>
+              </div>
+            </div>
+            <div class="flex items-center p-3 bg-yellow-50 rounded-lg">
+              <i class="fas fa-clock text-yellow-500 mr-3"></i>
+              <div>
+                <p class="font-medium text-yellow-800">Recordatorio de cita</p>
+                <p class="text-xs text-yellow-600">3 pacientes para mañana</p>
+              </div>
+            </div>
+            <div class="flex items-center p-3 bg-blue-50 rounded-lg">
+              <i class="fas fa-info-circle text-blue-500 mr-3"></i>
+              <div>
+                <p class="font-medium text-blue-800">Inventario bajo</p>
+                <p class="text-xs text-blue-600">Reabastecer materiales</p>
+              </div>
+            </div>
+          </div>
+        `,
+        showCloseButton: true,
+        showConfirmButton: false,
+        width: '400px'
+      });
+    }
+
+    // Logout functionality
+    function logout() {
+      Swal.fire({
+        title: '¿Cerrar sesión?',
+        text: "¿Estás seguro de que quieres salir del sistema?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, cerrar sesión',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = '/login';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

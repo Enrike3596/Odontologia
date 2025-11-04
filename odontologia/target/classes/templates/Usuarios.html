@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Odontología · Gestión de Pacientes</title>
+  <title>Odontología · Gestión de Usuarios</title>
 
   <!-- Tailwind CDN (para desarrollo/prototipo) -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -19,31 +19,82 @@
 
   <!-- Custom CSS -->
   <link rel="stylesheet" th:href="@{/css/app.css}" />
+  
+  <style>
+    /* Asegurar que el sidebar se muestre correctamente */
+    #sidebar {
+      min-height: 100vh;
+      box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Responsivo para móviles */
+    @media (max-width: 768px) {
+      #sidebar {
+        position: fixed;
+        left: -288px;
+        z-index: 1000;
+        transition: left 0.3s ease;
+      }
+      
+      #sidebar.show {
+        left: 0;
+      }
+      
+      main {
+        margin-left: 0 !important;
+      }
+    }
+    
+    @media (min-width: 769px) {
+      #sidebar {
+        position: relative;
+      }
+    }
+    
+    /* Efectos hover para navegación */
+    .nav-link:hover {
+      transform: translateX(4px);
+      transition: all 0.2s ease;
+    }
+  </style>
 </head>
-<body class="bg-gray-50 text-gray-800 antialiased" data-page="pacientes">
+<body class="bg-gray-50 text-gray-800 antialiased" data-page="usuarios">
 
   <!-- Layout: Sidebar + Main -->
   <div class="min-h-screen flex">
 
     <!-- SIDEBAR -->
-    <aside id="sidebar" class="w-72 bg-white border-r hidden md:flex md:flex-col">
+    <aside id="sidebar" class="w-72 bg-white border-r flex flex-col">
       <div class="p-6 flex items-center justify-between">
         <div>
           <h1 class="text-2xl font-semibold text-indigo-700">Clínica <span class="text-indigo-500">Odontología</span></h1>
           <p class="text-sm text-gray-500 mt-1">Panel de administración</p>
         </div>
-        <button id="sidebarCollapse" class="md:hidden block p-2 rounded bg-gray-100" aria-label="Cerrar sidebar">✕</button>
       </div>
 
       <nav class="mt-4 px-2 flex-1 overflow-auto" aria-label="Main navigation">
         <ul class="space-y-1">
-          <li><a href="#" class="nav-link block px-4 py-2 rounded-lg hover:bg-indigo-50" data-view="dashboard">Dashboard</a></li>
-          <li><a href="#" class="nav-link block px-4 py-2 rounded-lg hover:bg-gray-50" data-view="citas">Citas</a></li>
-          <li><a href="#" class="nav-link block px-4 py-2 rounded-lg hover:bg-indigo-50 text-indigo-600 font-medium" data-view="pacientes">Pacientes</a></li>
-          <li><a href="#" class="nav-link block px-4 py-2 rounded-lg hover:bg-gray-50" data-view="odontologos">Odontólogos</a></li>
-          <li><a href="#" class="nav-link block px-4 py-2 rounded-lg hover:bg-gray-50" data-view="historia">Historia Clínica</a></li>
-          <li><a href="#" class="nav-link block px-4 py-2 rounded-lg hover:bg-gray-50" data-view="usuarios">Usuarios</a></li>
-          <li><a href="#" class="nav-link block px-4 py-2 rounded-lg hover:bg-gray-50" data-view="configuracion">Configuración</a></li>
+          <li><a href="/dashboard" class="nav-link block px-4 py-2 rounded-lg hover:bg-indigo-50" data-view="dashboard">
+            <i class="fas fa-chart-line mr-3 text-gray-500"></i>Dashboard
+          </a></li>
+          <li><a href="/citas" class="nav-link block px-4 py-2 rounded-lg hover:bg-emerald-50" data-view="citas">
+            <i class="fas fa-calendar-alt mr-3 text-gray-500"></i>Citas Médicas
+          </a></li>
+          <li><a href="/pacientes" class="nav-link block px-4 py-2 rounded-lg hover:bg-blue-50" data-view="pacientes">
+            <i class="fas fa-user-injured mr-3 text-gray-500"></i>Pacientes
+          </a></li>
+          <li><a href="/odontologos" class="nav-link block px-4 py-2 rounded-lg hover:bg-purple-50" data-view="odontologos">
+            <i class="fas fa-user-md mr-3 text-gray-500"></i>Odontólogos
+          </a></li>
+          <li><a href="/historias-clinicas" class="nav-link block px-4 py-2 rounded-lg hover:bg-teal-50" data-view="historia">
+            <i class="fas fa-file-medical mr-3 text-gray-500"></i>Historia Clínica
+          </a></li>
+          <li><a href="/usuarios" class="nav-link block px-4 py-2 rounded-lg hover:bg-orange-50 text-orange-600 font-medium bg-orange-50" data-view="usuarios">
+            <i class="fas fa-users mr-3 text-orange-500"></i>Usuarios
+          </a></li>
+          <li><a href="/configuracion" class="nav-link block px-4 py-2 rounded-lg hover:bg-gray-50" data-view="configuracion">
+            <i class="fas fa-cog mr-3 text-gray-500"></i>Configuración
+          </a></li>
         </ul>
       </nav>
       <div class="p-4 border-t">
@@ -51,8 +102,8 @@
         <div class="flex items-center gap-3 mt-2">
           <img src="https://i.pravatar.cc/40?img=5" alt="avatar" class="w-9 h-9 rounded-full" />
           <div class="text-sm">
-            <div class="font-medium">Recepcionista</div>
-            <div class="text-xs text-gray-400">recepcion@clinica.com</div>
+            <div class="font-medium">Administrador</div>
+            <div class="text-xs text-gray-400">admin@clinica.com</div>
           </div>
         </div>
       </div>
@@ -63,8 +114,8 @@
       <!-- Topbar -->
       <header class="flex items-center justify-between mb-6">
         <div>
-          <h2 class="text-xl font-semibold">Pacientes</h2>
-          <p class="text-sm text-gray-500">Gestiona la información de los pacientes de la clínica odontológica.</p>
+          <h2 class="text-xl font-semibold">Usuarios</h2>
+          <p class="text-sm text-gray-500">Administra los usuarios del sistema odontológico, gestiona roles y permisos.</p>
         </div>
 
         <div class="flex items-center gap-3">
@@ -77,9 +128,9 @@
 
           <!-- Actions -->
           <div class="flex items-center gap-3">
-            <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" onclick="openNewPatientModal()">
-              <i class="fas fa-user-plus mr-2"></i>
-              Nuevo Paciente
+            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" onclick="openNewUserModal()">
+              <i class="fas fa-plus mr-2"></i>
+              Nuevo Usuario
             </button>
           </div>
 
@@ -87,8 +138,8 @@
           <div class="flex items-center gap-3">
             <img src="https://i.pravatar.cc/40?img=5" alt="avatar" class="w-9 h-9 rounded-full" />
             <div class="text-right">
-              <div class="text-sm font-medium">Recepcionista</div>
-              <div class="text-xs text-gray-500">recepcion@clinica.com</div>
+              <div class="text-sm font-medium">Administrador</div>
+              <div class="text-xs text-gray-500">admin@clinica.com</div>
             </div>
           </div>
         </div>
@@ -99,11 +150,11 @@
         <div class="bg-white p-6 rounded-lg shadow-sm border">
           <div class="flex items-center">
             <div class="p-3 rounded-full bg-blue-100 text-blue-600">
-              <i class="fas fa-user-injured text-xl"></i>
+              <i class="fas fa-users text-xl"></i>
             </div>
             <div class="ml-4">
-              <h3 class="text-2xl font-bold text-gray-900">2,456</h3>
-              <p class="text-sm text-gray-500">Total Pacientes</p>
+              <h3 class="text-2xl font-bold text-gray-900">1,247</h3>
+              <p class="text-sm text-gray-500">Total Usuarios</p>
             </div>
           </div>
         </div>
@@ -111,23 +162,11 @@
         <div class="bg-white p-6 rounded-lg shadow-sm border">
           <div class="flex items-center">
             <div class="p-3 rounded-full bg-green-100 text-green-600">
-              <i class="fas fa-calendar-check text-xl"></i>
-            </div>
-            <div class="ml-4">
-              <h3 class="text-2xl font-bold text-gray-900">1,234</h3>
-              <p class="text-sm text-gray-500">Pacientes Activos</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white p-6 rounded-lg shadow-sm border">
-          <div class="flex items-center">
-            <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
-              <i class="fas fa-clock text-xl"></i>
+              <i class="fas fa-user-md text-xl"></i>
             </div>
             <div class="ml-4">
               <h3 class="text-2xl font-bold text-gray-900">89</h3>
-              <p class="text-sm text-gray-500">Citas Pendientes</p>
+              <p class="text-sm text-gray-500">Odontólogos</p>
             </div>
           </div>
         </div>
@@ -135,21 +174,33 @@
         <div class="bg-white p-6 rounded-lg shadow-sm border">
           <div class="flex items-center">
             <div class="p-3 rounded-full bg-purple-100 text-purple-600">
-              <i class="fas fa-file-medical text-xl"></i>
+              <i class="fas fa-user-shield text-xl"></i>
             </div>
             <div class="ml-4">
-              <h3 class="text-2xl font-bold text-gray-900">567</h3>
-              <p class="text-sm text-gray-500">Historias Clínicas</p>
+              <h3 class="text-2xl font-bold text-gray-900">12</h3>
+              <p class="text-sm text-gray-500">Administradores</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-sm border">
+          <div class="flex items-center">
+            <div class="p-3 rounded-full bg-orange-100 text-orange-600">
+              <i class="fas fa-user-tie text-xl"></i>
+            </div>
+            <div class="ml-4">
+              <h3 class="text-2xl font-bold text-gray-900">146</h3>
+              <p class="text-sm text-gray-500">Recepcionistas</p>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Tabla de pacientes -->
+      <!-- Tabla de usuarios -->
       <div class="bg-white rounded-lg shadow-sm border">
         <div class="p-6 border-b">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold">Lista de pacientes</h3>
+            <h3 class="text-lg font-semibold">Lista de usuarios</h3>
             <button class="text-gray-500 hover:text-gray-700" onclick="toggleFilters()">
               <i class="fas fa-filter"></i>
             </button>
@@ -158,10 +209,20 @@
 
         <!-- Filtros colapsables -->
         <div class="px-6 py-4 bg-gray-50 border-b hidden" id="filtersSection">
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
-              <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Nombre, documento, teléfono...">
+              <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Nombre, email, documento...">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Rol</label>
+              <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">Todos los roles</option>
+                <option value="admin">Administrador</option>
+                <option value="odontologo">Odontólogo</option>
+                <option value="recepcionista">Recepcionista</option>
+              </select>
             </div>
             
             <div>
@@ -170,26 +231,6 @@
                 <option value="">Todos los estados</option>
                 <option value="activo">Activo</option>
                 <option value="inactivo">Inactivo</option>
-              </select>
-            </div>
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Género</label>
-              <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="">Todos</option>
-                <option value="M">Masculino</option>
-                <option value="F">Femenino</option>
-                <option value="O">Otro</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Edad</label>
-              <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="">Todas las edades</option>
-                <option value="0-17">Menor de 18</option>
-                <option value="18-64">18-64 años</option>
-                <option value="65+">65+ años</option>
               </select>
             </div>
           </div>
@@ -210,12 +251,11 @@
           <table class="w-full">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paciente</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Documento</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Edad</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Última cita</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Último acceso</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
               </tr>
             </thead>
@@ -224,40 +264,38 @@
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
                     <div class="flex-shrink-0 h-10 w-10">
-                      <div class="h-10 w-10 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center text-white font-medium">
-                        MG
-                      </div>
+                      <img class="h-10 w-10 rounded-full" src="https://i.pravatar.cc/40?img=1" alt="">
                     </div>
                     <div class="ml-4">
-                      <div class="text-sm font-medium text-gray-900">María González</div>
-                      <div class="text-sm text-gray-500">maria.gonzalez@email.com</div>
+                      <div class="text-sm font-medium text-gray-900">Dr. Juan Pérez</div>
+                      <div class="text-sm text-gray-500">juan.perez@clinica.com</div>
                     </div>
                   </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">12345678</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">+57 300 123 4567</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">35 años</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                    Odontólogo
+                  </span>
+                </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
                     Activo
                   </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">15/10/2024</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Hace 2 horas</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <div class="flex space-x-2">
-                    <button class="text-indigo-600 hover:text-indigo-900" onclick="viewPatient(1)" title="Ver detalles">
+                    <button class="text-indigo-600 hover:text-indigo-900" onclick="viewUser(1)" title="Ver detalles">
                       <i class="fas fa-eye"></i>
                     </button>
-                    <button class="text-blue-600 hover:text-blue-900" onclick="editPatient(1)" title="Editar">
+                    <button class="text-blue-600 hover:text-blue-900" onclick="editUser(1)" title="Editar">
                       <i class="fas fa-edit"></i>
                     </button>
-                    <button class="text-green-600 hover:text-green-900" onclick="viewHistory(1)" title="Historia clínica">
-                      <i class="fas fa-file-medical-alt"></i>
+                    <button class="text-yellow-600 hover:text-yellow-900" onclick="toggleUserStatus(1)" title="Cambiar estado">
+                      <i class="fas fa-user-slash"></i>
                     </button>
-                    <button class="text-purple-600 hover:text-purple-900" onclick="scheduleAppointment(1)" title="Agendar cita">
-                      <i class="fas fa-calendar-plus"></i>
-                    </button>
-                    <button class="text-red-600 hover:text-red-900" onclick="deletePatient(1)" title="Eliminar">
+                    <button class="text-red-600 hover:text-red-900" onclick="deleteUser(1)" title="Eliminar">
                       <i class="fas fa-trash"></i>
                     </button>
                   </div>
@@ -268,40 +306,38 @@
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
                     <div class="flex-shrink-0 h-10 w-10">
-                      <div class="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center text-white font-medium">
-                        JP
-                      </div>
+                      <img class="h-10 w-10 rounded-full" src="https://i.pravatar.cc/40?img=2" alt="">
                     </div>
                     <div class="ml-4">
-                      <div class="text-sm font-medium text-gray-900">Juan Pérez</div>
-                      <div class="text-sm text-gray-500">juan.perez@email.com</div>
+                      <div class="text-sm font-medium text-gray-900">María García</div>
+                      <div class="text-sm text-gray-500">maria.garcia@clinica.com</div>
                     </div>
                   </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">87654321</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">+57 301 987 6543</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">42 años</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
+                    Recepcionista
+                  </span>
+                </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
                     Activo
                   </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">10/10/2024</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Hace 5 minutos</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <div class="flex space-x-2">
-                    <button class="text-indigo-600 hover:text-indigo-900" onclick="viewPatient(2)" title="Ver detalles">
+                    <button class="text-indigo-600 hover:text-indigo-900" onclick="viewUser(2)" title="Ver detalles">
                       <i class="fas fa-eye"></i>
                     </button>
-                    <button class="text-blue-600 hover:text-blue-900" onclick="editPatient(2)" title="Editar">
+                    <button class="text-blue-600 hover:text-blue-900" onclick="editUser(2)" title="Editar">
                       <i class="fas fa-edit"></i>
                     </button>
-                    <button class="text-green-600 hover:text-green-900" onclick="viewHistory(2)" title="Historia clínica">
-                      <i class="fas fa-file-medical-alt"></i>
+                    <button class="text-yellow-600 hover:text-yellow-900" onclick="toggleUserStatus(2)" title="Cambiar estado">
+                      <i class="fas fa-user-slash"></i>
                     </button>
-                    <button class="text-purple-600 hover:text-purple-900" onclick="scheduleAppointment(2)" title="Agendar cita">
-                      <i class="fas fa-calendar-plus"></i>
-                    </button>
-                    <button class="text-red-600 hover:text-red-900" onclick="deletePatient(2)" title="Eliminar">
+                    <button class="text-red-600 hover:text-red-900" onclick="deleteUser(2)" title="Eliminar">
                       <i class="fas fa-trash"></i>
                     </button>
                   </div>
@@ -314,7 +350,7 @@
         <!-- Paginación -->
         <div class="px-6 py-4 border-t flex items-center justify-between">
           <div class="text-sm text-gray-500">
-            Mostrando 1-10 de 2,456 resultados
+            Mostrando 1-10 de 1,247 resultados
           </div>
           <div class="flex space-x-1">
             <button class="px-3 py-1 border rounded-md text-sm bg-gray-100 text-gray-400" disabled>
@@ -324,7 +360,7 @@
             <button class="px-3 py-1 border rounded-md text-sm hover:bg-gray-50">2</button>
             <button class="px-3 py-1 border rounded-md text-sm hover:bg-gray-50">3</button>
             <button class="px-3 py-1 border rounded-md text-sm hover:bg-gray-50">...</button>
-            <button class="px-3 py-1 border rounded-md text-sm hover:bg-gray-50">246</button>
+            <button class="px-3 py-1 border rounded-md text-sm hover:bg-gray-50">125</button>
             <button class="px-3 py-1 border rounded-md text-sm hover:bg-gray-50">
               <i class="fas fa-chevron-right"></i>
             </button>
@@ -334,17 +370,33 @@
     </main>
   </div>
 
-  <!-- Modal de Nuevo Paciente -->
-  <div id="newPatientModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+  <!-- Modal de Nuevo Usuario -->
+  <div id="newUserModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
     <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
       <div class="mt-3">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-medium text-gray-900">Nuevo Paciente</h3>
-          <button onclick="closeNewPatientModal()" class="text-gray-400 hover:text-gray-600">
+          <h3 class="text-lg font-medium text-gray-900">Nuevo Usuario</h3>
+          <button onclick="closeNewUserModal()" class="text-gray-400 hover:text-gray-600">
             <i class="fas fa-times"></i>
           </button>
         </div>
-        <form id="newPatientForm" class="space-y-6">
+        <form id="newUserForm" class="space-y-6">
+          <!-- Tipo de usuario -->
+          <div>
+            <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
+              <i class="fas fa-user-tag mr-2"></i> Tipo de usuario
+            </h4>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Rol</label>
+              <select id="role" name="role" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">Seleccionar rol</option>
+                <option value="administrador">Administrador</option>
+                <option value="odontologo">Odontólogo</option>
+                <option value="recepcionista">Recepcionista</option>
+              </select>
+            </div>
+          </div>
+
           <!-- Información personal -->
           <div>
             <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
@@ -397,7 +449,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                <input type="email" id="email" name="email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <input type="email" id="email" name="email" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
@@ -410,56 +462,41 @@
             </div>
           </div>
 
-          <!-- Contacto de emergencia -->
+          <!-- Seguridad -->
           <div>
             <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
-              <i class="fas fa-phone-alt mr-2"></i> Contacto de emergencia
+              <i class="fas fa-lock mr-2"></i> Seguridad
             </h4>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Nombre completo</label>
-                <input type="text" id="contactoEmergenciaNombre" name="contactoEmergenciaNombre" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
+                <div class="relative">
+                  <input type="password" id="password" name="password" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center" onclick="togglePassword('password')">
+                    <i class="fas fa-eye text-gray-400"></i>
+                  </button>
+                </div>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Parentesco</label>
-                <input type="text" id="contactoEmergenciaParentesco" name="contactoEmergenciaParentesco" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
-                <input type="tel" id="contactoEmergenciaTelefono" name="contactoEmergenciaTelefono" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              </div>
-            </div>
-          </div>
-
-          <!-- Información médica -->
-          <div>
-            <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
-              <i class="fas fa-notes-medical mr-2"></i> Información médica
-            </h4>
-            <div class="grid grid-cols-1 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Alergias</label>
-                <textarea id="alergias" name="alergias" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Describa las alergias del paciente (medicamentos, alimentos, etc.)"></textarea>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Medicamentos actuales</label>
-                <textarea id="medicamentos" name="medicamentos" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Liste los medicamentos que toma actualmente"></textarea>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Observaciones médicas</label>
-                <textarea id="observaciones" name="observaciones" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Observaciones adicionales sobre el estado de salud del paciente"></textarea>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Confirmar contraseña</label>
+                <div class="relative">
+                  <input type="password" id="confirmPassword" name="confirmPassword" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center" onclick="togglePassword('confirmPassword')">
+                    <i class="fas fa-eye text-gray-400"></i>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
           <div class="flex justify-end space-x-3 pt-4">
-            <button type="button" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors" onclick="closeNewPatientModal()">
+            <button type="button" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors" onclick="closeNewUserModal()">
               <i class="fas fa-times mr-2"></i>
               Cancelar
             </button>
-            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">
               <i class="fas fa-save mr-2"></i>
-              Registrar Paciente
+              Crear Usuario
             </button>
           </div>
         </form>
@@ -467,28 +504,28 @@
     </div>
   </div>
 
-  <!-- Modal de Ver Detalles del Paciente -->
-  <div id="viewPatientModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+  <!-- Modal de Ver Detalles del Usuario -->
+  <div id="viewUserModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
     <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
       <div class="mt-3">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-medium text-gray-900" id="viewPatientTitle">Detalles del Paciente</h3>
-          <button onclick="closeViewPatientModal()" class="text-gray-400 hover:text-gray-600">
+          <h3 class="text-lg font-medium text-gray-900" id="viewUserTitle">Detalles del Usuario</h3>
+          <button onclick="closeViewUserModal()" class="text-gray-400 hover:text-gray-600">
             <i class="fas fa-times"></i>
           </button>
         </div>
         
         <div class="space-y-6">
-          <!-- Información básica del paciente -->
+          <!-- Información básica del usuario -->
           <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center" id="viewPatientAvatar">
-              <i class="fas fa-user text-green-600 text-xl"></i>
+            <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center" id="viewUserAvatar">
+              <i class="fas fa-user text-indigo-600 text-xl"></i>
             </div>
             <div>
-              <h4 class="text-lg font-semibold" id="viewPatientName">Nombre del Paciente</h4>
-              <p class="text-gray-600" id="viewPatientEmail">email@example.com</p>
-              <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800" id="viewPatientStatus">
-                Activo
+              <h4 class="text-lg font-semibold" id="viewUserName">Nombre del Usuario</h4>
+              <p class="text-gray-600" id="viewUserEmail">email@example.com</p>
+              <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800" id="viewUserRole">
+                Rol
               </span>
             </div>
           </div>
@@ -498,31 +535,27 @@
             <div>
               <h5 class="font-medium text-gray-900 mb-3">Información Personal</h5>
               <div class="space-y-2 text-sm">
-                <div><strong>Documento:</strong> <span id="viewPatientDocument">-</span></div>
-                <div><strong>Fecha de nacimiento:</strong> <span id="viewPatientBirthdate">-</span></div>
-                <div><strong>Edad:</strong> <span id="viewPatientAge">-</span></div>
-                <div><strong>Género:</strong> <span id="viewPatientGender">-</span></div>
+                <div><strong>Documento:</strong> <span id="viewUserDocument">-</span></div>
+                <div><strong>Fecha de nacimiento:</strong> <span id="viewUserBirthdate">-</span></div>
+                <div><strong>Género:</strong> <span id="viewUserGender">-</span></div>
               </div>
             </div>
             <div>
               <h5 class="font-medium text-gray-900 mb-3">Información de Contacto</h5>
               <div class="space-y-2 text-sm">
-                <div><strong>Teléfono:</strong> <span id="viewPatientPhone">-</span></div>
-                <div><strong>Dirección:</strong> <span id="viewPatientAddress">-</span></div>
-                <div><strong>Contacto emergencia:</strong> <span id="viewPatientEmergencyContact">-</span></div>
+                <div><strong>Teléfono:</strong> <span id="viewUserPhone">-</span></div>
+                <div><strong>Dirección:</strong> <span id="viewUserAddress">-</span></div>
+                <div><strong>Estado:</strong> <span id="viewUserStatus">-</span></div>
               </div>
             </div>
           </div>
 
           <div class="flex justify-end space-x-3 pt-4">
-            <button type="button" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors" onclick="closeViewPatientModal()">
+            <button type="button" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors" onclick="closeViewUserModal()">
               <i class="fas fa-times mr-2"></i> Cerrar
             </button>
-            <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors" onclick="editPatientFromModal()">
-              <i class="fas fa-edit mr-2"></i> Editar Paciente
-            </button>
-            <button type="button" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors" onclick="viewHistoryFromModal()">
-              <i class="fas fa-file-medical mr-2"></i> Historia Clínica
+            <button type="button" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors" onclick="editUserFromModal()">
+              <i class="fas fa-edit mr-2"></i> Editar Usuario
             </button>
           </div>
         </div>
@@ -531,7 +564,28 @@
   </div>
 
   <!-- Scripts -->
-  <script th:src="@{/js/components.js}"></script>
-  <script th:src="@{/js/pacientes.js}"></script>
+  <script th:src="@{/js/usuarios.js}"></script>
+  <script>
+    // Mobile sidebar functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+      const sidebar = document.getElementById('sidebar');
+      
+      if (mobileMenuToggle && sidebar) {
+        mobileMenuToggle.addEventListener('click', function() {
+          if (window.innerWidth <= 768) {
+            sidebar.classList.toggle('show');
+          }
+        });
+      }
+      
+      // Handle window resize
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+          sidebar.classList.remove('show');
+        }
+      });
+    });
+  </script>
 </body>
 </html>
