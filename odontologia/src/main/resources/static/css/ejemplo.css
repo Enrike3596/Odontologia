@@ -1,0 +1,57 @@
+/* styles.css
+   Overrides y estilos personalizados para complementar Tailwind.
+   Guarda este archivo junto al index.html
+*/
+
+/* SweetAlert2 custom styling hook */
+.swal-custom {
+  border-radius: 10px !important;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+/* SweetAlert2 custom button styles: use Tailwind-like classes */
+.swal-confirm {
+  background-color: #4f46e5 !important; /* indigo-600 */
+  color: #fff !important;
+  box-shadow: none !important;
+  padding: 10px 18px !important;
+  border-radius: 8px !important;
+}
+
+.swal-cancel {
+  background-color: #e5e7eb !important; /* gray-200 */
+  color: #111827 !important;
+  box-shadow: none !important;
+  padding: 10px 18px !important;
+  border-radius: 8px !important;
+}
+
+/* Toast custom */
+.swal-custom-toast {
+  background: rgba(255,255,255,0.95) !important;
+  border-left: 4px solid #4f46e5;
+}
+
+/* Improve modal backdrop blur for modern look */
+#modal {
+  backdrop-filter: blur(4px);
+}
+
+/* Small responsive tweak: make sidebar visible on small screens when active (if you later toggle) */
+@media (max-width: 768px) {
+  aside {
+    display: none;
+  }
+}
+
+/* Example visual polish for appointment badges */
+[data-badge].bg-yellow-100 { background-color: #fffbeb; color: #92400e; }
+[data-badge].bg-blue-100   { background-color: #eff6ff; color: #1e3a8a; }
+[data-badge].bg-green-100  { background-color: #ecfdf5; color: #065f46; }
+[data-badge].bg-red-100    { background-color: #fef2f2; color: #7f1d1d; }
+
+/* Small accessibility focus outline */
+button:focus, a:focus, input:focus, select:focus, textarea:focus {
+  outline: 2px solid rgba(99,102,241,0.3);
+  outline-offset: 2px;
+}

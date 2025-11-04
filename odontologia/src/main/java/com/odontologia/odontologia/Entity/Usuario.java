@@ -3,8 +3,6 @@ package com.odontologia.odontologia.Entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
-
 @Entity
 @Table(name = "usuarios")
 @Getter

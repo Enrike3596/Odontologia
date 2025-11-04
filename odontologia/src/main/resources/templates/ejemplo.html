@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Odontología · Panel de Citas</title>
+
+  <!-- Tailwind CDN (para desarrollo/prototipo) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Alpine.js para interactividad ligera -->
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Custom CSS (overrides / componentes) -->
+  <link rel="stylesheet" href="ejemplo.css" />
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased">
+
+  <!-- Layout: Sidebar + Main -->
+  <div class="min-h-screen flex">
+
+    <!-- SIDEBAR -->
+    <aside class="w-72 bg-white border-r hidden md:block">
+      <div class="p-6">
+        <h1 class="text-2xl font-semibold text-indigo-700">Clínica <span class="text-indigo-500">Odontología</span></h1>
+        <p class="text-sm text-gray-500 mt-1">Panel de administración</p>
+      </div>
+
+      <nav class="mt-6 px-4">
+        <ul class="space-y-1">
+          <li>
+            <button class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-indigo-50 text-indigo-600 font-medium">
+              <!-- icon -->
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6a2 2 0 012-2h2a2 2 0 012 2v6M9 21h6"></path></svg>
+              Dashboard
+            </button>
+          </li>
+          <li>
+            <button id="btn-new-cita" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-indigo-50">
+              <svg class="w-5 h-5 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+              Nueva cita
+            </button>
+          </li>
+          <li>
+            <button class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-indigo-50">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"></path></svg>
+              Citas
+            </button>
+          </li>
+          <li>
+            <button class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-indigo-50">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14v6"></path></svg>
+              Pacientes
+            </button>
+          </li>
+          <li>
+            <button class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-indigo-50">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6a2 2 0 012-2h2a2 2 0 012 2v6M9 21h6"></path></svg>
+              Odontólogos
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="flex-1 p-6">
+      <!-- Topbar -->
+      <header class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-semibold">Agenda de citas</h2>
+          <p class="text-sm text-gray-500">Visión general de hoy y próximas citas</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <!-- Role switcher (demo) -->
+          <div class="hidden sm:flex items-center gap-2 bg-white border rounded-lg px-3 py-2">
+            <label class="text-sm text-gray-600">Ver como</label>
+            <select id="roleSelect" class="bg-transparent text-sm outline-none">
+              <option>Recepcionista</option>
+              <option>Odontólogo</option>
+            </select>
+          </div>
+
+          <!-- User -->
+          <div class="flex items-center gap-3">
+            <img src="https://i.pravatar.cc/40?img=5" alt="avatar" class="w-9 h-9 rounded-full" />
+            <div class="text-right">
+              <div class="text-sm font-medium">Recepción</div>
+              <div class="text-xs text-gray-500">soporte@clinica.com</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content grid -->
+      <section class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- LEFT: Today summary -->
+        <div class="lg:col-span-1 space-y-4">
+          <div class="bg-white p-4 rounded-lg shadow-sm border">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-semibold text-gray-700">Citas de hoy</h3>
+                <p class="text-xs text-gray-500">{{fecha actual}} <!-- replace from backend --></p>
+              </div>
+              <div class="text-right">
+                <span class="text-2xl font-bold text-indigo-600">8</span>
+                <div class="text-xs text-gray-400">Totales</div>
+              </div>
+            </div>
+
+            <!-- lista compacta -->
+            <ul id="todayList" class="mt-4 space-y-3">
+              <!-- items generados por JS -->
+            </ul>
+
+            <div class="mt-4">
+              <button id="btn-view-all" class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-500">Ver todas las citas</button>
+            </div>
+          </div>
+
+          <!-- Paciente rápido -->
+          <div class="bg-white p-4 rounded-lg shadow-sm border">
+            <h3 class="text-sm font-semibold">Buscar paciente</h3>
+            <div class="mt-3 flex gap-2">
+              <input id="searchPatient" type="search" placeholder="Documento o nombre" class="flex-1 border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-200" />
+              <button id="btn-search" class="px-4 py-2 bg-green-600 text-white rounded-lg">Buscar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTER: Calendar / list -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Controls -->
+          <div class="bg-white p-4 rounded-lg shadow-sm border flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <button id="prevDay" class="p-2 rounded-md hover:bg-gray-100" title="Anterior">
+                ‹
+              </button>
+              <div class="text-sm font-medium">31 Oct 2025</div>
+              <button id="nextDay" class="p-2 rounded-md hover:bg-gray-100" title="Siguiente">›</button>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <select id="filterOdontologo" class="border rounded-lg px-3 py-2">
+                <option value="">Todos los odontólogos</option>
+                <option value="1">Dr. Pérez</option>
+                <option value="2">Dra. López</option>
+              </select>
+              <select id="filterEstado" class="border rounded-lg px-3 py-2">
+                <option value="">Todos los estados</option>
+                <option value="PENDIENTE">Pendiente</option>
+                <option value="CONFIRMADA">Confirmada</option>
+                <option value="CANCELADA">Cancelada</option>
+                <option value="COMPLETADA">Completada</option>
+              </select>
+
+              <button id="btn-export" class="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg border">Exportar</button>
+            </div>
+          </div>
+
+          <!-- Lista de citas -->
+          <div id="appointments" class="bg-white p-4 rounded-lg shadow-sm border">
+            <h3 class="text-lg font-semibold mb-4">Próximas citas</h3>
+
+            <div id="appointmentsList" class="space-y-3">
+              <!-- items generados por JS -->
+            </div>
+
+          </div>
+
+          <!-- Quick stats -->
+          <div class="grid grid-cols-3 gap-4">
+            <div class="bg-white p-4 rounded-lg border shadow-sm text-center">
+              <div class="text-sm text-gray-500">Confirmadas</div>
+              <div class="text-2xl font-bold text-green-600">12</div>
+            </div>
+            <div class="bg-white p-4 rounded-lg border shadow-sm text-center">
+              <div class="text-sm text-gray-500">Pendientes</div>
+              <div class="text-2xl font-bold text-yellow-600">5</div>
+            </div>
+            <div class="bg-white p-4 rounded-lg border shadow-sm text-center">
+              <div class="text-sm text-gray-500">Canceladas</div>
+              <div class="text-2xl font-bold text-red-600">1</div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL: Crear/Editar cita (Tailwind modal simple) -->
+  <div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40">
+    <div class="w-full max-w-2xl bg-white rounded-lg shadow-lg p-6 mx-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold">Nueva cita</h3>
+        <button id="closeModal" class="text-gray-500 hover:text-gray-700">✕</button>
+      </div>
+
+      <form id="citaForm" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="col-span-2">
+          <label class="text-sm font-medium">Paciente</label>
+          <input id="pacienteInput" type="text" placeholder="Buscar paciente..." class="mt-1 w-full border rounded-lg px-3 py-2" />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium">Odontólogo</label>
+          <select id="odontologoSelect" class="mt-1 w-full border rounded-lg px-3 py-2">
+            <option value="">Seleccione...</option>
+            <option value="1">Dr. Pérez</option>
+            <option value="2">Dra. López</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-sm font-medium">Tipo de cita</label>
+          <select id="tipoCitaSelect" class="mt-1 w-full border rounded-lg px-3 py-2">
+            <option value="">Seleccione...</option>
+            <option value="Limpieza">Limpieza</option>
+            <option value="Endodoncia">Endodoncia</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-sm font-medium">Fecha</label>
+          <input id="fechaInput" type="date" class="mt-1 w-full border rounded-lg px-3 py-2" />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium">Hora</label>
+          <input id="horaInput" type="time" class="mt-1 w-full border rounded-lg px-3 py-2" />
+        </div>
+
+        <div class="col-span-2">
+          <label class="text-sm font-medium">Observaciones</label>
+          <textarea id="obsInput" class="mt-1 w-full border rounded-lg px-3 py-2" rows="3"></textarea>
+        </div>
+
+        <div class="col-span-2 flex gap-2 justify-end">
+          <button type="button" id="btnCancel" class="px-4 py-2 border rounded-lg">Cancelar</button>
+          <button type="submit" id="btnSave" class="px-4 py-2 bg-indigo-600 text-white rounded-lg">Guardar cita</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TEMPLATE: appointment item (hidden) -->
+  <template id="appointmentTpl">
+    <div class="p-3 border rounded-lg flex items-start justify-between">
+      <div>
+        <div class="flex items-center gap-3">
+          <div class="w-10 text-center">
+            <div class="text-sm font-semibold" data-time></div>
+            <div class="text-xs text-gray-400" data-date></div>
+          </div>
+          <div>
+            <div class="font-medium" data-patient></div>
+            <div class="text-xs text-gray-500" data-type></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span class="px-2 py-1 rounded-full text-xs font-medium" data-badge></span>
+        <button class="btn-edit text-sm px-3 py-1 border rounded-lg">Editar</button>
+        <button class="btn-cancel text-sm px-3 py-1 border rounded-lg">Cancelar</button>
+      </div>
+    </div>
+  </template>
+
+  <!-- SCRIPTS -->
+  <script>
+    // Demo dataset (replace with backend fetch)
+    const demoAppointments = [
+      { id:1, fecha:'2025-10-31', hora:'09:00', paciente:'Juan Pérez', tipo:'Limpieza', odontologo:'Dr. Pérez', estado:'PENDIENTE'},
+      { id:2, fecha:'2025-10-31', hora:'10:30', paciente:'María Gómez', tipo:'Endodoncia', odontologo:'Dra. López', estado:'CONFIRMADA'},
+      { id:3, fecha:'2025-10-31', hora:'14:00', paciente:'Carlos Ruiz', tipo:'Control', odontologo:'Dr. Pérez', estado:'COMPLETADA'}
+    ];
+
+    // Helpers
+    function createAppointmentNode(item) {
+      const tpl = document.getElementById('appointmentTpl');
+      const node = tpl.content.cloneNode(true);
+      node.querySelector('[data-time]').textContent = item.hora;
+      node.querySelector('[data-date]').textContent = item.fecha;
+      node.querySelector('[data-patient]').textContent = item.paciente + ' • ' + item.odontologo;
+      node.querySelector('[data-type]').textContent = item.tipo;
+      const badge = node.querySelector('[data-badge]');
+      badge.textContent = item.estado;
+      badge.classList.add(
+        item.estado === 'COMPLETADA' ? 'bg-green-100 text-green-800' :
+        item.estado === 'CONFIRMADA' ? 'bg-blue-100 text-blue-800' :
+        item.estado === 'CANCELADA' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
+      );
+
+      // Button handlers
+      node.querySelector('.btn-edit').addEventListener('click', () => openModalForEdit(item));
+      node.querySelector('.btn-cancel').addEventListener('click', () => confirmCancel(item.id));
+      return node;
+    }
+
+    function renderAppointments(list) {
+      const container = document.getElementById('appointmentsList');
+      container.innerHTML = '';
+      list.forEach(it => container.appendChild(createAppointmentNode(it)));
+    }
+
+    // Modal logic
+    const modal = document.getElementById('modal');
+    const btnNew = document.getElementById('btn-new-cita');
+    const closeModal = document.getElementById('closeModal');
+    const citaForm = document.getElementById('citaForm');
+
+    btnNew.addEventListener('click', () => openModalForCreate());
+    closeModal.addEventListener('click', () => closeModalFunc());
+    document.getElementById('btnCancel').addEventListener('click', () => closeModalFunc());
+
+    function openModalForCreate() {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.querySelector('#modal h3').textContent = 'Nueva cita';
+      citaForm.reset();
+      citaForm.dataset.mode = 'create';
+    }
+
+    function openModalForEdit(item) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.querySelector('#modal h3').textContent = 'Editar cita';
+      // fill fields (demo)
+      document.getElementById('pacienteInput').value = item.paciente;
+      document.getElementById('odontologoSelect').value = item.odontologo === 'Dr. Pérez' ? '1' : '2';
+      document.getElementById('tipoCitaSelect').value = item.tipo;
+      document.getElementById('fechaInput').value = item.fecha;
+      document.getElementById('horaInput').value = item.hora;
+      document.getElementById('obsInput').value = item.observaciones || '';
+      citaForm.dataset.mode = 'edit';
+      citaForm.dataset.id = item.id;
+    }
+
+    function closeModalFunc() {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    // SweetAlert confirm cancel
+    function confirmCancel(id) {
+      Swal.fire({
+        title: '¿Deseas cancelar la cita?',
+        text: "Esta acción puede notificarse al paciente.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, cancelar',
+        cancelButtonText: 'No',
+        customClass: {
+          popup: 'swal-custom',
+          confirmButton: 'swal-confirm',
+          cancelButton: 'swal-cancel'
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // TODO: call backend to cancel
+          Swal.fire({
+            title: 'Cancelada',
+            text: 'La cita ha sido cancelada correctamente.',
+            icon: 'success',
+            customClass: { popup: 'swal-custom' }
+          });
+          // demo remove
+          const index = demoAppointments.findIndex(a=>a.id===id);
+          if(index>-1){ demoAppointments[index].estado='CANCELADA'; renderAppointments(demoAppointments); }
+        }
+      });
+    }
+
+    // Form submit
+    citaForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      // validate
+      const paciente = document.getElementById('pacienteInput').value.trim();
+      const odontologo = document.getElementById('odontologoSelect').value;
+      const tipo = document.getElementById('tipoCitaSelect').value;
+      const fecha = document.getElementById('fechaInput').value;
+      const hora = document.getElementById('horaInput').value;
+
+      if(!paciente || !odontologo || !tipo || !fecha || !hora) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Faltan datos',
+          text: 'Completa todos los campos obligatorios.',
+          customClass: { popup: 'swal-custom' }
+        });
+        return;
+      }
+
+      // If create
+      if(citaForm.dataset.mode === 'create') {
+        // TODO: call backend POST /citas
+        const newItem = {
+          id: Math.floor(Math.random()*10000),
+          paciente, fecha, hora, tipo, odontologo: odontologo === '1' ? 'Dr. Pérez' : 'Dra. López', estado: 'PENDIENTE'
+        };
+        demoAppointments.push(newItem);
+        renderAppointments(demoAppointments);
+
+        Swal.fire({
+          title: 'Guardada',
+          text: 'La cita se ha creado correctamente.',
+          icon: 'success',
+          customClass: { popup: 'swal-custom' }
+        });
+      } else {
+        // edit mode: TODO call backend PUT /citas/:id
+        const id = Number(citaForm.dataset.id);
+        const idx = demoAppointments.findIndex(a=>a.id===id);
+        if(idx>-1) {
+          demoAppointments[idx].paciente = paciente;
+          demoAppointments[idx].odontologo = odontologo === '1' ? 'Dr. Pérez' : 'Dra. López';
+          demoAppointments[idx].tipo = tipo;
+          demoAppointments[idx].fecha = fecha;
+          demoAppointments[idx].hora = hora;
+          demoAppointments[idx].observaciones = document.getElementById('obsInput').value;
+          renderAppointments(demoAppointments);
+        }
+        Swal.fire({
+          title: 'Actualizada',
+          text: 'La cita se ha actualizado correctamente.',
+          icon: 'success',
+          customClass: { popup: 'swal-custom' }
+        });
+      }
+
+      closeModalFunc();
+    });
+
+    // init
+    renderAppointments(demoAppointments);
+
+    // Example: show a welcome toast using SweetAlert (customized)
+    window.addEventListener('load', () => {
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'info',
+        title: 'Bienvenido al panel',
+        showConfirmButton: false,
+        timer: 2200,
+        customClass: { popup: 'swal-custom-toast' }
+      });
+    });
+
+  </script>
+</body>
+</html>
