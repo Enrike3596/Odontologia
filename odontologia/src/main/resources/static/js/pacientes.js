@@ -135,17 +135,20 @@ async function handleNewPatientSubmit(e) {
             }
         });
         
-        // Simular llamada a la API
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Llamada real a la API
+        const response = await fetch('/api/pacientes', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(patientData)
+        });
         
-        // Simular respuesta exitosa
-        const newPatient = {
-            id: Date.now(),
-            ...patientData,
-            fechaRegistro: new Date().toISOString(),
-            estado: 'activo',
-            ultimaCita: null
-        };
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const newPatient = await response.json();
         
         // Cerrar modal
         closeNewPatientModal();
@@ -263,11 +266,14 @@ async function viewPatient(patientId) {
             }
         });
         
-        // Simular carga de datos
-        await new Promise(resolve => setTimeout(resolve, 800));
+        // Llamada real a la API
+        const response = await fetch(`/api/pacientes/${patientId}`);
         
-        // Datos simulados del paciente
-        const patient = getSimulatedPatient(patientId);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const patient = await response.json();
         
         // Cerrar loading
         Swal.close();
@@ -402,91 +408,111 @@ function scheduleAppointment(patientId) {
  * Eliminar paciente
  */
 async function deletePatient(patientId) {
-    // Obtener datos del paciente
-    const patient = getSimulatedPatient(patientId);
-    
-    const result = await Swal.fire({
-        icon: 'warning',
-        title: '¿Eliminar paciente?',
-        html: `
-            <div class="text-center">
-                <div class="mb-4">
-                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <i class="fas fa-user-injured text-red-600 text-xl"></i>
-                    </div>
-                    <p class="text-gray-700 mb-2">Está a punto de eliminar el paciente:</p>
-                    <p class="font-semibold text-gray-900">${patient.nombres} ${patient.apellidos}</p>
-                    <p class="text-sm text-gray-500">${patient.tipoDocumento} ${patient.documento}</p>
-                </div>
-                <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                    <p class="text-red-800 text-sm">
-                        <i class="fas fa-exclamation-triangle mr-2"></i>
-                        <strong>Advertencia:</strong> Esta acción no se puede deshacer y eliminará:
-                    </p>
-                    <ul class="text-red-700 text-sm mt-2 text-left list-disc ml-6">
-                        <li>Toda la información personal del paciente</li>
-                        <li>Su historia clínica completa</li>
-                        <li>Todas las citas programadas</li>
-                        <li>Tratamientos y seguimientos</li>
-                    </ul>
-                </div>
-            </div>
-        `,
-        showCancelButton: true,
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#dc2626',
-        cancelButtonColor: '#6b7280',
-        reverseButtons: true
-    });
-    
-    if (result.isConfirmed) {
-        try {
-            // Mostrar progreso de eliminación
-            Swal.fire({
-                title: 'Eliminando paciente...',
-                html: 'Procesando eliminación del paciente y toda su información asociada.',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-            
-            // Simular eliminación
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            
-            // Confirmar eliminación
-            await Swal.fire({
-                icon: 'success',
-                title: 'Paciente eliminado',
-                html: `
-                    <div class="text-center">
-                        <p class="text-gray-600">El paciente <strong>${patient.nombres} ${patient.apellidos}</strong> ha sido eliminado del sistema.</p>
-                        <div class="mt-4 p-3 bg-green-50 rounded-lg">
-                            <p class="text-sm text-green-700">
-                                <i class="fas fa-check-circle mr-1"></i>
-                                Toda la información asociada ha sido eliminada correctamente
-                            </p>
-                        </div>
-                    </div>
-                `,
-                confirmButtonText: 'Entendido',
-                confirmButtonColor: '#16a34a'
-            });
-            
-            // Recargar lista
-            loadPatients();
-            
-        } catch (error) {
-            console.error('Error al eliminar paciente:', error);
-            
-            Swal.fire({
-                icon: 'error',
-                title: 'Error al eliminar',
-                text: 'No se pudo eliminar el paciente. Por favor intente nuevamente.',
-                confirmButtonColor: '#dc2626'
-            });
+    try {
+        // Obtener datos del paciente primero
+        const response = await fetch(`/api/pacientes/${patientId}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
+        const patient = await response.json();
+        
+        const result = await Swal.fire({
+            icon: 'warning',
+            title: '¿Eliminar paciente?',
+            html: `
+                <div class="text-center">
+                    <div class="mb-4">
+                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-user-injured text-red-600 text-xl"></i>
+                        </div>
+                        <p class="text-gray-700 mb-2">Está a punto de eliminar el paciente:</p>
+                        <p class="font-semibold text-gray-900">${patient.nombres} ${patient.apellidos}</p>
+                        <p class="text-sm text-gray-500">${patient.tipoDocumento || ''} ${patient.documento || ''}</p>
+                    </div>
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                        <p class="text-red-800 text-sm">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            <strong>Advertencia:</strong> Esta acción no se puede deshacer y eliminará:
+                        </p>
+                        <ul class="text-red-700 text-sm mt-2 text-left list-disc ml-6">
+                            <li>Toda la información personal del paciente</li>
+                            <li>Su historia clínica completa</li>
+                            <li>Todas las citas programadas</li>
+                            <li>Tratamientos y seguimientos</li>
+                        </ul>
+                    </div>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            reverseButtons: true
+        });
+        
+        if (result.isConfirmed) {
+            try {
+                // Mostrar progreso de eliminación
+                Swal.fire({
+                    title: 'Eliminando paciente...',
+                    html: 'Procesando eliminación del paciente y toda su información asociada.',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                
+                // Llamada real a la API para eliminar
+                const deleteResponse = await fetch(`/api/pacientes/${patientId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!deleteResponse.ok) {
+                    throw new Error(`HTTP error! status: ${deleteResponse.status}`);
+                }
+                
+                // Confirmar eliminación
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Paciente eliminado',
+                    html: `
+                        <div class="text-center">
+                            <p class="text-gray-600">El paciente ha sido eliminado del sistema.</p>
+                            <div class="mt-4 p-3 bg-green-50 rounded-lg">
+                                <p class="text-sm text-green-700">
+                                    <i class="fas fa-check-circle mr-1"></i>
+                                    Toda la información asociada ha sido eliminada correctamente
+                                </p>
+                            </div>
+                        </div>
+                    `,
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#16a34a'
+                });
+                
+                // Recargar lista
+                loadPatients();
+                
+            } catch (error) {
+                console.error('Error al eliminar paciente:', error);
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error al eliminar',
+                    text: 'No se pudo eliminar el paciente. Por favor intente nuevamente.',
+                    confirmButtonColor: '#dc2626'
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Error al obtener datos del paciente:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudo cargar la información del paciente.',
+            confirmButtonColor: '#dc2626'
+        });
     }
 }
 
@@ -497,10 +523,19 @@ async function loadPatients() {
     try {
         console.log('📋 Cargando lista de pacientes...');
         
-        // Simular carga de datos
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Llamada real a la API
+        const response = await fetch('/api/pacientes');
         
-        console.log('✅ Pacientes cargados exitosamente');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const patients = await response.json();
+        
+        // Actualizar la tabla con los datos reales
+        renderPatientsTable(patients);
+        
+        console.log('✅ Pacientes cargados exitosamente:', patients.length);
         
     } catch (error) {
         console.error('❌ Error al cargar pacientes:', error);
@@ -512,6 +547,89 @@ async function loadPatients() {
             confirmButtonColor: '#dc2626'
         });
     }
+}
+
+/**
+ * Renderiza la tabla de pacientes con los datos recibidos
+ */
+function renderPatientsTable(patients) {
+    const tbody = document.querySelector('table tbody');
+    if (!tbody) {
+        console.warn('No se encontró el tbody de la tabla');
+        return;
+    }
+    
+    if (!patients || patients.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                    <i class="fas fa-users text-2xl mb-2"></i>
+                    <div>No hay pacientes registrados</div>
+                    <div class="text-sm">Comience registrando el primer paciente</div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = patients.map(patient => `
+        <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 h-10 w-10">
+                        <div class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                            <span class="text-sm font-medium text-indigo-700">
+                                ${getPatientInitials(patient.nombres, patient.apellidos)}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">${patient.nombres} ${patient.apellidos}</div>
+                        <div class="text-sm text-gray-500">${patient.tipoDocumento || ''} ${patient.documento || ''}</div>
+                    </div>
+                </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${patient.email || 'No registrado'}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${patient.telefono || 'No registrado'}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">
+                    ${patient.fechaNacimiento ? formatDate(patient.fechaNacimiento) : 'No registrada'}
+                </div>
+                <div class="text-sm text-gray-500">
+                    ${patient.fechaNacimiento ? calculateAge(patient.fechaNacimiento) + ' años' : ''}
+                </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="text-sm text-gray-900">${getGenderLabel(patient.genero)}</span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                    Activo
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button onclick="viewPatient(${patient.id})" class="text-blue-600 hover:text-blue-900 mr-3" title="Ver detalles">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button onclick="editPatient(${patient.id})" class="text-yellow-600 hover:text-yellow-900 mr-3" title="Editar">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button onclick="viewHistory(${patient.id})" class="text-purple-600 hover:text-purple-900 mr-3" title="Historia clínica">
+                    <i class="fas fa-file-medical"></i>
+                </button>
+                <button onclick="scheduleAppointment(${patient.id})" class="text-green-600 hover:text-green-900 mr-3" title="Agendar cita">
+                    <i class="fas fa-calendar-plus"></i>
+                </button>
+                <button onclick="deletePatient(${patient.id})" class="text-red-600 hover:text-red-900" title="Eliminar">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
 }
 
 /**

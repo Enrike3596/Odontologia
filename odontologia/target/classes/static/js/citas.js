@@ -6,6 +6,8 @@
 // Estado global del módulo de citas
 const AppointmentsModule = {
     currentAppointment: null,
+    editMode: false,
+    editingAppointmentId: null,
     filters: {
         search: '',
         estado: '',
@@ -18,11 +20,11 @@ const AppointmentsModule = {
         totalItems: 0
     },
     appointmentStatuses: [
-        { id: 'pendiente', name: 'Pendiente', color: 'yellow' },
-        { id: 'confirmada', name: 'Confirmada', color: 'green' },
-        { id: 'completada', name: 'Completada', color: 'blue' },
-        { id: 'cancelada', name: 'Cancelada', color: 'red' },
-        { id: 'no-asistio', name: 'No Asistió', color: 'gray' }
+        { id: 'PENDIENTE', name: 'Pendiente', color: 'yellow' },
+        { id: 'CONFIRMADA', name: 'Confirmada', color: 'green' },
+        { id: 'COMPLETADA', name: 'Completada', color: 'blue' },
+        { id: 'CANCELADA', name: 'Cancelada', color: 'red' },
+        { id: 'NO_ASISTIO', name: 'No Asistió', color: 'gray' }
     ],
     appointmentTypes: [
         { id: 'consulta-general', name: 'Consulta General', icon: 'fa-stethoscope', color: 'blue' },
@@ -34,7 +36,85 @@ const AppointmentsModule = {
         { id: 'estetica', name: 'Odontología Estética', icon: 'fa-star', color: 'yellow' },
         { id: 'urgencia', name: 'Urgencia', icon: 'fa-exclamation-triangle', color: 'red' }
     ],
-    currentDate: new Date()
+    currentDate: new Date(),
+    apiBaseUrl: '/api'
+};
+
+// API Functions para comunicación con el backend
+const CitasAPI = {
+    // Obtener todas las citas
+    async getAllCitas() {
+        try {
+            const response = await fetch(`${AppointmentsModule.apiBaseUrl}/citas`);
+            if (!response.ok) throw new Error('Error al cargar las citas');
+            return await response.json();
+        } catch (error) {
+            console.error('Error en getAllCitas:', error);
+            throw error;
+        }
+    },
+
+    // Obtener cita por ID
+    async getCitaById(id) {
+        try {
+            const response = await fetch(`${AppointmentsModule.apiBaseUrl}/citas/${id}`);
+            if (!response.ok) throw new Error('Error al cargar la cita');
+            return await response.json();
+        } catch (error) {
+            console.error('Error en getCitaById:', error);
+            throw error;
+        }
+    },
+
+    // Crear nueva cita
+    async createCita(citaData) {
+        try {
+            const response = await fetch(`${AppointmentsModule.apiBaseUrl}/citas`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(citaData)
+            });
+            if (!response.ok) throw new Error('Error al crear la cita');
+            return await response.json();
+        } catch (error) {
+            console.error('Error en createCita:', error);
+            throw error;
+        }
+    },
+
+    // Actualizar cita
+    async updateCita(id, citaData) {
+        try {
+            const response = await fetch(`${AppointmentsModule.apiBaseUrl}/citas/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(citaData)
+            });
+            if (!response.ok) throw new Error('Error al actualizar la cita');
+            return await response.json();
+        } catch (error) {
+            console.error('Error en updateCita:', error);
+            throw error;
+        }
+    },
+
+    // Eliminar cita
+    async deleteCita(id) {
+        try {
+            const response = await fetch(`${AppointmentsModule.apiBaseUrl}/citas/${id}`, {
+                method: 'DELETE'
+            });
+            if (!response.ok) throw new Error('Error al eliminar la cita');
+            return true;
+        } catch (error) {
+            console.error('Error en deleteCita:', error);
+            throw error;
+        }
+    }
 };
 
 // Inicialización del módulo
@@ -92,7 +172,7 @@ function setupEventListeners() {
 /**
  * Abre el modal para crear una nueva cita
  */
-function openNewAppointmentModal() {
+async function openNewAppointmentModal(editData = null) {
     const modal = document.getElementById('newAppointmentModal');
     const form = document.getElementById('newAppointmentForm');
     
@@ -100,9 +180,68 @@ function openNewAppointmentModal() {
         // Limpiar formulario
         form.reset();
         
-        // Establecer fecha mínima (hoy)
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('fechaCita').min = today;
+        // Configurar modo (crear o editar)
+        const isEditMode = editData !== null;
+        AppointmentsModule.editMode = isEditMode;
+        AppointmentsModule.editingAppointmentId = isEditMode ? editData.id : null;
+        
+        // Cambiar título del modal
+        const modalTitle = modal.querySelector('h3');
+        if (modalTitle) {
+            modalTitle.textContent = isEditMode ? 'Editar Cita' : 'Nueva Cita';
+        }
+        
+        // Cambiar texto del botón
+        const submitButton = form.querySelector('button[type="submit"]');
+        if (submitButton) {
+            submitButton.textContent = isEditMode ? 'Actualizar Cita' : 'Agendar Cita';
+        }
+        
+        // Establecer fecha mínima (hoy para nuevas citas, sin restricción para editar)
+        const fechaInput = document.getElementById('fechaCita');
+        if (!isEditMode) {
+            const today = new Date().toISOString().split('T')[0];
+            fechaInput.min = today;
+        } else {
+            fechaInput.removeAttribute('min');
+        }
+        
+        // Si es modo edición, cargar datos
+        if (isEditMode) {
+            try {
+                // Cargar selects primero
+                await Promise.all([
+                    loadPacientesSelect(),
+                    loadOdontologosSelect(),
+                    loadTiposCitaSelect()
+                ]);
+                
+                // Llenar formulario con datos de la cita
+                document.getElementById('pacienteId').value = editData.paciente.id;
+                document.getElementById('odontologoId').value = editData.odontologo.id;
+                document.getElementById('tipoCitaId').value = editData.tipoCita.id;
+                document.getElementById('fechaCita').value = editData.fecha;
+                document.getElementById('horaCita').value = editData.hora;
+                document.getElementById('observaciones').value = editData.observaciones || '';
+                
+            } catch (error) {
+                console.error('Error al cargar datos para edición:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudieron cargar los datos para editar la cita.',
+                    confirmButtonColor: '#dc2626'
+                });
+                return;
+            }
+        } else {
+            // Cargar selects para nueva cita
+            await Promise.all([
+                loadPacientesSelect(),
+                loadOdontologosSelect(),
+                loadTiposCitaSelect()
+            ]);
+        }
         
         // Mostrar modal
         modal.classList.remove('hidden');
@@ -131,6 +270,10 @@ function closeNewAppointmentModal() {
             modal.classList.add('hidden');
         }, 300);
     }
+    
+    // Resetear modo de edición
+    AppointmentsModule.editMode = false;
+    AppointmentsModule.editingAppointmentId = null;
 }
 
 /**
@@ -150,49 +293,66 @@ async function handleNewAppointmentSubmit(e) {
     }
     
     try {
+        // Preparar datos para la API
+        const citaData = {
+            pacienteId: appointmentData.pacienteId,
+            odontologoId: appointmentData.odontologoId,
+            tipoCitaId: appointmentData.tipoCitaId,
+            fecha: appointmentData.fechaCita,
+            hora: appointmentData.horaCita,
+            observaciones: appointmentData.observaciones || '',
+            estado: 'PENDIENTE'
+        };
+        
+        // Determinar si es creación o edición
+        const isEdit = AppointmentsModule.editMode;
+        const actionText = isEdit ? 'Actualizando' : 'Programando';
+        const successText = isEdit ? 'actualizada' : 'programada';
+        
         // Mostrar loading
         Swal.fire({
-            title: 'Programando cita...',
-            html: 'Por favor espere mientras procesamos la información de la cita médica',
+            title: `${actionText} cita...`,
+            html: `Por favor espere mientras procesamos la información de la cita médica`,
             allowOutsideClick: false,
             didOpen: () => {
                 Swal.showLoading();
             }
         });
         
-        // Simular llamada a la API
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Simular respuesta exitosa
-        const newAppointment = {
-            id: Date.now(),
-            ...appointmentData,
-            fechaCreacion: new Date().toISOString(),
-            pacienteNombre: getPatientName(appointmentData.pacienteId),
-            odontologoNombre: getDoctorName(appointmentData.odontologoId)
-        };
+        let result;
+        if (isEdit) {
+            // Actualizar cita existente
+            result = await CitasAPI.updateCita(AppointmentsModule.editingAppointmentId, citaData);
+        } else {
+            // Crear nueva cita
+            result = await CitasAPI.createCita(citaData);
+        }
         
         // Cerrar modal
         closeNewAppointmentModal();
         
+        // Resetear modo de edición
+        AppointmentsModule.editMode = false;
+        AppointmentsModule.editingAppointmentId = null;
+        
         // Mostrar éxito
         await Swal.fire({
             icon: 'success',
-            title: '¡Cita programada exitosamente!',
+            title: `¡Cita ${successText} exitosamente!`,
             html: `
                 <div class="text-center">
                     <div class="mb-3">
                         <i class="fas fa-calendar-check text-4xl text-emerald-500 mb-2"></i>
                     </div>
-                    <p class="text-gray-600">La cita para <strong>${newAppointment.pacienteNombre}</strong> ha sido programada.</p>
+                    <p class="text-gray-600">La cita para <strong>${result.paciente.nombre} ${result.paciente.apellido}</strong> ha sido ${successText}.</p>
                     <div class="mt-4 p-3 bg-emerald-50 rounded-lg">
                         <p class="text-sm text-emerald-700">
                             <i class="fas fa-calendar mr-1"></i>
-                            ${formatDate(appointmentData.fechaCita)} a las ${appointmentData.horaCita}
+                            ${formatDate(result.fecha)} a las ${result.hora}
                         </p>
                         <p class="text-sm text-emerald-700">
                             <i class="fas fa-user-md mr-1"></i>
-                            ${newAppointment.odontologoNombre}
+                            Dr. ${result.odontologo.nombre} ${result.odontologo.apellido}
                         </p>
                     </div>
                 </div>
@@ -202,16 +362,17 @@ async function handleNewAppointmentSubmit(e) {
         });
         
         // Recargar lista
-        loadAppointments();
-        updateTodayTimeline();
+        await loadAppointments();
         
     } catch (error) {
-        console.error('Error al crear cita:', error);
+        console.error('Error al procesar cita:', error);
+        
+        const actionText = AppointmentsModule.editMode ? 'actualizar' : 'programar';
         
         Swal.fire({
             icon: 'error',
-            title: 'Error al programar cita',
-            text: 'No se pudo programar la cita médica. Por favor intente nuevamente.',
+            title: `Error al ${actionText} cita`,
+            text: `No se pudo ${actionText} la cita médica. Por favor intente nuevamente.`,
             confirmButtonColor: '#dc2626'
         });
     }
@@ -296,11 +457,8 @@ async function viewAppointment(appointmentId) {
             }
         });
         
-        // Simular carga de datos
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // Datos simulados de la cita
-        const appointment = getSimulatedAppointment(appointmentId);
+        // Obtener datos reales de la API
+        const appointment = await CitasAPI.getCitaById(appointmentId);
         
         // Cerrar loading
         Swal.close();
@@ -310,6 +468,8 @@ async function viewAppointment(appointmentId) {
         
     } catch (error) {
         console.error('Error al cargar cita:', error);
+        Swal.close();
+        
         Swal.fire({
             icon: 'error',
             title: 'Error',
@@ -324,31 +484,28 @@ async function viewAppointment(appointmentId) {
  */
 function showAppointmentDetailsModal(appointment) {
     // Llenar datos en el modal
-    document.getElementById('viewAppointmentTitle').textContent = `Cita - ${appointment.fechaCita} ${appointment.horaCita}`;
-    document.getElementById('viewAppointmentPatient').textContent = appointment.pacienteNombre;
-    document.getElementById('viewAppointmentType').textContent = appointment.tipoNombre;
-    document.getElementById('viewAppointmentDateTime').textContent = `${formatDate(appointment.fechaCita)} a las ${appointment.horaCita}`;
+    document.getElementById('viewAppointmentTitle').textContent = `Cita - ${formatDate(appointment.fecha)} ${appointment.hora}`;
+    document.getElementById('viewAppointmentPatient').textContent = `${appointment.paciente.nombre} ${appointment.paciente.apellido}`;
+    document.getElementById('viewAppointmentType').textContent = appointment.tipoCita.nombre;
+    document.getElementById('viewAppointmentDateTime').textContent = `${formatDate(appointment.fecha)} a las ${appointment.hora}`;
     
     // Llenar detalles
-    document.getElementById('viewPatientDocument').textContent = appointment.pacienteDocumento || 'No especificado';
-    document.getElementById('viewPatientPhone').textContent = appointment.pacienteTelefono || 'No especificado';
-    document.getElementById('viewAppointmentDuration').textContent = `${appointment.duracion} minutos`;
+    document.getElementById('viewPatientDocument').textContent = appointment.paciente.cedula || 'No especificado';
+    document.getElementById('viewPatientPhone').textContent = appointment.paciente.telefono || 'No especificado';
+    document.getElementById('viewAppointmentDuration').textContent = `${appointment.tipoCita.duracion || 30} minutos`;
     document.getElementById('viewAppointmentOffice').textContent = appointment.consultorio || 'Por asignar';
-    document.getElementById('viewAppointmentDoctor').textContent = appointment.odontologoNombre;
-    document.getElementById('viewDoctorSpecialty').textContent = appointment.odontologoEspecialidad || 'Odontología General';
-    document.getElementById('viewAppointmentReason').textContent = appointment.motivoConsulta || 'No especificado';
+    document.getElementById('viewAppointmentDoctor').textContent = `Dr. ${appointment.odontologo.nombre} ${appointment.odontologo.apellido}`;
+    document.getElementById('viewDoctorSpecialty').textContent = appointment.odontologo.especialidad || 'Odontología General';
+    document.getElementById('viewAppointmentReason').textContent = appointment.observaciones || 'No especificado';
     
     // Estado
     const statusElement = document.getElementById('viewAppointmentStatus');
-    const status = AppointmentsModule.appointmentStatuses.find(s => s.id === appointment.estado);
-    if (status) {
-        statusElement.textContent = status.name;
-        statusElement.className = `px-2 py-1 text-xs font-medium rounded-full bg-${status.color}-100 text-${status.color}-800`;
-    }
+    statusElement.textContent = getStatusText(appointment.estado);
+    statusElement.className = `px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(appointment.estado)}`;
     
     // Actualizar avatar
     const avatar = document.getElementById('viewAppointmentAvatar');
-    avatar.innerHTML = getPatientInitials(appointment.pacienteNombre);
+    avatar.innerHTML = getPatientInitials(`${appointment.paciente.nombre} ${appointment.paciente.apellido}`);
     
     // Guardar referencia de la cita actual
     AppointmentsModule.currentAppointment = appointment;
@@ -379,15 +536,37 @@ function closeViewAppointmentModal() {
 /**
  * Editar cita
  */
-function editAppointment(appointmentId) {
-    console.log('Editar cita:', appointmentId);
-    
-    Swal.fire({
-        icon: 'info',
-        title: 'Función en desarrollo',
-        text: 'La edición de citas estará disponible próximamente.',
-        confirmButtonColor: '#3b82f6'
-    });
+async function editAppointment(appointmentId) {
+    try {
+        // Mostrar loading
+        Swal.fire({
+            title: 'Cargando datos de la cita...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        // Obtener datos de la cita
+        const appointment = await CitasAPI.getCitaById(appointmentId);
+        
+        // Cerrar loading
+        Swal.close();
+        
+        // Abrir modal de nueva cita en modo edición
+        await openNewAppointmentModal(appointment);
+        
+    } catch (error) {
+        console.error('Error al cargar cita para edición:', error);
+        Swal.close();
+        
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudo cargar la información de la cita para editar.',
+            confirmButtonColor: '#dc2626'
+        });
+    }
 }
 
 /**
@@ -660,12 +839,20 @@ function updateTodayTimeline() {
  */
 async function loadAppointments() {
     try {
-        console.log('📅 Cargando citas...');
+        console.log('📅 Cargando citas desde el servidor...');
         
-        // Simular carga de datos
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Cargar citas usando la API
+        const citas = await CitasAPI.getAllCitas();
         
-        console.log('✅ Citas cargadas exitosamente');
+        console.log('✅ Citas cargadas exitosamente:', citas.length, 'citas encontradas');
+        
+        // Actualizar la tabla de citas
+        updateAppointmentsTable(citas);
+        
+        // Actualizar estadísticas
+        updateAppointmentStats(citas);
+        
+        return citas;
         
     } catch (error) {
         console.error('❌ Error al cargar citas:', error);
@@ -673,9 +860,12 @@ async function loadAppointments() {
         Swal.fire({
             icon: 'error',
             title: 'Error de conexión',
-            text: 'No se pudo cargar la lista de citas.',
+            text: 'No se pudo cargar la lista de citas. Por favor, verifique su conexión e intente nuevamente.',
             confirmButtonColor: '#dc2626'
         });
+        
+        // Devolver array vacío en caso de error
+        return [];
     }
 }
 
@@ -940,13 +1130,274 @@ function debounce(func, wait) {
     };
 }
 
+/**
+ * Actualiza la tabla de citas con los datos del servidor
+ */
+function updateAppointmentsTable(citas) {
+    const tableBody = document.querySelector('#citasTable tbody');
+    if (!tableBody) return;
+
+    if (citas.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-8 text-gray-500">
+                    <i class="fas fa-calendar-times text-4xl mb-3 text-gray-300"></i>
+                    <p>No se encontraron citas</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tableBody.innerHTML = citas.map(cita => `
+        <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 h-10 w-10">
+                        <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                            <i class="fas fa-user-injured text-blue-600"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">
+                            ${cita.paciente.nombre} ${cita.paciente.apellido}
+                        </div>
+                        <div class="text-sm text-gray-500">${cita.paciente.email || ''}</div>
+                    </div>
+                </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${formatDate(cita.fecha)}</div>
+                <div class="text-sm text-gray-500">${cita.hora}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${cita.odontologo.nombre} ${cita.odontologo.apellido}</div>
+                <div class="text-sm text-gray-500">Dr. ${cita.odontologo.matricula}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="text-sm text-gray-900">${cita.tipoCita.nombre}</span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(cita.estado)}">
+                    ${getStatusText(cita.estado)}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${cita.observaciones || '-'}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button onclick="viewAppointment(${cita.id})" class="text-blue-600 hover:text-blue-900 mr-3">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button onclick="editAppointment(${cita.id})" class="text-yellow-600 hover:text-yellow-900 mr-3">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button onclick="deleteAppointment(${cita.id})" class="text-red-600 hover:text-red-900">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+/**
+ * Actualiza las estadísticas de citas
+ */
+function updateAppointmentStats(citas) {
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Citas de hoy
+    const todayAppointments = citas.filter(cita => cita.fecha === today);
+    const todayElement = document.getElementById('todayAppointments');
+    if (todayElement) todayElement.textContent = todayAppointments.length;
+    
+    // Citas pendientes
+    const pendingAppointments = citas.filter(cita => cita.estado === 'PENDIENTE');
+    const pendingElement = document.getElementById('pendingAppointments');
+    if (pendingElement) pendingElement.textContent = pendingAppointments.length;
+    
+    // Citas completadas (del mes actual)
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const completedAppointments = citas.filter(cita => {
+        const citaDate = new Date(cita.fecha);
+        return cita.estado === 'COMPLETADA' && 
+               citaDate.getMonth() === currentMonth && 
+               citaDate.getFullYear() === currentYear;
+    });
+    const completedElement = document.getElementById('completedAppointments');
+    if (completedElement) completedElement.textContent = completedAppointments.length;
+}
+
+/**
+ * Obtiene el color del estado de la cita
+ */
+function getStatusColor(estado) {
+    const colors = {
+        'PENDIENTE': 'bg-yellow-100 text-yellow-800',
+        'CONFIRMADA': 'bg-green-100 text-green-800',
+        'COMPLETADA': 'bg-blue-100 text-blue-800',
+        'CANCELADA': 'bg-red-100 text-red-800',
+        'NO_ASISTIO': 'bg-gray-100 text-gray-800'
+    };
+    return colors[estado] || 'bg-gray-100 text-gray-800';
+}
+
+/**
+ * Obtiene el texto del estado de la cita
+ */
+function getStatusText(estado) {
+    const texts = {
+        'PENDIENTE': 'Pendiente',
+        'CONFIRMADA': 'Confirmada',
+        'COMPLETADA': 'Completada',
+        'CANCELADA': 'Cancelada',
+        'NO_ASISTIO': 'No Asistió'
+    };
+    return texts[estado] || estado;
+}
+
+/**
+ * Elimina una cita
+ */
+async function deleteAppointment(citaId) {
+    const result = await Swal.fire({
+        title: '¿Eliminar cita?',
+        text: 'Esta acción no se puede deshacer',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
+        try {
+            await CitasAPI.deleteCita(citaId);
+            
+            await Swal.fire({
+                icon: 'success',
+                title: 'Cita eliminada',
+                text: 'La cita ha sido eliminada exitosamente',
+                confirmButtonColor: '#10b981'
+            });
+            
+            // Recargar lista
+            await loadAppointments();
+            
+        } catch (error) {
+            console.error('Error al eliminar cita:', error);
+            
+            await Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo eliminar la cita',
+                confirmButtonColor: '#dc2626'
+            });
+        }
+    }
+}
+
+/**
+ * Carga la lista de pacientes en el select
+ */
+async function loadPacientesSelect() {
+    try {
+        const response = await fetch('/api/pacientes');
+        if (!response.ok) throw new Error('Error al cargar pacientes');
+        
+        const pacientes = await response.json();
+        const select = document.getElementById('pacienteId');
+        
+        if (select) {
+            select.innerHTML = '<option value="">Seleccionar paciente...</option>';
+            pacientes.forEach(paciente => {
+                const option = document.createElement('option');
+                option.value = paciente.id;
+                option.textContent = `${paciente.nombre} ${paciente.apellido}`;
+                select.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error al cargar pacientes:', error);
+        // Si falla, mostrar opción por defecto
+        const select = document.getElementById('pacienteId');
+        if (select) {
+            select.innerHTML = '<option value="">Error al cargar pacientes</option>';
+        }
+    }
+}
+
+/**
+ * Carga la lista de odontólogos en el select
+ */
+async function loadOdontologosSelect() {
+    try {
+        const response = await fetch('/api/odontologos');
+        if (!response.ok) throw new Error('Error al cargar odontólogos');
+        
+        const odontologos = await response.json();
+        const select = document.getElementById('odontologoId');
+        
+        if (select) {
+            select.innerHTML = '<option value="">Seleccionar odontólogo...</option>';
+            odontologos.forEach(odontologo => {
+                const option = document.createElement('option');
+                option.value = odontologo.id;
+                option.textContent = `Dr. ${odontologo.nombre} ${odontologo.apellido}`;
+                select.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error al cargar odontólogos:', error);
+        // Si falla, mostrar opción por defecto
+        const select = document.getElementById('odontologoId');
+        if (select) {
+            select.innerHTML = '<option value="">Error al cargar odontólogos</option>';
+        }
+    }
+}
+
+/**
+ * Carga la lista de tipos de cita en el select
+ */
+async function loadTiposCitaSelect() {
+    try {
+        const response = await fetch('/api/tipos-cita');
+        if (!response.ok) throw new Error('Error al cargar tipos de cita');
+        
+        const tiposCita = await response.json();
+        const select = document.getElementById('tipoCitaId');
+        
+        if (select) {
+            select.innerHTML = '<option value="">Seleccionar tipo de cita...</option>';
+            tiposCita.forEach(tipo => {
+                const option = document.createElement('option');
+                option.value = tipo.id;
+                option.textContent = tipo.nombre;
+                select.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error al cargar tipos de cita:', error);
+        // Si falla, mostrar opción por defecto
+        const select = document.getElementById('tipoCitaId');
+        if (select) {
+            select.innerHTML = '<option value="">Error al cargar tipos de cita</option>';
+        }
+    }
+}
+
 // Exportar funciones principales para uso global
 window.AppointmentsModule = AppointmentsModule;
+window.CitasAPI = CitasAPI;
 window.openNewAppointmentModal = openNewAppointmentModal;
 window.closeNewAppointmentModal = closeNewAppointmentModal;
 window.viewAppointment = viewAppointment;
 window.closeViewAppointmentModal = closeViewAppointmentModal;
 window.editAppointment = editAppointment;
+window.deleteAppointment = deleteAppointment;
 window.editAppointmentFromModal = editAppointmentFromModal;
 window.confirmAppointment = confirmAppointment;
 window.cancelAppointment = cancelAppointment;

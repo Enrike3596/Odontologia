@@ -42,10 +42,21 @@ public class Paciente2ServiceImpl  implements Paciente2Service {
 		Paciente2 existente = paciente2Repository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Paciente no encontrado con ID: " + id));
 
-		existente.setNombre(pacienteDto.getNombre());
-		existente.setApellido(pacienteDto.getApellido());
+		existente.setNombres(pacienteDto.getNombres());
+		existente.setApellidos(pacienteDto.getApellidos());
+		existente.setTipoDocumento(pacienteDto.getTipoDocumento());
+		existente.setDocumento(pacienteDto.getDocumento());
+		existente.setFechaNacimiento(pacienteDto.getFechaNacimiento());
+		existente.setGenero(pacienteDto.getGenero());
 		existente.setEmail(pacienteDto.getEmail());
 		existente.setTelefono(pacienteDto.getTelefono());
+		existente.setDireccion(pacienteDto.getDireccion());
+		existente.setContactoEmergenciaNombre(pacienteDto.getContactoEmergenciaNombre());
+		existente.setContactoEmergenciaParentesco(pacienteDto.getContactoEmergenciaParentesco());
+		existente.setContactoEmergenciaTelefono(pacienteDto.getContactoEmergenciaTelefono());
+		existente.setAlergias(pacienteDto.getAlergias());
+		existente.setMedicamentos(pacienteDto.getMedicamentos());
+		existente.setObservaciones(pacienteDto.getObservaciones());
 
 		Paciente2 actualizado = paciente2Repository.save(existente);
 		return convertirEntityADto(actualizado);
@@ -62,20 +73,42 @@ public class Paciente2ServiceImpl  implements Paciente2Service {
 	private Paciente2Dto convertirEntityADto(Paciente2 p) {
 		Paciente2Dto dto = new Paciente2Dto();
 		dto.setId(p.getId());
-		dto.setNombre(p.getNombre());
-		dto.setApellido(p.getApellido());
+		dto.setNombres(p.getNombres());
+		dto.setApellidos(p.getApellidos());
+		dto.setTipoDocumento(p.getTipoDocumento());
+		dto.setDocumento(p.getDocumento());
+		dto.setFechaNacimiento(p.getFechaNacimiento());
+		dto.setGenero(p.getGenero());
 		dto.setEmail(p.getEmail());
 		dto.setTelefono(p.getTelefono());
+		dto.setDireccion(p.getDireccion());
+		dto.setContactoEmergenciaNombre(p.getContactoEmergenciaNombre());
+		dto.setContactoEmergenciaParentesco(p.getContactoEmergenciaParentesco());
+		dto.setContactoEmergenciaTelefono(p.getContactoEmergenciaTelefono());
+		dto.setAlergias(p.getAlergias());
+		dto.setMedicamentos(p.getMedicamentos());
+		dto.setObservaciones(p.getObservaciones());
 		return dto;
 	}
 
 	private Paciente2 convertirDtoAEntity(Paciente2Dto dto) {
 		Paciente2 p = new Paciente2();
 		p.setId(dto.getId());
-		p.setNombre(dto.getNombre());
-		p.setApellido(dto.getApellido());
+		p.setNombres(dto.getNombres());
+		p.setApellidos(dto.getApellidos());
+		p.setTipoDocumento(dto.getTipoDocumento());
+		p.setDocumento(dto.getDocumento());
+		p.setFechaNacimiento(dto.getFechaNacimiento());
+		p.setGenero(dto.getGenero());
 		p.setEmail(dto.getEmail());
 		p.setTelefono(dto.getTelefono());
+		p.setDireccion(dto.getDireccion());
+		p.setContactoEmergenciaNombre(dto.getContactoEmergenciaNombre());
+		p.setContactoEmergenciaParentesco(dto.getContactoEmergenciaParentesco());
+		p.setContactoEmergenciaTelefono(dto.getContactoEmergenciaTelefono());
+		p.setAlergias(dto.getAlergias());
+		p.setMedicamentos(dto.getMedicamentos());
+		p.setObservaciones(dto.getObservaciones());
 		return p;
 	}
 }

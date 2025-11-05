@@ -35,8 +35,14 @@ public class UsuarioServiceImpl implements UsuarioService {
 	@Override
 	public UsuarioDto crearUsuario(UsuarioDto usuarioDto) {
 		Usuario u = convertirDtoAEntity(usuarioDto);
-		// Si no se proporciona password, guardamos cadena vacía para respetar nullable=false en DB
-		if (u.getPassword() == null) u.setPassword("");
+		// Si no se proporciona password, generamos una temporal
+		if (u.getPassword() == null || u.getPassword().isEmpty()) {
+			u.setPassword("temp123"); // En producción debería ser encriptada
+		}
+		// Si no se proporciona username, generamos uno basado en email
+		if (u.getUsername() == null || u.getUsername().isEmpty()) {
+			u.setUsername(usuarioDto.getEmail().split("@")[0]);
+		}
 		Usuario guardado = usuarioRepository.save(u);
 		return convertirEntityADto(guardado);
 	}
@@ -46,8 +52,23 @@ public class UsuarioServiceImpl implements UsuarioService {
 		Usuario existente = usuarioRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
 
-		existente.setUsername(usuarioDto.getNombre());
-		// no actualizamos password por seguridad aquí; se puede añadir si se requiere
+		existente.setNombres(usuarioDto.getNombres());
+		existente.setApellidos(usuarioDto.getApellidos());
+		existente.setTipoDocumento(usuarioDto.getTipoDocumento());
+		existente.setDocumento(usuarioDto.getDocumento());
+		existente.setFechaNacimiento(usuarioDto.getFechaNacimiento());
+		existente.setGenero(usuarioDto.getGenero());
+		existente.setEmail(usuarioDto.getEmail());
+		existente.setTelefono(usuarioDto.getTelefono());
+		existente.setDireccion(usuarioDto.getDireccion());
+		existente.setUsername(usuarioDto.getUsername());
+		if (usuarioDto.getActivo() != null) {
+			existente.setActivo(usuarioDto.getActivo());
+		}
+		// Solo actualizar password si se proporciona
+		if (usuarioDto.getPassword() != null && !usuarioDto.getPassword().isEmpty()) {
+			existente.setPassword(usuarioDto.getPassword());
+		}
 		if (usuarioDto.getRol() != null && usuarioDto.getRol().getId() != null) {
 			Rol rol = new Rol();
 			rol.setId(usuarioDto.getRol().getId());
@@ -69,10 +90,19 @@ public class UsuarioServiceImpl implements UsuarioService {
 	private UsuarioDto convertirEntityADto(Usuario u) {
 		UsuarioDto dto = new UsuarioDto();
 		dto.setId(u.getId());
-		dto.setNombre(u.getUsername());
-		// No hay campos email/telefono en la entidad Usuario; dejamos null o vacío
-		dto.setEmail(null);
-		dto.setTelefono(null);
+		dto.setNombres(u.getNombres());
+		dto.setApellidos(u.getApellidos());
+		dto.setTipoDocumento(u.getTipoDocumento());
+		dto.setDocumento(u.getDocumento());
+		dto.setFechaNacimiento(u.getFechaNacimiento());
+		dto.setGenero(u.getGenero());
+		dto.setEmail(u.getEmail());
+		dto.setTelefono(u.getTelefono());
+		dto.setDireccion(u.getDireccion());
+		dto.setUsername(u.getUsername());
+		// No incluir password por seguridad
+		dto.setPassword(null);
+		dto.setActivo(u.getActivo());
 		if (u.getRol() != null) {
 			RolDto r = new RolDto();
 			r.setId(u.getRol().getId());
@@ -85,8 +115,18 @@ public class UsuarioServiceImpl implements UsuarioService {
 	private Usuario convertirDtoAEntity(UsuarioDto dto) {
 		Usuario u = new Usuario();
 		u.setId(dto.getId());
-		u.setUsername(dto.getNombre());
-		// password no viene desde DTO, dejar null/ vacío
+		u.setNombres(dto.getNombres());
+		u.setApellidos(dto.getApellidos());
+		u.setTipoDocumento(dto.getTipoDocumento());
+		u.setDocumento(dto.getDocumento());
+		u.setFechaNacimiento(dto.getFechaNacimiento());
+		u.setGenero(dto.getGenero());
+		u.setEmail(dto.getEmail());
+		u.setTelefono(dto.getTelefono());
+		u.setDireccion(dto.getDireccion());
+		u.setUsername(dto.getUsername());
+		u.setPassword(dto.getPassword());
+		u.setActivo(dto.getActivo() != null ? dto.getActivo() : true);
 		if (dto.getRol() != null && dto.getRol().getId() != null) {
 			Rol r = new Rol();
 			r.setId(dto.getRol().getId());

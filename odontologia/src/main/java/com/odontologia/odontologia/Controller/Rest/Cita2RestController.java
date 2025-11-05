@@ -9,10 +9,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.odontologia.odontologia.Dto.Cita2Dto;
 import com.odontologia.odontologia.Impl.Cita2ServiceImpl;
 
+@RestController
+@RequestMapping("/api")
 public class Cita2RestController {
     @Autowired
     private Cita2ServiceImpl cita2Service;

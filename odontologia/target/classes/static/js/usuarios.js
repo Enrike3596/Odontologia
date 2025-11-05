@@ -759,25 +759,40 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // Validar campos requeridos
-            const nombres = document.getElementById('nombres').value.trim();
-            const apellidos = document.getElementById('apellidos').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
+            // Obtener datos del formulario
+            const formData = new FormData(form);
+            const usuarioData = Object.fromEntries(formData);
             
-            if (!nombres || !apellidos || !email) {
+            // Validar campos requeridos
+            if (!usuarioData.nombres || !usuarioData.apellidos || !usuarioData.email) {
                 showWarningAlert('Por favor complete todos los campos requeridos');
                 return;
             }
             
-            if (password !== confirmPassword) {
+            if (usuarioData.password !== usuarioData.confirmPassword) {
                 showWarningAlert('Las contraseñas no coinciden');
                 return;
             }
             
-            // Aquí iría la lógica para enviar los datos al servidor
-            showInfoAlert('Funcionalidad en desarrollo - Sistema Odontológico');
+            // Remover confirmPassword antes de enviar
+            delete usuarioData.confirmPassword;
+            
+            // Generar username basado en email si no se proporciona
+            if (!usuarioData.username) {
+                usuarioData.username = usuarioData.email.split('@')[0];
+            }
+            
+            // Convertir role a objeto para el DTO
+            if (usuarioData.role) {
+                usuarioData.rol = {
+                    id: getRoleIdByName(usuarioData.role),
+                    nombre: usuarioData.role
+                };
+                delete usuarioData.role;
+            }
+            
+            // Enviar datos al servidor
+            crearUsuario(usuarioData);
         });
     }
     
@@ -811,5 +826,80 @@ document.addEventListener('click', function(event) {
         closeToggleStatusModal();
     }
 });
+
+// Función para crear usuario
+async function crearUsuario(usuarioData) {
+    try {
+        // Mostrar loading
+        Swal.fire({
+            title: 'Creando usuario...',
+            html: 'Por favor espere mientras procesamos la información',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        // Llamada real a la API
+        const response = await fetch('/api/usuarios', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(usuarioData)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const newUser = await response.json();
+        
+        // Cerrar modal
+        closeNewUserModal();
+        
+        // Mostrar éxito
+        await Swal.fire({
+            icon: 'success',
+            title: '¡Usuario creado!',
+            html: `
+                <div class="text-center">
+                    <p class="text-gray-600">El usuario <strong>${usuarioData.nombres} ${usuarioData.apellidos}</strong> ha sido creado exitosamente.</p>
+                    <div class="mt-4 p-3 bg-green-50 rounded-lg">
+                        <p class="text-sm text-green-700">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Ya puede acceder al sistema con sus credenciales
+                        </p>
+                    </div>
+                </div>
+            `,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#16a34a'
+        });
+        
+        // Recargar lista
+        loadUsers();
+        
+    } catch (error) {
+        console.error('Error al crear usuario:', error);
+        
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al crear usuario',
+            text: 'No se pudo crear el usuario. Por favor intente nuevamente.',
+            confirmButtonColor: '#dc2626'
+        });
+    }
+}
+
+// Función para mapear nombres de rol a IDs
+function getRoleIdByName(roleName) {
+    const roleMap = {
+        'administrador': 1,
+        'odontologo': 2,
+        'recepcionista': 3
+    };
+    return roleMap[roleName.toLowerCase()] || 3; // Default: recepcionista
+}
 
 console.log('Sistema de usuarios para clínica odontológica inicializado correctamente');

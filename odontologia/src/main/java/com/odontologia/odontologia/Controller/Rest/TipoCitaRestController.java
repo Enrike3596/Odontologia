@@ -9,12 +9,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.odontologia.odontologia.Dto.TipoCitaDto;
+import com.odontologia.odontologia.Service.TipoCitaService;
 
+@RestController
+@RequestMapping("/api")
 public class TipoCitaRestController {
     @Autowired
-    private com.odontologia.odontologia.Impl.TipoCitaServiceImpl tipoCitaService;
+    private TipoCitaService tipoCitaService;
 
     // Listar todos los tipos de cita
     @GetMapping("/tipos-cita")

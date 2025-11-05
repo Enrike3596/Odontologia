@@ -9,18 +9,23 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.odontologia.odontologia.Dto.HistoriaClinicaDto;
+import com.odontologia.odontologia.Service.HistoriaClinicaService;
 
+@RestController
+@RequestMapping("/api")
 public class HistoriaClinicaRestController {
 
     @Autowired
-    private HistoriaClinicaRestController historiaClinicaService;
+    private HistoriaClinicaService historiaClinicaService;
 
     // Listar todas las historias clínicas
     @GetMapping("/historias-clinicas")
     public List<HistoriaClinicaDto> listarHistoriasClinicas() {
-        return historiaClinicaService.listarHistoriasClinicas();
+        return historiaClinicaService.listarHistoriaClinicas();
     }
 
     // Obtener historia clínica por ID

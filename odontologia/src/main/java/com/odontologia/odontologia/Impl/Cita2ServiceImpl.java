@@ -112,8 +112,8 @@ public class Cita2ServiceImpl implements Cita2Service{
 			Paciente2 p = cita.getPaciente();
 			Paciente2Dto pdto = new Paciente2Dto();
 			pdto.setId(p.getId());
-			pdto.setNombre(p.getNombre());
-			pdto.setApellido(p.getApellido());
+			pdto.setNombres(p.getNombres());
+			pdto.setApellidos(p.getApellidos());
 			pdto.setEmail(p.getEmail());
 			pdto.setTelefono(p.getTelefono());
 			dto.setPaciente(pdto);
