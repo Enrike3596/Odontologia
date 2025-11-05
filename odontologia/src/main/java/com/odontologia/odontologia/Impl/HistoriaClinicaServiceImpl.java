@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.odontologia.odontologia.Dto.HistoriaClinicaDto;
-import com.odontologia.odontologia.Dto.PacienteDto;
+import com.odontologia.odontologia.Dto.Paciente2Dto;
 import com.odontologia.odontologia.Entity.HistoriaClinica;
 import com.odontologia.odontologia.Entity.Paciente2;
 import com.odontologia.odontologia.Repository.HistoriaClinicaRepository;
@@ -49,7 +49,7 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService{
 		existente.setMedicamentos(historiaClinicaDto.getMedicamentos());
 		// Si el DTO trae paciente, actualizamos la referencia por id
 		if (historiaClinicaDto.getPaciente() != null && historiaClinicaDto.getPaciente().getId() != null) {
-			PacienteDto pDto = historiaClinicaDto.getPaciente();
+			Paciente2Dto pDto = historiaClinicaDto.getPaciente();
 			Paciente2 p = new Paciente2();
 			p.setId(pDto.getId());
 			existente.setPaciente(p);
@@ -75,7 +75,7 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService{
 		dto.setMedicamentos(h.getMedicamentos());
 		// Solo seteamos el paciente con id si existe
 		if (h.getPaciente() != null) {
-			PacienteDto p = new PacienteDto();
+			Paciente2Dto p = new Paciente2Dto();
 			p.setId(h.getPaciente().getId());
 			dto.setPaciente(p);
 		}

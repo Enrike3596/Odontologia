@@ -15,5 +15,5 @@ public class HistoriaClinicaDto {
     private String enfermedades;
     private String cirugias;
     private String observaciones;
-    private PacienteDto paciente;
+    private Paciente2Dto paciente;
 }

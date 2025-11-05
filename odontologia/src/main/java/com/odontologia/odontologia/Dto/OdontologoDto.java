@@ -15,5 +15,5 @@ public class OdontologoDto {
     private String apellido;
     private String matricula;
     private RolDto rol;
-    private List<CitaDto> citas; // mostrar citas del odontólogo
+    private List<Cita2Dto> citas; // mostrar citas del odontólogo
 }
