@@ -264,138 +264,18 @@
         </div>
 
         <div class="overflow-x-auto">
-          <table class="w-full">
+          <table id="odontologosTable" class="w-full">
             <thead class="bg-gray-50">
               <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Odontólogo</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Licencia</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Especialidades</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matrícula</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Disponibilidad</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Especialidad</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              <tr>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex items-center">
-                    <div class="flex-shrink-0 h-10 w-10">
-                      <div class="h-10 w-10 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-medium">
-                        DR
-                      </div>
-                    </div>
-                    <div class="ml-4">
-                      <div class="text-sm font-medium text-gray-900">Dr. Roberto Martínez</div>
-                      <div class="text-sm text-gray-500">roberto.martinez@clinica.com</div>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">MP-12345</td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex flex-wrap gap-1">
-                    <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-                      Ortodoncia
-                    </span>
-                    <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                      General
-                    </span>
-                  </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">+57 300 123 4567</td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                    Activo
-                  </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">
-                    Disponible
-                  </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div class="flex space-x-2">
-                    <button class="text-indigo-600 hover:text-indigo-900" onclick="viewDentist(1)" title="Ver detalles">
-                      <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="text-blue-600 hover:text-blue-900" onclick="editDentist(1)" title="Editar">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="text-green-600 hover:text-green-900" onclick="viewSchedule(1)" title="Ver horarios">
-                      <i class="fas fa-calendar-alt"></i>
-                    </button>
-                    <button class="text-purple-600 hover:text-purple-900" onclick="viewPatients(1)" title="Ver pacientes">
-                      <i class="fas fa-users"></i>
-                    </button>
-                    <button class="text-orange-600 hover:text-orange-900" onclick="toggleDentistStatus(1)" title="Cambiar estado">
-                      <i class="fas fa-toggle-on"></i>
-                    </button>
-                    <button class="text-red-600 hover:text-red-900" onclick="deleteDentist(1)" title="Eliminar">
-                      <i class="fas fa-trash"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              <!-- Más filas de ejemplo -->
-              <tr>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex items-center">
-                    <div class="flex-shrink-0 h-10 w-10">
-                      <div class="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center text-white font-medium">
-                        DM
-                      </div>
-                    </div>
-                    <div class="ml-4">
-                      <div class="text-sm font-medium text-gray-900">Dra. María López</div>
-                      <div class="text-sm text-gray-500">maria.lopez@clinica.com</div>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">MP-67890</td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex flex-wrap gap-1">
-                    <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
-                      Endodoncia
-                    </span>
-                    <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-pink-100 text-pink-800">
-                      Estética
-                    </span>
-                  </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">+57 301 987 6543</td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                    Activo
-                  </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                    Ocupado
-                  </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div class="flex space-x-2">
-                    <button class="text-indigo-600 hover:text-indigo-900" onclick="viewDentist(2)" title="Ver detalles">
-                      <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="text-blue-600 hover:text-blue-900" onclick="editDentist(2)" title="Editar">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="text-green-600 hover:text-green-900" onclick="viewSchedule(2)" title="Ver horarios">
-                      <i class="fas fa-calendar-alt"></i>
-                    </button>
-                    <button class="text-purple-600 hover:text-purple-900" onclick="viewPatients(2)" title="Ver pacientes">
-                      <i class="fas fa-users"></i>
-                    </button>
-                    <button class="text-orange-600 hover:text-orange-900" onclick="toggleDentistStatus(2)" title="Cambiar estado">
-                      <i class="fas fa-toggle-on"></i>
-                    </button>
-                    <button class="text-red-600 hover:text-red-900" onclick="deleteDentist(2)" title="Eliminar">
-                      <i class="fas fa-trash"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
+              <!-- Los datos se cargarán dinámicamente desde el JavaScript -->
             </tbody>
           </table>
         </div>
@@ -403,15 +283,13 @@
         <!-- Paginación -->
         <div class="px-6 py-4 border-t flex items-center justify-between">
           <div class="text-sm text-gray-500">
-            Mostrando 1-10 de 24 resultados
+            Mostrando resultados
           </div>
           <div class="flex space-x-1">
             <button class="px-3 py-1 border rounded-md text-sm bg-gray-100 text-gray-400" disabled>
               <i class="fas fa-chevron-left"></i>
             </button>
             <button class="px-3 py-1 border rounded-md text-sm bg-indigo-600 text-white">1</button>
-            <button class="px-3 py-1 border rounded-md text-sm hover:bg-gray-50">2</button>
-            <button class="px-3 py-1 border rounded-md text-sm hover:bg-gray-50">3</button>
             <button class="px-3 py-1 border rounded-md text-sm hover:bg-gray-50">
               <i class="fas fa-chevron-right"></i>
             </button>
@@ -432,178 +310,35 @@
           </button>
         </div>
         <form id="newDentistForm" class="space-y-6">
-          <!-- Información personal -->
+          <!-- Información básica -->
           <div>
             <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
-              <i class="fas fa-user mr-2"></i> Información personal
+              <i class="fas fa-user mr-2 text-blue-500"></i>
+              Información Personal
             </h4>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Nombres</label>
-                <input type="text" id="nombres" name="nombres" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <label for="nombre" class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+                <input type="text" id="nombre" name="nombre" required 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                       placeholder="Ingrese el nombre">
               </div>
+              
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Apellidos</label>
-                <input type="text" id="apellidos" name="apellidos" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <label for="apellido" class="block text-sm font-medium text-gray-700 mb-1">Apellido *</label>
+                <input type="text" id="apellido" name="apellido" required 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                       placeholder="Ingrese el apellido">
               </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de documento</label>
-                <select id="tipoDocumento" name="tipoDocumento" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                  <option value="">Seleccionar</option>
-                  <option value="CC">Cédula de Ciudadanía</option>
-                  <option value="CE">Cédula de Extranjería</option>
-                  <option value="PP">Pasaporte</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Número de documento</label>
-                <input type="text" id="documento" name="documento" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de nacimiento</label>
-                <input type="date" id="fechaNacimiento" name="fechaNacimiento" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Género</label>
-                <select id="genero" name="genero" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                  <option value="">Seleccionar</option>
-                  <option value="M">Masculino</option>
-                  <option value="F">Femenino</option>
-                  <option value="O">Otro</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- Información profesional -->
-          <div>
-            <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
-              <i class="fas fa-user-md mr-2"></i> Información profesional
-            </h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Número de licencia profesional</label>
-                <input type="text" id="licenciaProfesional" name="licenciaProfesional" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="MP-12345">
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Universidad de graduación</label>
-                <input type="text" id="universidad" name="universidad" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Año de graduación</label>
-                <input type="number" id="anoGraduacion" name="anoGraduacion" min="1950" max="2030" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Años de experiencia</label>
-                <input type="number" id="experiencia" name="experiencia" min="0" max="50" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              </div>
+              
               <div class="md:col-span-2">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Especialidades</label>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                  <label class="flex items-center">
-                    <input type="checkbox" name="especialidades[]" value="general" class="mr-2">
-                    <span class="text-sm">General</span>
-                  </label>
-                  <label class="flex items-center">
-                    <input type="checkbox" name="especialidades[]" value="ortododoncia" class="mr-2">
-                    <span class="text-sm">Ortodoncia</span>
-                  </label>
-                  <label class="flex items-center">
-                    <input type="checkbox" name="especialidades[]" value="endodoncia" class="mr-2">
-                    <span class="text-sm">Endodoncia</span>
-                  </label>
-                  <label class="flex items-center">
-                    <input type="checkbox" name="especialidades[]" value="periodoncia" class="mr-2">
-                    <span class="text-sm">Periodoncia</span>
-                  </label>
-                  <label class="flex items-center">
-                    <input type="checkbox" name="especialidades[]" value="cirugia" class="mr-2">
-                    <span class="text-sm">Cirugía Oral</span>
-                  </label>
-                  <label class="flex items-center">
-                    <input type="checkbox" name="especialidades[]" value="protesis" class="mr-2">
-                    <span class="text-sm">Prótesis</span>
-                  </label>
-                  <label class="flex items-center">
-                    <input type="checkbox" name="especialidades[]" value="pediatrica" class="mr-2">
-                    <span class="text-sm">Odontopediatría</span>
-                  </label>
-                  <label class="flex items-center">
-                    <input type="checkbox" name="especialidades[]" value="estetica" class="mr-2">
-                    <span class="text-sm">Estética</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Información de contacto -->
-          <div>
-            <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
-              <i class="fas fa-address-card mr-2"></i> Información de contacto
-            </h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                <input type="email" id="email" name="email" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
-                <input type="tel" id="telefono" name="telefono" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              </div>
-              <div class="md:col-span-2">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Dirección</label>
-                <input type="text" id="direccion" name="direccion" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              </div>
-            </div>
-          </div>
-
-          <!-- Horarios de trabajo -->
-          <div>
-            <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
-              <i class="fas fa-clock mr-2"></i> Horarios de trabajo
-            </h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Hora de inicio</label>
-                <input type="time" id="horaInicio" name="horaInicio" value="08:00" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Hora de fin</label>
-                <input type="time" id="horaFin" name="horaFin" value="17:00" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              </div>
-              <div class="md:col-span-2">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Días de trabajo</label>
-                <div class="flex flex-wrap gap-4">
-                  <label class="flex items-center">
-                    <input type="checkbox" name="diasTrabajo[]" value="lunes" checked class="mr-2">
-                    <span class="text-sm">Lunes</span>
-                  </label>
-                  <label class="flex items-center">
-                    <input type="checkbox" name="diasTrabajo[]" value="martes" checked class="mr-2">
-                    <span class="text-sm">Martes</span>
-                  </label>
-                  <label class="flex items-center">
-                    <input type="checkbox" name="diasTrabajo[]" value="miercoles" checked class="mr-2">
-                    <span class="text-sm">Miércoles</span>
-                  </label>
-                  <label class="flex items-center">
-                    <input type="checkbox" name="diasTrabajo[]" value="jueves" checked class="mr-2">
-                    <span class="text-sm">Jueves</span>
-                  </label>
-                  <label class="flex items-center">
-                    <input type="checkbox" name="diasTrabajo[]" value="viernes" checked class="mr-2">
-                    <span class="text-sm">Viernes</span>
-                  </label>
-                  <label class="flex items-center">
-                    <input type="checkbox" name="diasTrabajo[]" value="sabado" class="mr-2">
-                    <span class="text-sm">Sábado</span>
-                  </label>
-                  <label class="flex items-center">
-                    <input type="checkbox" name="diasTrabajo[]" value="domingo" class="mr-2">
-                    <span class="text-sm">Domingo</span>
-                  </label>
-                </div>
+                <label for="matricula" class="block text-sm font-medium text-gray-700 mb-1">Matrícula Profesional *</label>
+                <input type="text" id="matricula" name="matricula" required 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                       placeholder="Ej: MP-12345"
+                       pattern="MP-[0-9]{4,6}"
+                       title="Formato: MP-XXXXX">
+                <p class="text-xs text-gray-500 mt-1">Formato: MP-XXXXX (4-6 dígitos)</p>
               </div>
             </div>
           </div>
@@ -615,7 +350,7 @@
             </button>
             <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors">
               <i class="fas fa-save mr-2"></i>
-              Registrar Odontólogo
+              Guardar Odontólogo
             </button>
           </div>
         </form>

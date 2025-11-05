@@ -262,26 +262,17 @@ function closeNewDentistModal() {
 /**
  * Maneja el envío del formulario de nuevo odontólogo
  */
+/**
+ * Maneja el envío del formulario de nuevo odontólogo
+ */
 async function handleNewDentistSubmit(e) {
     e.preventDefault();
     
     const formData = new FormData(e.target);
     const dentistData = Object.fromEntries(formData);
     
-    // Procesar especialidades seleccionadas
-    const especialidades = [];
-    const especialidadesInputs = document.querySelectorAll('input[name="especialidades[]"]:checked');
-    especialidadesInputs.forEach(input => especialidades.push(input.value));
-    dentistData.especialidades = especialidades;
-    
-    // Procesar días de trabajo seleccionados
-    const diasTrabajo = [];
-    const diasInputs = document.querySelectorAll('input[name="diasTrabajo[]"]:checked');
-    diasInputs.forEach(input => diasTrabajo.push(input.value));
-    dentistData.diasTrabajo = diasTrabajo;
-    
-    // Validar datos
-    const validation = validateDentistData(dentistData);
+    // Validar datos básicos
+    const validation = validateBasicDentistData(dentistData);
     if (!validation.isValid) {
         showValidationError(validation.errors);
         return;
@@ -290,10 +281,9 @@ async function handleNewDentistSubmit(e) {
     try {
         // Preparar datos para la API
         const odontologoData = {
-            nombre: dentistData.nombres,
-            apellido: dentistData.apellidos,
-            matricula: dentistData.licenciaProfesional,
-            // Otros campos específicos pueden agregarse según la entidad
+            nombre: dentistData.nombre.trim(),
+            apellido: dentistData.apellido.trim(),
+            matricula: dentistData.matricula.trim()
         };
         
         // Determinar si es creación o edición
@@ -304,7 +294,7 @@ async function handleNewDentistSubmit(e) {
         // Mostrar loading
         Swal.fire({
             title: `${actionText} odontólogo...`,
-            html: 'Por favor espere mientras procesamos la información profesional',
+            html: 'Por favor espere mientras procesamos la información',
             allowOutsideClick: false,
             didOpen: () => {
                 Swal.showLoading();
@@ -364,6 +354,28 @@ async function handleNewDentistSubmit(e) {
             confirmButtonColor: '#dc2626'
         });
     }
+}
+
+/**
+ * Valida los datos básicos del odontólogo
+ */
+function validateBasicDentistData(data) {
+    const errors = [];
+    
+    // Validaciones requeridas
+    if (!data.nombre?.trim()) errors.push('El nombre es requerido');
+    if (!data.apellido?.trim()) errors.push('El apellido es requerido');
+    if (!data.matricula?.trim()) errors.push('La matrícula profesional es requerida');
+    
+    // Validación de matrícula profesional (formato MP-XXXXX)
+    if (data.matricula && !/^MP-\d{4,6}$/.test(data.matricula)) {
+        errors.push('La matrícula debe tener el formato MP-XXXXX (4-6 dígitos)');
+    }
+    
+    return {
+        isValid: errors.length === 0,
+        errors
+    };
 }
 
 /**
@@ -1173,23 +1185,22 @@ function updateDentistsTable(odontologos) {
  * Actualiza las estadísticas de odontólogos
  */
 function updateDentistsStats(odontologos) {
-    // Total de odontólogos
-    const totalElement = document.getElementById('totalDentists');
-    if (totalElement) totalElement.textContent = odontologos.length;
+    // Buscar y actualizar los elementos de estadísticas en las cards
+    const statsCards = document.querySelectorAll('.grid .bg-white .text-2xl');
     
-    // Odontólogos activos (simulamos que todos están activos)
-    const activeDentists = odontologos.length;
-    const activeElement = document.getElementById('activeDentists');
-    if (activeElement) activeElement.textContent = activeDentists;
-    
-    // Especialidades (simulamos conteo)
-    const specialtiesElement = document.getElementById('totalSpecialties');
-    if (specialtiesElement) specialtiesElement.textContent = Math.min(odontologos.length, 8);
-    
-    // Disponibles hoy (simulamos que 80% están disponibles)
-    const availableToday = Math.floor(odontologos.length * 0.8);
-    const availableElement = document.getElementById('availableToday');
-    if (availableElement) availableElement.textContent = availableToday;
+    if (statsCards.length >= 4) {
+        // Total de odontólogos
+        statsCards[0].textContent = odontologos.length;
+        
+        // Odontólogos disponibles hoy (simulamos que todos están disponibles)
+        statsCards[1].textContent = odontologos.length;
+        
+        // Especialidades (simulamos 8 especialidades)
+        statsCards[2].textContent = '8';
+        
+        // Citas agendadas (simulamos un número)
+        statsCards[3].textContent = odontologos.length * 6;
+    }
 }
 
 /**

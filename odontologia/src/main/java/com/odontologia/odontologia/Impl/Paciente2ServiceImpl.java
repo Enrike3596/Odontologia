@@ -32,9 +32,13 @@ public class Paciente2ServiceImpl  implements Paciente2Service {
 
 	@Override
 	public Paciente2Dto crearPaciente(Paciente2Dto pacienteDto) {
-		Paciente2 p = convertirDtoAEntity(pacienteDto);
-		Paciente2 guardado = paciente2Repository.save(p);
-		return convertirEntityADto(guardado);
+		try {
+			Paciente2 p = convertirDtoAEntity(pacienteDto);
+			Paciente2 guardado = paciente2Repository.save(p);
+			return convertirEntityADto(guardado);
+		} catch (Exception e) {
+			throw new RuntimeException("Error al crear paciente: " + e.getMessage(), e);
+		}
 	}
 
 	@Override
@@ -93,7 +97,10 @@ public class Paciente2ServiceImpl  implements Paciente2Service {
 
 	private Paciente2 convertirDtoAEntity(Paciente2Dto dto) {
 		Paciente2 p = new Paciente2();
-		p.setId(dto.getId());
+		// No establecer ID para nuevos registros
+		if (dto.getId() != null) {
+			p.setId(dto.getId());
+		}
 		p.setNombres(dto.getNombres());
 		p.setApellidos(dto.getApellidos());
 		p.setTipoDocumento(dto.getTipoDocumento());

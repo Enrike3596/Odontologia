@@ -3,6 +3,7 @@ package com.odontologia.odontologia.Controller.Rest;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +18,7 @@ import com.odontologia.odontologia.Service.Paciente2Service;
 
 @RestController
 @RequestMapping("/api")
+@CrossOrigin(origins = "*")
 public class Paciente2RestController {
     @Autowired  
     private Paciente2Service paciente2Service;
