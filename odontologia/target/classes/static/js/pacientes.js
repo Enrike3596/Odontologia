@@ -172,10 +172,20 @@ function setupEventListeners() {
 function openNewPatientModal() {
     const modal = document.getElementById('newPatientModal');
     const form = document.getElementById('newPatientForm');
+    const modalTitle = modal.querySelector('h3');
+    const submitButton = form.querySelector('button[type="submit"]');
     
     if (modal && form) {
         // Limpiar formulario
         form.reset();
+        
+        // Restaurar valores por defecto para nuevo paciente
+        modalTitle.textContent = 'Nuevo Paciente';
+        submitButton.innerHTML = '<i class="fas fa-save mr-2"></i>Registrar Paciente';
+        
+        // Limpiar modo de edición
+        delete form.dataset.editingPatientId;
+        delete form.dataset.editMode;
         
         // Mostrar modal
         modal.classList.remove('hidden');
@@ -198,10 +208,25 @@ function openNewPatientModal() {
  */
 function closeNewPatientModal() {
     const modal = document.getElementById('newPatientModal');
+    const form = document.getElementById('newPatientForm');
+    
     if (modal) {
         modal.classList.remove('show');
         setTimeout(() => {
             modal.classList.add('hidden');
+            
+            // Limpiar modo de edición y datos del formulario
+            if (form) {
+                delete form.dataset.editingPatientId;
+                delete form.dataset.editMode;
+                form.reset();
+                
+                // Restaurar título y botón por defecto
+                const modalTitle = modal.querySelector('h3');
+                const submitButton = form.querySelector('button[type="submit"]');
+                if (modalTitle) modalTitle.textContent = 'Nuevo Paciente';
+                if (submitButton) submitButton.innerHTML = '<i class="fas fa-save mr-2"></i>Registrar Paciente';
+            }
         }, 300);
     }
 }
@@ -212,8 +237,13 @@ function closeNewPatientModal() {
 async function handleNewPatientSubmit(e) {
     e.preventDefault();
     
-    const formData = new FormData(e.target);
+    const form = e.target;
+    const formData = new FormData(form);
     const patientData = Object.fromEntries(formData);
+    
+    // Determinar si es edición o creación
+    const isEditMode = form.dataset.editMode === 'true';
+    const patientId = form.dataset.editingPatientId;
     
     // Validar datos
     const validation = validatePatientData(patientData);
@@ -251,8 +281,9 @@ async function handleNewPatientSubmit(e) {
         }
         
         // Mostrar loading
+        const actionText = isEditMode ? 'Actualizando' : 'Registrando';
         Swal.fire({
-            title: 'Registrando paciente...',
+            title: `${actionText} paciente...`,
             html: 'Por favor espere mientras procesamos la información',
             allowOutsideClick: false,
             didOpen: () => {
@@ -260,26 +291,33 @@ async function handleNewPatientSubmit(e) {
             }
         });
         
-        // Crear paciente usando la API
-        const newPatient = await PacientesAPI.createPaciente(filteredData);
+        let result;
+        if (isEditMode) {
+            // Actualizar paciente existente
+            result = await PacientesAPI.updatePaciente(patientId, filteredData);
+        } else {
+            // Crear nuevo paciente
+            result = await PacientesAPI.createPaciente(filteredData);
+        }
         
         // Cerrar modal
         closeNewPatientModal();
         
         // Mostrar éxito
+        const successText = isEditMode ? 'actualizado' : 'registrado';
         await Swal.fire({
             icon: 'success',
-            title: '¡Paciente registrado!',
+            title: `¡Paciente ${successText}!`,
             html: `
                 <div class="text-center">
                     <div class="mb-3">
                         <i class="fas fa-user-injured text-4xl text-green-500 mb-2"></i>
                     </div>
-                    <p class="text-gray-600">El paciente <strong>${newPatient.nombres} ${newPatient.apellidos}</strong> ha sido registrado exitosamente en el sistema.</p>
+                    <p class="text-gray-600">El paciente <strong>${result.nombres} ${result.apellidos}</strong> ha sido ${successText} exitosamente en el sistema.</p>
                     <div class="mt-4 p-3 bg-green-50 rounded-lg">
                         <p class="text-sm text-green-700">
                             <i class="fas fa-info-circle mr-1"></i>
-                            Documento: ${newPatient.tipoDocumento} ${newPatient.documento}
+                            Documento: ${result.tipoDocumento} ${result.documento}
                         </p>
                     </div>
                 </div>
@@ -294,10 +332,12 @@ async function handleNewPatientSubmit(e) {
     } catch (error) {
         console.error('Error al procesar paciente:', error);
         
+        const actionText = isEditMode ? 'actualizar' : 'registrar';
+        
         Swal.fire({
             icon: 'error',
-            title: 'Error al registrar',
-            text: `No se pudo registrar el paciente. Error: ${error.message}`,
+            title: `Error al ${actionText}`,
+            text: `No se pudo ${actionText} el paciente. Error: ${error.message}`,
             confirmButtonColor: '#dc2626'
         });
     }
@@ -456,15 +496,90 @@ function closeViewPatientModal() {
 /**
  * Editar paciente
  */
-function editPatient(patientId) {
-    console.log('Editar paciente:', patientId);
+async function editPatient(patientId) {
+    try {
+        console.log('Editando paciente:', patientId);
+        
+        // Mostrar loading
+        Swal.fire({
+            title: 'Cargando información...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        // Obtener los datos del paciente
+        const patient = await PacientesAPI.getPacienteById(patientId);
+        
+        // Cerrar loading
+        Swal.close();
+        
+        // Abrir modal de edición (reutilizar el modal de nuevo paciente)
+        openEditPatientModal(patient);
+        
+    } catch (error) {
+        console.error('Error al cargar paciente para edición:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudo cargar la información del paciente para edición.',
+            confirmButtonColor: '#dc2626'
+        });
+    }
+}
+
+/**
+ * Abre el modal para editar un paciente
+ */
+function openEditPatientModal(patient) {
+    const modal = document.getElementById('newPatientModal');
+    const form = document.getElementById('newPatientForm');
+    const modalTitle = modal.querySelector('h3');
+    const submitButton = form.querySelector('button[type="submit"]');
     
-    Swal.fire({
-        icon: 'info',
-        title: 'Función en desarrollo',
-        text: 'La edición de pacientes estará disponible próximamente.',
-        confirmButtonColor: '#3b82f6'
-    });
+    if (modal && form) {
+        // Cambiar título del modal
+        modalTitle.textContent = 'Editar Paciente';
+        
+        // Cambiar texto del botón
+        submitButton.innerHTML = '<i class="fas fa-save mr-2"></i>Actualizar Paciente';
+        
+        // Llenar formulario con datos del paciente
+        document.getElementById('nombres').value = patient.nombres || '';
+        document.getElementById('apellidos').value = patient.apellidos || '';
+        document.getElementById('tipoDocumento').value = patient.tipoDocumento || '';
+        document.getElementById('documento').value = patient.documento || '';
+        document.getElementById('fechaNacimiento').value = patient.fechaNacimiento || '';
+        document.getElementById('genero').value = patient.genero || '';
+        document.getElementById('email').value = patient.email || '';
+        document.getElementById('telefono').value = patient.telefono || '';
+        document.getElementById('direccion').value = patient.direccion || '';
+        document.getElementById('contactoEmergenciaNombre').value = patient.contactoEmergenciaNombre || '';
+        document.getElementById('contactoEmergenciaParentesco').value = patient.contactoEmergenciaParentesco || '';
+        document.getElementById('contactoEmergenciaTelefono').value = patient.contactoEmergenciaTelefono || '';
+        document.getElementById('alergias').value = patient.alergias || '';
+        document.getElementById('medicamentos').value = patient.medicamentos || '';
+        document.getElementById('observaciones').value = patient.observaciones || '';
+        
+        // Agregar el ID del paciente como data attribute
+        form.dataset.editingPatientId = patient.id;
+        form.dataset.editMode = 'true';
+        
+        // Mostrar modal
+        modal.classList.remove('hidden');
+        
+        // Focus en el primer campo
+        setTimeout(() => {
+            const firstInput = form.querySelector('input[type="text"]');
+            if (firstInput) firstInput.focus();
+        }, 100);
+        
+        // Animación
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
+    }
 }
 
 /**
@@ -475,46 +590,6 @@ function editPatientFromModal() {
         closeViewPatientModal();
         editPatient(PatientsModule.currentPatient.id);
     }
-}
-
-/**
- * Ver historia clínica
- */
-function viewHistory(patientId) {
-    console.log('Ver historia clínica del paciente:', patientId);
-    
-    Swal.fire({
-        icon: 'info',
-        title: 'Redirigiendo...',
-        text: 'Abriendo historia clínica del paciente.',
-        timer: 1500,
-        confirmButtonColor: '#16a34a'
-    });
-}
-
-/**
- * Ver historia clínica desde el modal
- */
-function viewHistoryFromModal() {
-    if (PatientsModule.currentPatient) {
-        closeViewPatientModal();
-        viewHistory(PatientsModule.currentPatient.id);
-    }
-}
-
-/**
- * Agendar nueva cita para un paciente
- */
-function scheduleAppointment(patientId) {
-    console.log('Agendar cita para paciente:', patientId);
-    
-    Swal.fire({
-        icon: 'info',
-        title: 'Redirigiendo...',
-        text: 'Abriendo módulo de agendamiento de citas.',
-        timer: 1500,
-        confirmButtonColor: '#8b5cf6'
-    });
 }
 
 /**
@@ -730,12 +805,6 @@ function renderPatientsTable(patients) {
                 </button>
                 <button onclick="editPatient(${patient.id})" class="text-yellow-600 hover:text-yellow-900 mr-3" title="Editar">
                     <i class="fas fa-edit"></i>
-                </button>
-                <button onclick="viewHistory(${patient.id})" class="text-purple-600 hover:text-purple-900 mr-3" title="Historia clínica">
-                    <i class="fas fa-file-medical"></i>
-                </button>
-                <button onclick="scheduleAppointment(${patient.id})" class="text-green-600 hover:text-green-900 mr-3" title="Agendar cita">
-                    <i class="fas fa-calendar-plus"></i>
                 </button>
                 <button onclick="deletePatient(${patient.id})" class="text-red-600 hover:text-red-900" title="Eliminar">
                     <i class="fas fa-trash"></i>
@@ -1022,9 +1091,6 @@ window.viewPatient = viewPatient;
 window.closeViewPatientModal = closeViewPatientModal;
 window.editPatient = editPatient;
 window.editPatientFromModal = editPatientFromModal;
-window.viewHistory = viewHistory;
-window.viewHistoryFromModal = viewHistoryFromModal;
-window.scheduleAppointment = scheduleAppointment;
 window.deletePatient = deletePatient;
 window.toggleFilters = toggleFilters;
 window.applyFilters = applyFilters;

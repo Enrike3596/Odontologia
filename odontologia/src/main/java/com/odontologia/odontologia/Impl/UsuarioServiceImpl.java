@@ -10,6 +10,7 @@ import com.odontologia.odontologia.Dto.RolDto;
 import com.odontologia.odontologia.Dto.UsuarioDto;
 import com.odontologia.odontologia.Entity.Rol;
 import com.odontologia.odontologia.Entity.Usuario;
+import com.odontologia.odontologia.Repository.RolRepository;
 import com.odontologia.odontologia.Repository.UsuarioRepository;
 import com.odontologia.odontologia.Service.UsuarioService;
 
@@ -18,6 +19,9 @@ public class UsuarioServiceImpl implements UsuarioService {
 
 	@Autowired
 	private UsuarioRepository usuarioRepository;
+	
+	@Autowired
+	private RolRepository rolRepository;
 
 	@Override
 	public List<UsuarioDto> listarUsuarios() {
@@ -34,17 +38,66 @@ public class UsuarioServiceImpl implements UsuarioService {
 
 	@Override
 	public UsuarioDto crearUsuario(UsuarioDto usuarioDto) {
-		Usuario u = convertirDtoAEntity(usuarioDto);
-		// Si no se proporciona password, generamos una temporal
-		if (u.getPassword() == null || u.getPassword().isEmpty()) {
-			u.setPassword("temp123"); // En producción debería ser encriptada
+		try {
+			// Validaciones básicas
+			if (usuarioDto.getNombres() == null || usuarioDto.getNombres().trim().isEmpty()) {
+				throw new RuntimeException("El nombre es requerido");
+			}
+			if (usuarioDto.getApellidos() == null || usuarioDto.getApellidos().trim().isEmpty()) {
+				throw new RuntimeException("Los apellidos son requeridos");
+			}
+			if (usuarioDto.getEmail() == null || usuarioDto.getEmail().trim().isEmpty()) {
+				throw new RuntimeException("El email es requerido");
+			}
+			if (usuarioDto.getDocumento() == null || usuarioDto.getDocumento().trim().isEmpty()) {
+				throw new RuntimeException("El documento es requerido");
+			}
+			
+			// Crear entidad Usuario
+			Usuario u = new Usuario();
+			u.setNombres(usuarioDto.getNombres());
+			u.setApellidos(usuarioDto.getApellidos());
+			u.setTipoDocumento(usuarioDto.getTipoDocumento());
+			u.setDocumento(usuarioDto.getDocumento());
+			u.setFechaNacimiento(usuarioDto.getFechaNacimiento());
+			u.setGenero(usuarioDto.getGenero());
+			u.setEmail(usuarioDto.getEmail());
+			u.setTelefono(usuarioDto.getTelefono());
+			u.setDireccion(usuarioDto.getDireccion());
+			u.setActivo(usuarioDto.getActivo() != null ? usuarioDto.getActivo() : true);
+			
+			// Si no se proporciona password, generamos una temporal
+			if (usuarioDto.getPassword() == null || usuarioDto.getPassword().isEmpty()) {
+				u.setPassword("temp123"); // En producción debería ser encriptada
+			} else {
+				u.setPassword(usuarioDto.getPassword());
+			}
+			
+			// Si no se proporciona username, generamos uno basado en email
+			if (usuarioDto.getUsername() == null || usuarioDto.getUsername().isEmpty()) {
+				u.setUsername(usuarioDto.getEmail().split("@")[0]);
+			} else {
+				u.setUsername(usuarioDto.getUsername());
+			}
+			
+			// Manejar el rol
+			if (usuarioDto.getRol() == null || usuarioDto.getRol().getId() == null) {
+				// Asignar rol por defecto: recepcionista
+				Rol rolPorDefecto = rolRepository.findById(3L)
+					.orElseThrow(() -> new RuntimeException("Rol por defecto no encontrado"));
+				u.setRol(rolPorDefecto);
+			} else {
+				// Validar que el rol proporcionado existe
+				Rol rolExistente = rolRepository.findById(usuarioDto.getRol().getId())
+					.orElseThrow(() -> new RuntimeException("El rol especificado no existe"));
+				u.setRol(rolExistente);
+			}
+			
+			Usuario guardado = usuarioRepository.save(u);
+			return convertirEntityADto(guardado);
+		} catch (Exception e) {
+			throw new RuntimeException("Error al crear usuario: " + e.getMessage(), e);
 		}
-		// Si no se proporciona username, generamos uno basado en email
-		if (u.getUsername() == null || u.getUsername().isEmpty()) {
-			u.setUsername(usuarioDto.getEmail().split("@")[0]);
-		}
-		Usuario guardado = usuarioRepository.save(u);
-		return convertirEntityADto(guardado);
 	}
 
 	@Override

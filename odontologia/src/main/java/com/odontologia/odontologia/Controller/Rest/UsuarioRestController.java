@@ -36,8 +36,27 @@ public class UsuarioRestController {
 
     // Crear nuevo usuario
     @PostMapping("/usuarios")
-    public UsuarioDto crearUsuario(@RequestBody UsuarioDto usuarioDto) {
-        return usuarioService.crearUsuario(usuarioDto);
+    public ResponseEntity<?> crearUsuario(@RequestBody UsuarioDto usuarioDto) {
+        try {
+            UsuarioDto usuarioCreado = usuarioService.crearUsuario(usuarioDto);
+            return ResponseEntity.ok(usuarioCreado);
+        } catch (RuntimeException e) {
+            // Log del error para debugging
+            System.err.println("Error al crear usuario: " + e.getMessage());
+            e.printStackTrace();
+            
+            // Retornar error con mensaje descriptivo
+            return ResponseEntity.badRequest()
+                .body(java.util.Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            // Log del error para debugging
+            System.err.println("Error inesperado al crear usuario: " + e.getMessage());
+            e.printStackTrace();
+            
+            // Retornar error genérico
+            return ResponseEntity.status(500)
+                .body(java.util.Map.of("error", "Error interno del servidor"));
+        }
     }
 
     // Actualizar usuario existente
@@ -55,12 +74,19 @@ public class UsuarioRestController {
 
     // Endpoint adicional para cambiar estado del usuario (activo/inactivo)
     @PutMapping("/usuarios/{id}/estado")
-    public ResponseEntity<UsuarioDto> cambiarEstadoUsuario(@PathVariable Long id, @RequestBody Boolean activo) {
+    public ResponseEntity<String> cambiarEstadoUsuario(@PathVariable Long id, @RequestBody java.util.Map<String, Boolean> request) {
         try {
+            Boolean activo = request.get("activo");
+            if (activo == null) {
+                return ResponseEntity.badRequest().body("El campo 'activo' es requerido");
+            }
+            
             UsuarioDto usuario = usuarioService.obtenerUsuarioPorId(id);
             usuario.setActivo(activo);
-            UsuarioDto usuarioActualizado = usuarioService.actualizarUsuario(id, usuario);
-            return ResponseEntity.ok(usuarioActualizado);
+            usuarioService.actualizarUsuario(id, usuario);
+            
+            String mensaje = activo ? "Usuario activado exitosamente" : "Usuario desactivado exitosamente";
+            return ResponseEntity.ok(mensaje);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }

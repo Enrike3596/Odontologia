@@ -596,7 +596,7 @@ function loadUsers() {
 
 // Función para renderizar la tabla de usuarios
 function renderUsersTable(usuarios) {
-    const tbody = document.querySelector('.contents-table tbody');
+    const tbody = document.getElementById('usuariosTableBody');
     if (!tbody) return;
     
     if (usuarios.length === 0) {
@@ -739,7 +739,7 @@ function updateSummaryCards(usuarios) {
 
 // Función para mostrar errores en la tabla
 function showErrorInTable(error) {
-    const tbody = document.querySelector('.contents-table tbody');
+    const tbody = document.getElementById('usuariosTableBody');
     if (tbody) {
         tbody.innerHTML = `
             <tr>
@@ -761,7 +761,30 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Obtener datos del formulario
             const formData = new FormData(form);
-            const usuarioData = Object.fromEntries(formData);
+            
+            // Construir objeto de usuario con los nombres correctos del DTO
+            const usuarioData = {
+                nombres: formData.get('nombres'),
+                apellidos: formData.get('apellidos'),
+                tipoDocumento: formData.get('tipoDocumento'),
+                documento: formData.get('documento'),
+                fechaNacimiento: formData.get('fechaNacimiento'),
+                genero: formData.get('genero'),
+                email: formData.get('email'),
+                telefono: formData.get('telefono'),
+                direccion: formData.get('direccion'),
+                password: formData.get('password'),
+                activo: true
+            };
+            
+            // Validar datos antes de enviar
+            console.log('Datos del formulario capturados:', {
+                nombres: usuarioData.nombres,
+                apellidos: usuarioData.apellidos,
+                email: usuarioData.email,
+                documento: usuarioData.documento,
+                rol: usuarioData.rol
+            });
             
             // Validar campos requeridos
             if (!usuarioData.nombres || !usuarioData.apellidos || !usuarioData.email) {
@@ -769,7 +792,51 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            if (usuarioData.password !== usuarioData.confirmPassword) {
+            if (usuarioData.password !== formData.get('confirmPassword')) {
+                showWarningAlert('Las contraseñas no coinciden');
+                return;
+            }
+            
+            // Generar username basado en email si no se proporciona
+            usuarioData.username = usuarioData.email.split('@')[0];
+            
+            // Convertir role a objeto para el DTO
+            const roleValue = formData.get('role');
+            if (roleValue) {
+                usuarioData.rol = {
+                    id: getRoleIdByName(roleValue),
+                    nombre: roleValue
+                };
+                console.log('Rol asignado:', usuarioData.rol);
+            } else {
+                console.log('No se proporcionó rol, se usará por defecto');
+            }
+            
+            console.log('Datos finales a enviar:', usuarioData);
+            
+            // Enviar datos al servidor
+            crearUsuario(usuarioData);
+        });
+    }
+
+    // Validación del formulario de editar usuario
+    const editForm = document.getElementById('editUserForm');
+    if (editForm) {
+        editForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Obtener datos del formulario
+            const formData = new FormData(editForm);
+            const usuarioData = Object.fromEntries(formData);
+            
+            // Validar campos requeridos
+            if (!usuarioData.firstName || !usuarioData.lastName || !usuarioData.email) {
+                showWarningAlert('Por favor complete todos los campos requeridos');
+                return;
+            }
+            
+            // Si se proporcionan contraseñas, validar que coincidan
+            if (usuarioData.password && usuarioData.password !== usuarioData.confirmPassword) {
                 showWarningAlert('Las contraseñas no coinciden');
                 return;
             }
@@ -777,22 +844,32 @@ document.addEventListener('DOMContentLoaded', function() {
             // Remover confirmPassword antes de enviar
             delete usuarioData.confirmPassword;
             
-            // Generar username basado en email si no se proporciona
-            if (!usuarioData.username) {
-                usuarioData.username = usuarioData.email.split('@')[0];
-            }
-            
+            // Mapear campos al DTO
+            const usuarioDto = {
+                id: usuarioData.id,
+                nombres: usuarioData.firstName,
+                apellidos: usuarioData.lastName,
+                tipoDocumento: usuarioData.idType,
+                documento: usuarioData.idNumber,
+                fechaNacimiento: usuarioData.birthDate,
+                genero: usuarioData.gender,
+                email: usuarioData.email,
+                telefono: usuarioData.phone,
+                direccion: usuarioData.address,
+                username: usuarioData.email.split('@')[0], // Generar username
+                password: usuarioData.password // Solo se enviará si no está vacío
+            };
+
             // Convertir role a objeto para el DTO
             if (usuarioData.role) {
-                usuarioData.rol = {
+                usuarioDto.rol = {
                     id: getRoleIdByName(usuarioData.role),
                     nombre: usuarioData.role
                 };
-                delete usuarioData.role;
             }
-            
+
             // Enviar datos al servidor
-            crearUsuario(usuarioData);
+            actualizarUsuario(usuarioDto.id, usuarioDto);
         });
     }
     
@@ -830,6 +907,9 @@ document.addEventListener('click', function(event) {
 // Función para crear usuario
 async function crearUsuario(usuarioData) {
     try {
+        // Validar datos antes de enviar
+        console.log('Datos a enviar:', usuarioData);
+        
         // Mostrar loading
         Swal.fire({
             title: 'Creando usuario...',
@@ -844,13 +924,23 @@ async function crearUsuario(usuarioData) {
         const response = await fetch('/api/usuarios', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
             body: JSON.stringify(usuarioData)
         });
         
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            // Obtener el mensaje de error del servidor
+            let errorMessage;
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.message || errorData.error || `Error HTTP: ${response.status}`;
+            } catch (e) {
+                const errorText = await response.text();
+                errorMessage = errorText || `Error HTTP: ${response.status}`;
+            }
+            throw new Error(errorMessage);
         }
         
         const newUser = await response.json();
@@ -880,13 +970,93 @@ async function crearUsuario(usuarioData) {
         // Recargar lista
         loadUsers();
         
+        // Limpiar formulario
+        document.getElementById('newUserForm').reset();
+        
     } catch (error) {
-        console.error('Error al crear usuario:', error);
+        console.error('Error detallado al crear usuario:', error);
+        
+        let errorMessage = 'No se pudo crear el usuario. Por favor intente nuevamente.';
+        
+        if (error.message.includes('duplicate key') || error.message.includes('already exists') || error.message.includes('UNIQUE')) {
+            errorMessage = 'Ya existe un usuario con ese email o documento. Por favor use datos diferentes.';
+        } else if (error.message.includes('constraint') || error.message.includes('required')) {
+            errorMessage = 'Faltan campos requeridos o hay datos inválidos. Por favor revise la información.';
+        } else if (error.message.includes('rol')) {
+            errorMessage = 'Error con el rol seleccionado. Por favor seleccione un rol válido.';
+        } else if (error.message && error.message !== 'No se pudo crear el usuario. Por favor intente nuevamente.') {
+            errorMessage = error.message;
+        }
         
         Swal.fire({
             icon: 'error',
             title: 'Error al crear usuario',
-            text: 'No se pudo crear el usuario. Por favor intente nuevamente.',
+            text: errorMessage,
+            confirmButtonColor: '#dc2626'
+        });
+    }
+}
+
+// Función para actualizar usuario
+async function actualizarUsuario(id, usuarioData) {
+    try {
+        // Mostrar loading
+        Swal.fire({
+            title: 'Actualizando usuario...',
+            html: 'Por favor espere mientras procesamos la información',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        // Llamada real a la API
+        const response = await fetch(`/api/usuarios/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(usuarioData)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const updatedUser = await response.json();
+        
+        // Cerrar modal
+        closeEditUserModal();
+        
+        // Mostrar éxito
+        await Swal.fire({
+            icon: 'success',
+            title: '¡Usuario actualizado!',
+            html: `
+                <div class="text-center">
+                    <p class="text-gray-600">El usuario <strong>${usuarioData.nombres} ${usuarioData.apellidos}</strong> ha sido actualizado exitosamente.</p>
+                    <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                        <p class="text-sm text-blue-700">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Los cambios ya están vigentes en el sistema
+                        </p>
+                    </div>
+                </div>
+            `,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#0284c7'
+        });
+        
+        // Recargar lista
+        loadUsers();
+        
+    } catch (error) {
+        console.error('Error al actualizar usuario:', error);
+        
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al actualizar usuario',
+            text: 'No se pudo actualizar el usuario. Por favor intente nuevamente.',
             confirmButtonColor: '#dc2626'
         });
     }

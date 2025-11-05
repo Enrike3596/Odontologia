@@ -259,87 +259,13 @@
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
               </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex items-center">
-                    <div class="flex-shrink-0 h-10 w-10">
-                      <img class="h-10 w-10 rounded-full" src="https://i.pravatar.cc/40?img=1" alt="">
-                    </div>
-                    <div class="ml-4">
-                      <div class="text-sm font-medium text-gray-900">Dr. Juan Pérez</div>
-                      <div class="text-sm text-gray-500">juan.perez@clinica.com</div>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">12345678</td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                    Odontólogo
-                  </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                    Activo
-                  </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Hace 2 horas</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div class="flex space-x-2">
-                    <button class="text-indigo-600 hover:text-indigo-900" onclick="viewUser(1)" title="Ver detalles">
-                      <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="text-blue-600 hover:text-blue-900" onclick="editUser(1)" title="Editar">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="text-yellow-600 hover:text-yellow-900" onclick="toggleUserStatus(1)" title="Cambiar estado">
-                      <i class="fas fa-user-slash"></i>
-                    </button>
-                    <button class="text-red-600 hover:text-red-900" onclick="deleteUser(1)" title="Eliminar">
-                      <i class="fas fa-trash"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              <!-- Más filas de ejemplo -->
-              <tr>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex items-center">
-                    <div class="flex-shrink-0 h-10 w-10">
-                      <img class="h-10 w-10 rounded-full" src="https://i.pravatar.cc/40?img=2" alt="">
-                    </div>
-                    <div class="ml-4">
-                      <div class="text-sm font-medium text-gray-900">María García</div>
-                      <div class="text-sm text-gray-500">maria.garcia@clinica.com</div>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">87654321</td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
-                    Recepcionista
-                  </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                    Activo
-                  </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Hace 5 minutos</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div class="flex space-x-2">
-                    <button class="text-indigo-600 hover:text-indigo-900" onclick="viewUser(2)" title="Ver detalles">
-                      <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="text-blue-600 hover:text-blue-900" onclick="editUser(2)" title="Editar">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="text-yellow-600 hover:text-yellow-900" onclick="toggleUserStatus(2)" title="Cambiar estado">
-                      <i class="fas fa-user-slash"></i>
-                    </button>
-                    <button class="text-red-600 hover:text-red-900" onclick="deleteUser(2)" title="Eliminar">
-                      <i class="fas fa-trash"></i>
-                    </button>
+            <tbody id="usuariosTableBody" class="bg-white divide-y divide-gray-200">
+              <!-- Los usuarios se cargarán dinámicamente aquí -->
+              <tr id="loadingRow">
+                <td colspan="6" class="px-6 py-8 text-center">
+                  <div class="flex items-center justify-center">
+                    <i class="fas fa-spinner fa-spin text-gray-400 mr-2"></i>
+                    <span class="text-gray-500">Cargando usuarios...</span>
                   </div>
                 </td>
               </tr>
@@ -563,6 +489,191 @@
     </div>
   </div>
 
+  <!-- Modal de Editar Usuario -->
+  <div id="editUserModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+      <div class="mt-3">
+        <div class="flex items-center justify-between mb-4">
+          <h3 id="editUserTitle" class="text-lg font-medium text-gray-900">Editar Usuario</h3>
+          <button onclick="closeEditUserModal()" class="text-gray-400 hover:text-gray-600">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form id="editUserForm" class="space-y-6">
+          <input type="hidden" id="editUserId" name="id">
+          
+          <!-- Tipo de usuario -->
+          <div>
+            <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
+              <i class="fas fa-user-tag mr-2"></i> Tipo de usuario
+            </h4>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Rol</label>
+              <select id="editRole" name="role" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">Seleccionar rol</option>
+                <option value="administrador">Administrador</option>
+                <option value="odontologo">Odontólogo</option>
+                <option value="recepcionista">Recepcionista</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Información personal -->
+          <div>
+            <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
+              <i class="fas fa-user mr-2"></i> Información personal
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Nombres</label>
+                <input type="text" id="editFirstName" name="firstName" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Apellidos</label>
+                <input type="text" id="editLastName" name="lastName" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de documento</label>
+                <select id="editIdType" name="idType" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option value="">Seleccionar tipo</option>
+                  <option value="CC">Cédula de Ciudadanía</option>
+                  <option value="TI">Tarjeta de Identidad</option>
+                  <option value="CE">Cédula de Extranjería</option>
+                  <option value="PP">Pasaporte</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Número de documento</label>
+                <input type="text" id="editIdNumber" name="idNumber" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de nacimiento</label>
+                <input type="date" id="editBirthDate" name="birthDate" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Género</label>
+                <select id="editGender" name="gender" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option value="">Seleccionar género</option>
+                  <option value="M">Masculino</option>
+                  <option value="F">Femenino</option>
+                  <option value="O">Otro</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Información de contacto -->
+          <div>
+            <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
+              <i class="fas fa-address-card mr-2"></i> Información de contacto
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <input type="email" id="editEmail" name="email" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
+                <input type="tel" id="editPhone" name="phone" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Dirección</label>
+                <input type="text" id="editAddress" name="address" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              </div>
+            </div>
+          </div>
+
+          <!-- Seguridad -->
+          <div>
+            <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
+              <i class="fas fa-lock mr-2"></i> Seguridad (opcional)
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Nueva contraseña (dejar vacío para mantener actual)</label>
+                <div class="relative">
+                  <input type="password" id="editPassword" name="password" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center" onclick="togglePassword('editPassword')">
+                    <i class="fas fa-eye text-gray-400"></i>
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Confirmar nueva contraseña</label>
+                <div class="relative">
+                  <input type="password" id="editConfirmPassword" name="confirmPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center" onclick="togglePassword('editConfirmPassword')">
+                    <i class="fas fa-eye text-gray-400"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end space-x-3 pt-4">
+            <button type="button" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors" onclick="closeEditUserModal()">
+              <i class="fas fa-times mr-2"></i>
+              Cancelar
+            </button>
+            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">
+              <i class="fas fa-save mr-2"></i>
+              Actualizar Usuario
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Cambiar Estado del Usuario -->
+  <div id="toggleUserStatusModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <div class="mt-3">
+        <div class="flex items-center justify-between mb-4">
+          <h3 id="toggleStatusTitle" class="text-lg font-medium text-gray-900">Cambiar Estado Usuario</h3>
+          <button onclick="closeToggleStatusModal()" class="text-gray-400 hover:text-gray-600">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <div class="space-y-4">
+          <!-- Información del usuario -->
+          <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+            <div id="toggleUserAvatar" class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+              <i class="fas fa-user text-indigo-600"></i>
+            </div>
+            <div>
+              <h4 id="toggleUserName" class="font-semibold">Nombre del Usuario</h4>
+              <p id="toggleUserEmail" class="text-gray-600 text-sm">email@example.com</p>
+            </div>
+          </div>
+
+          <!-- Icono y advertencia -->
+          <div class="text-center">
+            <div id="toggleStatusIcon" class="status-icon mx-auto mb-4">
+              <i class="fas fa-user-slash"></i>
+            </div>
+            <div id="statusWarning" class="status-warning">
+              <h5 id="warningTitle" class="font-medium mb-2">¿Está seguro de desactivar este usuario?</h5>
+              <p id="warningMessage" class="text-sm">El usuario no podrá acceder al sistema hasta que sea reactivado.</p>
+            </div>
+          </div>
+
+          <div class="flex justify-end space-x-3 pt-4">
+            <button type="button" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors" onclick="closeToggleStatusModal()">
+              <i class="fas fa-times mr-2"></i>
+              Cancelar
+            </button>
+            <button id="confirmStatusBtn" type="button" class="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors">
+              <i class="fas fa-check mr-2"></i>
+              Confirmar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script th:src="@{/js/usuarios.js}"></script>
   <script>
@@ -586,6 +697,57 @@
         }
       });
     });
+
+    // Custom styles for status modals
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .status-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+      }
+      .status-icon.activate {
+        background-color: #dcfce7;
+        color: #16a34a;
+      }
+      .status-icon.deactivate {
+        background-color: #fef3c7;
+        color: #d97706;
+      }
+      .status-warning {
+        padding: 16px;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+      }
+      .status-warning.success {
+        background-color: #f0fdf4;
+        border-color: #bbf7d0;
+      }
+      .role-badge {
+        display: inline-flex;
+        padding: 4px 8px;
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: 9999px;
+      }
+      .role-badge.administrador {
+        background-color: #fef3c7;
+        color: #92400e;
+      }
+      .role-badge.odontologo {
+        background-color: #dbeafe;
+        color: #1e40af;
+      }
+      .role-badge.recepcionista {
+        background-color: #f3e8ff;
+        color: #7c2d12;
+      }
+    `;
+    document.head.appendChild(style);
   </script>
 </body>
 </html>
