@@ -27,6 +27,30 @@
       box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
     }
     
+    /* Prevenir overflow horizontal */
+    body, html {
+      overflow-x: hidden;
+    }
+    
+    /* Asegurar que las tablas no causen overflow */
+    .overflow-x-auto {
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e0 #f7fafc;
+    }
+    
+    .overflow-x-auto::-webkit-scrollbar {
+      height: 6px;
+    }
+    
+    .overflow-x-auto::-webkit-scrollbar-track {
+      background: #f7fafc;
+    }
+    
+    .overflow-x-auto::-webkit-scrollbar-thumb {
+      background: #cbd5e0;
+      border-radius: 3px;
+    }
+    
     /* Responsivo para móviles */
     @media (max-width: 768px) {
       #sidebar {
@@ -42,6 +66,11 @@
       
       main {
         margin-left: 0 !important;
+      }
+      
+      /* Ajustar padding en móviles */
+      main {
+        padding: 1rem !important;
       }
     }
     
@@ -110,15 +139,15 @@
     </aside>
 
     <!-- MAIN -->
-    <main class="flex-1 p-6">
+    <main class="flex-1 min-w-0 p-4 md:p-6">
       <!-- Topbar -->
-      <header class="flex items-center justify-between mb-6">
+      <header class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
           <h2 class="text-xl font-semibold">Pacientes</h2>
           <p class="text-sm text-gray-500">Gestiona la información de los pacientes de la clínica odontológica.</p>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3">
           <!-- Mobile menu toggle -->
           <button id="mobileMenuToggle" class="md:hidden p-2 rounded-lg bg-gray-100" aria-label="Abrir menú">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -128,14 +157,15 @@
 
           <!-- Actions -->
           <div class="flex items-center gap-3">
-            <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" onclick="openNewPatientModal()">
-              <i class="fas fa-user-plus mr-2"></i>
-              Nuevo Paciente
+            <button class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors" onclick="openNewPatientModal()">
+              <i class="fas fa-user-plus mr-1 sm:mr-2"></i>
+              <span class="hidden sm:inline">Nuevo Paciente</span>
+              <span class="sm:hidden">Nuevo</span>
             </button>
           </div>
 
           <!-- User -->
-          <div class="flex items-center gap-3">
+          <div class="hidden lg:flex items-center gap-3">
             <img src="https://i.pravatar.cc/40?img=5" alt="avatar" class="w-9 h-9 rounded-full" />
             <div class="text-right">
               <div class="text-sm font-medium">Recepcionista</div>
@@ -258,16 +288,15 @@
         </div>
 
         <div class="overflow-x-auto">
-          <table class="w-full">
+          <table class="min-w-full">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paciente</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Nacimiento</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Género</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paciente</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Email</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Teléfono</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Fecha Nacimiento</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Género</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">

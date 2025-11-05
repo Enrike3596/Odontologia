@@ -27,6 +27,30 @@
       box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
     }
     
+    /* Prevenir overflow horizontal */
+    body, html {
+      overflow-x: hidden;
+    }
+    
+    /* Asegurar que las tablas no causen overflow */
+    .overflow-x-auto {
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e0 #f7fafc;
+    }
+    
+    .overflow-x-auto::-webkit-scrollbar {
+      height: 6px;
+    }
+    
+    .overflow-x-auto::-webkit-scrollbar-track {
+      background: #f7fafc;
+    }
+    
+    .overflow-x-auto::-webkit-scrollbar-thumb {
+      background: #cbd5e0;
+      border-radius: 3px;
+    }
+    
     /* Responsivo para móviles */
     @media (max-width: 768px) {
       #sidebar {
@@ -42,6 +66,11 @@
       
       main {
         margin-left: 0 !important;
+      }
+      
+      /* Ajustar padding en móviles */
+      main {
+        padding: 1rem !important;
       }
     }
     
@@ -110,9 +139,9 @@
     </aside>
 
     <!-- MAIN -->
-    <main class="flex-1 p-6">
+    <main class="flex-1 min-w-0 p-4 md:p-6">
       <!-- Topbar -->
-      <header class="flex items-center justify-between mb-6">
+      <header class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <div>
           <h2 class="text-xl font-semibold text-emerald-700">
             <i class="fas fa-calendar-alt mr-2 text-emerald-500"></i>
@@ -121,7 +150,7 @@
           <p class="text-sm text-gray-500">Programa, administra y gestiona las citas odontológicas de la clínica.</p>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3">
           <!-- Mobile menu toggle -->
           <button id="mobileMenuToggle" class="md:hidden p-2 rounded-lg bg-gray-100" aria-label="Abrir menú">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -130,19 +159,21 @@
           </button>
 
           <!-- Actions -->
-          <div class="flex items-center gap-3">
-            <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" onclick="openNewAppointmentModal()">
-              <i class="fas fa-plus mr-2"></i>
-              Nueva Cita
+          <div class="flex flex-wrap items-center gap-2">
+            <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors" onclick="openNewAppointmentModal()">
+              <i class="fas fa-plus mr-1 sm:mr-2"></i>
+              <span class="hidden sm:inline">Nueva Cita</span>
+              <span class="sm:hidden">Nueva</span>
             </button>
-            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" onclick="openCalendarView()">
-              <i class="fas fa-calendar mr-2"></i>
-              Vista Calendario
+            <button class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors hidden md:block" onclick="openCalendarView()">
+              <i class="fas fa-calendar mr-1 sm:mr-2"></i>
+              <span class="hidden lg:inline">Vista Calendario</span>
+              <span class="lg:hidden">Calendario</span>
             </button>
           </div>
 
           <!-- User -->
-          <div class="flex items-center gap-3">
+          <div class="hidden lg:flex items-center gap-3">
             <img src="https://i.pravatar.cc/40?img=5" alt="avatar" class="w-9 h-9 rounded-full" />
             <div class="text-right">
               <div class="text-sm font-medium">Administrador</div>
@@ -302,20 +333,20 @@
         </div>
 
         <div class="overflow-x-auto">
-          <table id="citasTable" class="w-full">
+          <table id="citasTable" class="min-w-full">
             <thead class="bg-gray-50">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paciente</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha y Hora</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Odontólogo</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tratamiento</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paciente</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha y Hora</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Odontólogo</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Tratamiento</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
               </tr>
             </thead>
             <tbody id="citasTableBody" class="bg-white divide-y divide-gray-200">
               <tr>
-                <td colspan="7" class="text-center py-8 text-gray-500">
+                <td colspan="6" class="text-center py-8 text-gray-500">
                   <i class="fas fa-spinner fa-pulse text-3xl mb-3 text-gray-300"></i>
                   <p>Cargando citas...</p>
                 </td>

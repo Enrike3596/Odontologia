@@ -1440,7 +1440,7 @@ function updateAppointmentsTable(citas) {
     if (citas.length === 0) {
         tableBody.innerHTML = `
             <tr>
-                <td colspan="7" class="text-center py-8 text-gray-500">
+                <td colspan="6" class="text-center py-8 text-gray-500">
                     <i class="fas fa-calendar-times text-4xl mb-3 text-gray-300"></i>
                     <p>No se encontraron citas</p>
                 </td>
@@ -1451,7 +1451,7 @@ function updateAppointmentsTable(citas) {
 
     tableBody.innerHTML = citas.map(cita => `
         <tr class="hover:bg-gray-50">
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-4 py-4 whitespace-nowrap">
                 <div class="flex items-center">
                     <div class="flex-shrink-0 h-10 w-10">
                         <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
@@ -1463,38 +1463,40 @@ function updateAppointmentsTable(citas) {
                             ${cita.paciente.nombres} ${cita.paciente.apellidos}
                         </div>
                         <div class="text-sm text-gray-500">${cita.paciente.email || ''}</div>
+                        <div class="md:hidden text-xs text-gray-400 mt-1">
+                            Dr. ${cita.odontologo.nombre} • ${cita.tipoCita.nombre}
+                        </div>
                     </div>
                 </div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-4 py-4 whitespace-nowrap">
                 <div class="text-sm text-gray-900">${formatDate(cita.fecha)}</div>
                 <div class="text-sm text-gray-500">${cita.hora}</div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-4 py-4 whitespace-nowrap hidden md:table-cell">
                 <div class="text-sm text-gray-900">${cita.odontologo.nombre} ${cita.odontologo.apellido}</div>
                 <div class="text-sm text-gray-500">Dr. ${cita.odontologo.matricula}</div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-4 py-4 whitespace-nowrap hidden lg:table-cell">
                 <span class="text-sm text-gray-900">${cita.tipoCita.nombre}</span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-4 py-4 whitespace-nowrap">
                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(cita.estado)}">
                     ${getStatusText(cita.estado)}
                 </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                ${cita.observaciones || '-'}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button onclick="viewAppointment(${cita.id})" class="text-blue-600 hover:text-blue-900 mr-3">
-                    <i class="fas fa-eye"></i>
-                </button>
-                <button onclick="editAppointment(${cita.id})" class="text-yellow-600 hover:text-yellow-900 mr-3">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button onclick="deleteAppointment(${cita.id})" class="text-red-600 hover:text-red-900">
-                    <i class="fas fa-trash"></i>
-                </button>
+            <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <div class="flex justify-end gap-1">
+                    <button onclick="viewAppointment(${cita.id})" class="p-2 text-blue-600 hover:bg-blue-100 rounded-full">
+                        <i class="fas fa-eye text-sm"></i>
+                    </button>
+                    <button onclick="editAppointment(${cita.id})" class="p-2 text-yellow-600 hover:bg-yellow-100 rounded-full">
+                        <i class="fas fa-edit text-sm"></i>
+                    </button>
+                    <button onclick="deleteAppointment(${cita.id})" class="p-2 text-red-600 hover:bg-red-100 rounded-full">
+                        <i class="fas fa-trash text-sm"></i>
+                    </button>
+                </div>
             </td>
         </tr>
     `).join('');

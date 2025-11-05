@@ -750,7 +750,7 @@ function renderPatientsTable(patients) {
     if (!patients || patients.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                <td colspan="6" class="px-4 py-4 text-center text-gray-500">
                     <i class="fas fa-users text-2xl mb-2"></i>
                     <div>No hay pacientes registrados</div>
                     <div class="text-sm">Comience registrando el primer paciente</div>
@@ -762,7 +762,7 @@ function renderPatientsTable(patients) {
     
     tbody.innerHTML = patients.map(patient => `
         <tr class="hover:bg-gray-50">
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-4 py-4 whitespace-nowrap">
                 <div class="flex items-center">
                     <div class="flex-shrink-0 h-10 w-10">
                         <div class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
@@ -774,16 +774,19 @@ function renderPatientsTable(patients) {
                     <div class="ml-4">
                         <div class="text-sm font-medium text-gray-900">${patient.nombres} ${patient.apellidos}</div>
                         <div class="text-sm text-gray-500">${patient.tipoDocumento || ''} ${patient.documento || ''}</div>
+                        <div class="sm:hidden text-xs text-gray-400 mt-1">
+                            ${patient.email || 'No registrado'} • ${patient.telefono || 'No registrado'}
+                        </div>
                     </div>
                 </div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-4 py-4 whitespace-nowrap hidden sm:table-cell">
                 <div class="text-sm text-gray-900">${patient.email || 'No registrado'}</div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-4 py-4 whitespace-nowrap hidden md:table-cell">
                 <div class="text-sm text-gray-900">${patient.telefono || 'No registrado'}</div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-4 py-4 whitespace-nowrap hidden lg:table-cell">
                 <div class="text-sm text-gray-900">
                     ${patient.fechaNacimiento ? formatDate(patient.fechaNacimiento) : 'No registrada'}
                 </div>
@@ -791,24 +794,21 @@ function renderPatientsTable(patients) {
                     ${patient.fechaNacimiento ? calculateAge(patient.fechaNacimiento) + ' años' : ''}
                 </div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-4 py-4 whitespace-nowrap hidden lg:table-cell">
                 <span class="text-sm text-gray-900">${getGenderLabel(patient.genero)}</span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                    Activo
-                </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button onclick="viewPatient(${patient.id})" class="text-blue-600 hover:text-blue-900 mr-3" title="Ver detalles">
-                    <i class="fas fa-eye"></i>
-                </button>
-                <button onclick="editPatient(${patient.id})" class="text-yellow-600 hover:text-yellow-900 mr-3" title="Editar">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button onclick="deletePatient(${patient.id})" class="text-red-600 hover:text-red-900" title="Eliminar">
-                    <i class="fas fa-trash"></i>
-                </button>
+            <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <div class="flex justify-end gap-1">
+                    <button onclick="viewPatient(${patient.id})" class="p-2 text-blue-600 hover:bg-blue-100 rounded-full" title="Ver detalles">
+                        <i class="fas fa-eye text-sm"></i>
+                    </button>
+                    <button onclick="editPatient(${patient.id})" class="p-2 text-yellow-600 hover:bg-yellow-100 rounded-full" title="Editar">
+                        <i class="fas fa-edit text-sm"></i>
+                    </button>
+                    <button onclick="deletePatient(${patient.id})" class="p-2 text-red-600 hover:bg-red-100 rounded-full" title="Eliminar">
+                        <i class="fas fa-trash text-sm"></i>
+                    </button>
+                </div>
             </td>
         </tr>
     `).join('');
