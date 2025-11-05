@@ -23,8 +23,7 @@ const AppointmentsModule = {
         { id: 'PENDIENTE', name: 'Pendiente', color: 'yellow' },
         { id: 'CONFIRMADA', name: 'Confirmada', color: 'green' },
         { id: 'COMPLETADA', name: 'Completada', color: 'blue' },
-        { id: 'CANCELADA', name: 'Cancelada', color: 'red' },
-        { id: 'NO_ASISTIO', name: 'No Asistió', color: 'gray' }
+        { id: 'CANCELADA', name: 'Cancelada', color: 'red' }
     ],
     appointmentTypes: [
         { id: 'consulta-general', name: 'Consulta General', icon: 'fa-stethoscope', color: 'blue' },
@@ -334,6 +333,13 @@ async function openNewAppointmentModal(editData = null) {
                         observacionesInput.value = editData.observaciones || '';
                     }
                     
+                    // Estado
+                    const estadoSelect = document.getElementById('estado');
+                    if (estadoSelect && editData.estado) {
+                        estadoSelect.value = editData.estado;
+                        console.log('Estado asignado:', editData.estado);
+                    }
+                    
                     console.log('Formulario llenado exitosamente');
                     
                 } catch (fillError) {
@@ -413,6 +419,9 @@ async function handleNewAppointmentSubmit(e) {
     console.log('Datos del formulario validados:', appointmentData);
     
     try {
+        // Determinar si es creación o edición
+        const isEdit = AppointmentsModule.editMode;
+        
         // Preparar datos para la API (el backend espera objetos, no IDs)
         const citaData = {
             paciente: { id: parseInt(appointmentData.pacienteId) },
@@ -421,7 +430,7 @@ async function handleNewAppointmentSubmit(e) {
             fecha: appointmentData.fechaCita,
             hora: appointmentData.horaCita,
             observaciones: appointmentData.observaciones || '',
-            estado: 'PENDIENTE'
+            estado: appointmentData.estado || 'PENDIENTE'
         };
 
         // En modo edición, agregar el ID de la cita
@@ -430,9 +439,6 @@ async function handleNewAppointmentSubmit(e) {
         }
 
         console.log('Datos preparados para enviar:', citaData);
-        
-        // Determinar si es creación o edición
-        const isEdit = AppointmentsModule.editMode;
         const actionText = isEdit ? 'Actualizando' : 'Programando';
         const successText = isEdit ? 'actualizada' : 'programada';
         
@@ -1539,8 +1545,7 @@ function getStatusColor(estado) {
         'PENDIENTE': 'bg-yellow-100 text-yellow-800',
         'CONFIRMADA': 'bg-green-100 text-green-800',
         'COMPLETADA': 'bg-blue-100 text-blue-800',
-        'CANCELADA': 'bg-red-100 text-red-800',
-        'NO_ASISTIO': 'bg-gray-100 text-gray-800'
+        'CANCELADA': 'bg-red-100 text-red-800'
     };
     return colors[estado] || 'bg-gray-100 text-gray-800';
 }
@@ -1553,8 +1558,7 @@ function getStatusText(estado) {
         'PENDIENTE': 'Pendiente',
         'CONFIRMADA': 'Confirmada',
         'COMPLETADA': 'Completada',
-        'CANCELADA': 'Cancelada',
-        'NO_ASISTIO': 'No Asistió'
+        'CANCELADA': 'Cancelada'
     };
     return texts[estado] || estado;
 }
