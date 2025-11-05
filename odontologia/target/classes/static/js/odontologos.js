@@ -199,11 +199,43 @@ async function openNewDentistModal(editData = null) {
         if (isEditMode) {
             try {
                 // Llenar formulario con datos del odontólogo
-                document.getElementById('nombres').value = editData.nombre || '';
-                document.getElementById('apellidos').value = editData.apellido || '';
-                document.getElementById('licenciaProfesional').value = editData.matricula || '';
+                document.getElementById('nombre').value = editData.nombre || '';
+                document.getElementById('apellido').value = editData.apellido || '';
+                document.getElementById('matricula').value = editData.matricula || '';
+                document.getElementById('tipoDocumento').value = editData.tipoDocumento || '';
+                document.getElementById('documento').value = editData.documento || '';
+                document.getElementById('fechaNacimiento').value = editData.fechaNacimiento || '';
+                document.getElementById('genero').value = editData.genero || '';
+                document.getElementById('email').value = editData.email || '';
+                document.getElementById('telefono').value = editData.telefono || '';
+                document.getElementById('direccion').value = editData.direccion || '';
+                document.getElementById('universidad').value = editData.universidad || '';
+                document.getElementById('anoGraduacion').value = editData.anoGraduacion || '';
+                document.getElementById('experiencia').value = editData.experiencia || '';
                 
-                // Otros campos se pueden agregar según la entidad
+                // Cargar especialidades como checkboxes
+                if (editData.especialidades) {
+                    const especialidadesArray = editData.especialidades.split(', ');
+                    form.querySelectorAll('input[name="especialidades"]').forEach(checkbox => {
+                        checkbox.checked = especialidadesArray.includes(checkbox.value);
+                    });
+                }
+                
+                document.getElementById('contactoEmergenciaNombre').value = editData.contactoEmergenciaNombre || '';
+                document.getElementById('contactoEmergenciaParentesco').value = editData.contactoEmergenciaParentesco || '';
+                document.getElementById('contactoEmergenciaTelefono').value = editData.contactoEmergenciaTelefono || '';
+                
+                // Cargar días de trabajo como checkboxes
+                if (editData.diasTrabajo) {
+                    const diasArray = editData.diasTrabajo.split(', ');
+                    form.querySelectorAll('input[name="diasTrabajo"]').forEach(checkbox => {
+                        checkbox.checked = diasArray.includes(checkbox.value);
+                    });
+                }
+                
+                document.getElementById('horaInicio').value = editData.horaInicio || '';
+                document.getElementById('horaFin').value = editData.horaFin || '';
+                document.getElementById('observaciones').value = editData.observaciones || '';
                 
             } catch (error) {
                 console.error('Error al cargar datos para edición:', error);
@@ -223,9 +255,9 @@ async function openNewDentistModal(editData = null) {
             if (horaFin) horaFin.value = '17:00';
             
             // Marcar días laborales por defecto (lunes a viernes)
-            const defaultDays = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes'];
+            const defaultDays = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
             defaultDays.forEach(day => {
-                const checkbox = document.querySelector(`input[name="diasTrabajo[]"][value="${day}"]`);
+                const checkbox = form.querySelector(`input[name="diasTrabajo"][value="${day}"]`);
                 if (checkbox) checkbox.checked = true;
             });
         }
@@ -268,11 +300,35 @@ function closeNewDentistModal() {
 async function handleNewDentistSubmit(e) {
     e.preventDefault();
     
-    const formData = new FormData(e.target);
-    const dentistData = Object.fromEntries(formData);
+    const form = e.target;
+    const formData = new FormData(form);
     
-    // Validar datos básicos
-    const validation = validateBasicDentistData(dentistData);
+    // Procesar campos de texto normales
+    const dentistData = {};
+    for (let [key, value] of formData.entries()) {
+        if (key !== 'especialidades' && key !== 'diasTrabajo') {
+            dentistData[key] = value;
+        }
+    }
+    
+    // Procesar especialidades seleccionadas
+    const especialidadesSeleccionadas = [];
+    const especialidadesCheckboxes = form.querySelectorAll('input[name="especialidades"]:checked');
+    especialidadesCheckboxes.forEach(checkbox => {
+        especialidadesSeleccionadas.push(checkbox.value);
+    });
+    dentistData.especialidades = especialidadesSeleccionadas.join(', ');
+    
+    // Procesar días de trabajo seleccionados
+    const diasSeleccionados = [];
+    const diasCheckboxes = form.querySelectorAll('input[name="diasTrabajo"]:checked');
+    diasCheckboxes.forEach(checkbox => {
+        diasSeleccionados.push(checkbox.value);
+    });
+    dentistData.diasTrabajo = diasSeleccionados.join(', ');
+    
+    // Validar datos completos
+    const validation = validateCompleteDentistData(dentistData);
     if (!validation.isValid) {
         showValidationError(validation.errors);
         return;
@@ -283,7 +339,25 @@ async function handleNewDentistSubmit(e) {
         const odontologoData = {
             nombre: dentistData.nombre.trim(),
             apellido: dentistData.apellido.trim(),
-            matricula: dentistData.matricula.trim()
+            matricula: dentistData.matricula.trim(),
+            tipoDocumento: dentistData.tipoDocumento,
+            documento: dentistData.documento.trim(),
+            fechaNacimiento: dentistData.fechaNacimiento,
+            genero: dentistData.genero,
+            email: dentistData.email?.trim() || null,
+            telefono: dentistData.telefono.trim(),
+            direccion: dentistData.direccion?.trim() || null,
+            universidad: dentistData.universidad.trim(),
+            anoGraduacion: parseInt(dentistData.anoGraduacion),
+            experiencia: parseInt(dentistData.experiencia),
+            especialidades: dentistData.especialidades || null,
+            contactoEmergenciaNombre: dentistData.contactoEmergenciaNombre?.trim() || null,
+            contactoEmergenciaParentesco: dentistData.contactoEmergenciaParentesco?.trim() || null,
+            contactoEmergenciaTelefono: dentistData.contactoEmergenciaTelefono?.trim() || null,
+            diasTrabajo: dentistData.diasTrabajo || null,
+            horaInicio: dentistData.horaInicio || null,
+            horaFin: dentistData.horaFin || null,
+            observaciones: dentistData.observaciones?.trim() || null
         };
         
         // Determinar si es creación o edición
@@ -370,6 +444,61 @@ function validateBasicDentistData(data) {
     // Validación de matrícula profesional (formato MP-XXXXX)
     if (data.matricula && !/^MP-\d{4,6}$/.test(data.matricula)) {
         errors.push('La matrícula debe tener el formato MP-XXXXX (4-6 dígitos)');
+    }
+    
+    return {
+        isValid: errors.length === 0,
+        errors
+    };
+}
+
+/**
+ * Valida los datos completos del odontólogo
+ */
+function validateCompleteDentistData(data) {
+    const errors = [];
+    
+    // Validaciones requeridas
+    if (!data.nombre?.trim()) errors.push('El nombre es requerido');
+    if (!data.apellido?.trim()) errors.push('El apellido es requerido');
+    if (!data.tipoDocumento) errors.push('El tipo de documento es requerido');
+    if (!data.documento?.trim()) errors.push('El número de documento es requerido');
+    if (!data.fechaNacimiento) errors.push('La fecha de nacimiento es requerida');
+    if (!data.genero) errors.push('El género es requerido');
+    if (!data.matricula?.trim()) errors.push('La matrícula profesional es requerida');
+    if (!data.universidad?.trim()) errors.push('La universidad es requerida');
+    if (!data.anoGraduacion) errors.push('El año de graduación es requerido');
+    if (!data.experiencia) errors.push('Los años de experiencia son requeridos');
+    if (!data.telefono?.trim()) errors.push('El teléfono es requerido');
+    
+    // Validación de matrícula profesional (formato MP-XXXXX)
+    if (data.matricula && !/^MP-\d{4,6}$/.test(data.matricula)) {
+        errors.push('La matrícula debe tener el formato MP-XXXXX (4-6 dígitos)');
+    }
+    
+    // Validación de email si se proporciona
+    if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+        errors.push('El formato del email no es válido');
+    }
+    
+    // Validaciones de rango para números
+    const currentYear = new Date().getFullYear();
+    if (data.anoGraduacion && (data.anoGraduacion < 1950 || data.anoGraduacion > currentYear)) {
+        errors.push(`El año de graduación debe estar entre 1950 y ${currentYear}`);
+    }
+    
+    if (data.experiencia && (data.experiencia < 0 || data.experiencia > 50)) {
+        errors.push('Los años de experiencia deben estar entre 0 y 50');
+    }
+    
+    // Validación de fecha de nacimiento (debe ser mayor de edad)
+    if (data.fechaNacimiento) {
+        const birthDate = new Date(data.fechaNacimiento);
+        const today = new Date();
+        const age = today.getFullYear() - birthDate.getFullYear();
+        if (age < 18) {
+            errors.push('El odontólogo debe ser mayor de edad');
+        }
     }
     
     return {
@@ -508,36 +637,54 @@ async function viewDentist(dentistId) {
  * Muestra el modal con los detalles del odontólogo
  */
 function showDentistDetailsModal(dentist) {
-    // Llenar datos en el modal adaptados a la estructura real
+    // Llenar datos en el modal con la estructura completa
     document.getElementById('viewDentistName').textContent = `Dr. ${dentist.nombre} ${dentist.apellido}`;
-    document.getElementById('viewDentistEmail').textContent = 'No disponible'; // No en la entidad actual
-    document.getElementById('viewDentistDocument').textContent = dentist.matricula || 'No especificado';
-    document.getElementById('viewDentistBirthdate').textContent = 'No disponible'; // No en la entidad actual
-    document.getElementById('viewDentistGender').textContent = 'No disponible'; // No en la entidad actual
-    document.getElementById('viewDentistPhone').textContent = 'No disponible'; // No en la entidad actual
-    document.getElementById('viewDentistAddress').textContent = 'No disponible'; // No en la entidad actual
+    document.getElementById('viewDentistEmail').textContent = dentist.email || 'No especificado';
+    document.getElementById('viewDentistDocument').textContent = `${dentist.tipoDocumento || ''} ${dentist.documento || 'No especificado'}`;
+    document.getElementById('viewDentistBirthdate').textContent = dentist.fechaNacimiento || 'No especificado';
+    document.getElementById('viewDentistGender').textContent = getGenderText(dentist.genero) || 'No especificado';
+    document.getElementById('viewDentistPhone').textContent = dentist.telefono || 'No especificado';
+    document.getElementById('viewDentistAddress').textContent = dentist.direccion || 'No especificado';
     document.getElementById('viewDentistLicense').textContent = dentist.matricula;
-    document.getElementById('viewDentistUniversity').textContent = 'No disponible'; // No en la entidad actual
-    document.getElementById('viewDentistGradYear').textContent = 'No disponible'; // No en la entidad actual
-    document.getElementById('viewDentistExperience').textContent = `${dentist.experiencia} años`;
+    document.getElementById('viewDentistUniversity').textContent = dentist.universidad || 'No especificado';
+    document.getElementById('viewDentistGradYear').textContent = dentist.anoGraduacion || 'No especificado';
+    document.getElementById('viewDentistExperience').textContent = `${dentist.experiencia || 0} años`;
     
-    // Mostrar especialidades
+    // Mostrar especialidades como badges
     const specialtiesContainer = document.getElementById('viewDentistSpecialties');
-    if (dentist.especialidades && dentist.especialidades.length > 0) {
-        const specialtyTags = dentist.especialidades.map(spec => {
-            const specialty = DentistsModule.specialties.find(s => s.id === spec);
-            const name = specialty ? specialty.name : spec;
-            const color = specialty ? specialty.color : 'gray';
-            return `<span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-${color}-100 text-${color}-800 mr-1 mb-1">${name}</span>`;
+    if (dentist.especialidades) {
+        const especialidadesArray = dentist.especialidades.split(', ');
+        const specialtyBadges = especialidadesArray.map(especialidad => {
+            return `<span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-emerald-100 text-emerald-800 mr-1 mb-1">${especialidad}</span>`;
         }).join('');
-        specialtiesContainer.innerHTML = specialtyTags;
+        specialtiesContainer.innerHTML = specialtyBadges;
     } else {
         specialtiesContainer.textContent = 'No especificadas';
     }
     
+    // Mostrar días de trabajo como badges
+    const workDaysContainer = document.getElementById('viewDentistWorkDays');
+    if (dentist.diasTrabajo) {
+        const diasArray = dentist.diasTrabajo.split(', ');
+        const dayBadges = diasArray.map(dia => {
+            return `<span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800 mr-1 mb-1">${dia}</span>`;
+        }).join('');
+        workDaysContainer.innerHTML = dayBadges;
+    } else {
+        workDaysContainer.textContent = 'No especificados';
+    }
+    
+    // Mostrar horario
+    const scheduleElement = document.getElementById('viewDentistSchedule');
+    if (dentist.horaInicio && dentist.horaFin) {
+        scheduleElement.textContent = `${dentist.horaInicio} - ${dentist.horaFin}`;
+    } else {
+        scheduleElement.textContent = 'No especificado';
+    }
+    
     // Actualizar avatar
     const avatar = document.getElementById('viewDentistAvatar');
-    avatar.innerHTML = getDentistInitials(dentist.nombres, dentist.apellidos);
+    avatar.innerHTML = getDentistInitials(dentist.nombre, dentist.apellido);
     
     // Guardar referencia del odontólogo actual
     DentistsModule.currentDentist = dentist;
@@ -1260,6 +1407,18 @@ function closeNewDentistModal() {
     // Resetear modo de edición
     DentistsModule.editMode = false;
     DentistsModule.editingDentistId = null;
+}
+
+/**
+ * Convierte el código de género a texto legible
+ */
+function getGenderText(genero) {
+    switch(genero) {
+        case 'M': return 'Masculino';
+        case 'F': return 'Femenino';
+        case 'O': return 'Otro';
+        default: return 'No especificado';
+    }
 }
 
 // Exportar funciones principales para uso global
