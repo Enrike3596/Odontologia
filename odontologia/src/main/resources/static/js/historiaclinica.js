@@ -357,7 +357,7 @@ async function handleNewRecordSubmit(e) {
                     <div class="mt-4 p-3 bg-teal-50 rounded-lg">
                         <p class="text-sm text-teal-700">
                             <i class="fas fa-user mr-1"></i>
-                            ${result.paciente ? `${result.paciente.nombre} ${result.paciente.apellido}` : 'Paciente'}
+                            ${result.paciente ? `${result.paciente.nombres} ${result.paciente.apellidos}` : 'Paciente'}
                         </p>
                     </div>
                 </div>
@@ -1012,7 +1012,7 @@ function updateRecordsTable(historias) {
                     </div>
                     <div class="ml-4">
                         <div class="text-sm font-medium text-gray-900">
-                            ${historia.paciente ? `${historia.paciente.nombre} ${historia.paciente.apellido}` : 'Sin paciente'}
+                            ${historia.paciente ? `${historia.paciente.nombres} ${historia.paciente.apellidos}` : 'Sin paciente'}
                         </div>
                         <div class="text-sm text-gray-500">ID: ${historia.id}</div>
                     </div>
@@ -1126,7 +1126,7 @@ async function loadPacientesSelect() {
             pacientes.forEach(paciente => {
                 const option = document.createElement('option');
                 option.value = paciente.id;
-                option.textContent = `${paciente.nombre} ${paciente.apellido}`;
+                option.textContent = `${paciente.nombres} ${paciente.apellidos}`;
                 select.appendChild(option);
             });
         }
