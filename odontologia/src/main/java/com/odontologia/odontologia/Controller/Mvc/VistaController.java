@@ -11,6 +11,11 @@ public class VistaController {
         return "home"; // Carga templates/home.html
     }
 
+    @GetMapping("/inicio")
+    public String paginaInicio() {
+        return "Pagina inicial/index"; // Carga templates/Pagina inicial/index.html
+    }
+
     @GetMapping("/dashboard")
     public String dashboard() {
         return "home"; // Carga templates/home.html
