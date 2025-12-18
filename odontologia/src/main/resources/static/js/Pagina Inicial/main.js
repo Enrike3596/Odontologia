@@ -52,6 +52,33 @@
 		autoplayButtonOutput: false,
 	});
 
+	//======= tiny slider for testimonial-slider
+	tns({
+		container: '.testimonial-slider',
+		items: 3,
+		slideBy: 1,
+		autoplay: true,
+		autoplayTimeout: 5000,
+		autoplayButtonOutput: false,
+		mouseDrag: true,
+		gutter: 0,
+		nav: true,
+		navPosition: 'bottom',
+		controls: true,
+		controlsText: ['<i class="lni lni-chevron-left"></i>', '<i class="lni lni-chevron-right"></i>'],
+		responsive: {
+			0: {
+				items: 1,
+			},
+			768: {
+				items: 2,
+			},
+			992: {
+				items: 3,
+			}
+		}
+	});
+
 	// for menu scroll 
 	var pageLink = document.querySelectorAll('.page-scroll');
 
