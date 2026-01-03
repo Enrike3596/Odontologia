@@ -92,7 +92,8 @@
 		});
 	});
 
-	// section menu active
+	// section menu active - DESACTIVADO: Ahora manejado por navigation.js
+	/*
 	function onScroll(event) {
 		var sections = document.querySelectorAll('.page-scroll');
 		var scrollPos = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop;
@@ -112,9 +113,10 @@
 	};
 
 	window.document.addEventListener('scroll', onScroll);
+	*/
 
-
-	//===== close navbar-collapse when a  clicked
+	//===== close navbar-collapse when a clicked - DESACTIVADO: Ahora manejado por navigation.js
+	/*
 	let navbarToggler = document.querySelector(".navbar-toggler");
 	var navbarCollapse = document.querySelector(".navbar-collapse");
 
@@ -127,6 +129,16 @@
 	navbarToggler.addEventListener('click', function () {
 		navbarToggler.classList.toggle("active");
 	})
+	*/
+
+	// Mantener solo el toggle del botón hamburguesa
+	let navbarToggler = document.querySelector(".navbar-toggler");
+	if (navbarToggler) {
+		navbarToggler.addEventListener('click', function () {
+			navbarToggler.classList.toggle("active");
+		});
+	}
+
 
 
 

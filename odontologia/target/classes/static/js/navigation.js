@@ -14,11 +14,14 @@ document.addEventListener('DOMContentLoaded', function() {
     let isProgrammaticScroll = false;
     let scrollTimeout = null;
     let targetSectionId = null; // Nueva variable para almacenar la sección objetivo
+    let lastClickedLink = null; // Guardar el último enlace clickeado
     
     // Configuración del observador de intersección
+    // Usar márgenes diferentes para móvil vs escritorio
+    const isMobile = window.innerWidth <= 768;
     const observerOptions = {
         root: null, // viewport
-        rootMargin: '-15% 0px -65% 0px', // Activar cuando la sección esté en el 15% superior del viewport
+        rootMargin: isMobile ? '-20% 0px -60% 0px' : '-15% 0px -65% 0px',
         threshold: 0
     };
     
@@ -46,16 +49,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Crear el observador de intersección
     const sectionObserver = new IntersectionObserver((entries) => {
-        // Si estamos en un scroll programático, ignorar las detecciones del observer
+        // Si estamos en un scroll programático, ignorar completamente el observer
         if (isProgrammaticScroll) {
-            // Durante scroll programático, solo activar si es la sección objetivo
-            if (targetSectionId) {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting && entry.target.id === targetSectionId) {
-                        activateLink(entry.target.id);
-                    }
-                });
-            }
             return;
         }
         
@@ -86,6 +81,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const targetSection = document.getElementById(targetId);
                 
                 if (targetSection) {
+                    // Guardar referencia al enlace clickeado
+                    lastClickedLink = this;
+                    
                     // Activar flag de scroll programático
                     isProgrammaticScroll = true;
                     targetSectionId = targetId; // Guardar el ID de la sección objetivo
@@ -93,6 +91,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Limpiar timeout anterior si existe
                     if (scrollTimeout) {
                         clearTimeout(scrollTimeout);
+                    }
+                    
+                    // Activar inmediatamente el enlace clickeado
+                    removeAllActiveClasses();
+                    this.classList.add('active');
+                    this.parentElement.classList.add('active');
+                    
+                    // Cerrar el menú móvil si está abierto
+                    const navbarToggler = document.querySelector('.navbar-toggler');
+                    const navbarCollapse = document.querySelector('.navbar-collapse');
+                    
+                    if (navbarCollapse && navbarCollapse.classList.contains('show')) {
+                        navbarCollapse.classList.remove('show');
+                    }
+                    if (navbarToggler && navbarToggler.classList.contains('active')) {
+                        navbarToggler.classList.remove('active');
                     }
                     
                     // Calcular la posición considerando el header fijo
@@ -108,37 +122,46 @@ document.addEventListener('DOMContentLoaded', function() {
                     const offset = totalHeaderHeight + 20;
                     const targetPosition = targetSection.offsetTop - offset;
                     
-                    // Activar inmediatamente el enlace clickeado
-                    removeAllActiveClasses();
-                    this.classList.add('active');
-                    this.parentElement.classList.add('active');
+                    // Pequeño delay para permitir que el menú se cierre primero
+                    setTimeout(() => {
+                        // Smooth scroll a la sección
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+                    }, 100);
                     
-                    // Smooth scroll a la sección
-                    window.scrollTo({
-                        top: targetPosition,
-                        behavior: 'smooth'
-                    });
-                    
-                    // Desactivar flag después de que termine el scroll (aproximadamente 1.5 segundos)
+                    // Desactivar flag después de que termine el scroll (3 segundos para asegurar)
                     scrollTimeout = setTimeout(() => {
                         isProgrammaticScroll = false;
                         targetSectionId = null; // Limpiar el ID objetivo
-                    }, 1500);
-                    
-                    // Cerrar el menú móvil si está abierto
-                    const navbarToggler = document.querySelector('.navbar-toggler');
-                    const navbarCollapse = document.querySelector('.navbar-collapse');
-                    
-                    if (navbarCollapse && navbarCollapse.classList.contains('show')) {
-                        navbarCollapse.classList.remove('show');
-                    }
-                    if (navbarToggler && navbarToggler.classList.contains('active')) {
-                        navbarToggler.classList.remove('active');
-                    }
+                        lastClickedLink = null;
+                        // Forzar la activación del enlace correcto después del scroll
+                        activateLink(targetId);
+                    }, 3000);
                 }
             }
         }, true); // Usar capture phase para ejecutarse antes que otros listeners
     });
+    
+    // Detectar cuando el usuario hace scroll manual para cancelar el modo programático
+    let userScrollTimer;
+    let isUserScrolling = false;
+    
+    window.addEventListener('scroll', function() {
+        // Si estamos en scroll programático y el usuario intenta hacer scroll, mantener el enlace clickeado
+        if (isProgrammaticScroll && lastClickedLink) {
+            clearTimeout(userScrollTimer);
+            userScrollTimer = setTimeout(() => {
+                // Después de que el usuario deje de hacer scroll, verificar si seguimos en modo programático
+                if (isProgrammaticScroll && lastClickedLink) {
+                    removeAllActiveClasses();
+                    lastClickedLink.classList.add('active');
+                    lastClickedLink.parentElement.classList.add('active');
+                }
+            }, 150);
+        }
+    }, { passive: true });
     
     // Manejar el scroll inicial para activar la sección correcta al cargar la página
     window.addEventListener('load', function() {
