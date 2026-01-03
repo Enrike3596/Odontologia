@@ -1216,6 +1216,16 @@ body {
     flex-shrink: 0;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
     transition: all 0.3s ease;
+    overflow: hidden; /* Asegura que la imagen no se salga del cÃ­rculo */
+}
+
+/* Estilos para las imÃ¡genes dentro del avatar */
+.testimonial-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ajusta la imagen para cubrir todo el espacio */
+    object-position: center; /* Centra la imagen */
+    border-radius: 50%; /* Asegura que la imagen sea circular */
 }
 
 .testimonial-box:hover .testimonial-avatar {
@@ -1294,6 +1304,11 @@ body {
         height: 60px;
     }
     
+    .testimonial-avatar img {
+        width: 100%;
+        height: 100%;
+    }
+    
     .testimonial-avatar span {
         font-size: 22px;
     }
@@ -1327,6 +1342,11 @@ body {
     .testimonial-avatar {
         width: 65px;
         height: 65px;
+    }
+    
+    .testimonial-avatar img {
+        width: 100%;
+        height: 100%;
     }
     
     .testimonial-avatar span {
@@ -1389,7 +1409,7 @@ body {
     }
 }
 /* ============================================================================
-   NAVEGACIÓN CON SCROLL SPY - Enlaces activos dinámicos
+   NAVEGACIï¿½N CON SCROLL SPY - Enlaces activos dinï¿½micos
    ============================================================================ */
 /* Estilo para el enlace activo en el navbar */
 .navbar-nav .nav-item a.page-scroll {
@@ -1438,7 +1458,7 @@ html {
     scroll-behavior: smooth;
 }
 
-/* Ajuste para dispositivos móviles */
+/* Ajuste para dispositivos mï¿½viles */
 @media (max-width: 991px) {
     .navbar-nav .nav-item a.page-scroll.active::after {
         bottom: 0;
