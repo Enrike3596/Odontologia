@@ -138,7 +138,13 @@ async function handleLoginAction(event) {
       }));
     } catch (e) { /* almacenamiento no disponible: continuar igual */ }
 
-    setTimeout(() => { window.location.href = '/dashboard'; }, 700);
+    // replace() en lugar de href: no deja el login en el historial (el "atras" no vuelve aqui).
+    // Si el guardia guardo una ruta en 'clinica.next', se retoma despues del login.
+    let target = '/dashboard';
+    try {
+      if (window.ClinicaAuth) target = window.ClinicaAuth.consumeNext('/dashboard');
+    } catch (e) { /* destino por defecto */ }
+    setTimeout(() => { window.location.replace(target); }, 700);
   } catch (error) {
     showFeedback('Error de conexión', 'No se pudo contactar al servidor. Verifica tu conexión e intenta de nuevo.', false);
   } finally {
@@ -156,7 +162,7 @@ function triggerBiometrics() {
 
   if (remembered) {
     showFeedback('Validación Biométrica', 'Sesión recordada verificada en este dispositivo...', true);
-    setTimeout(() => { window.location.href = '/dashboard'; }, 800);
+    setTimeout(() => { window.location.replace('/dashboard'); }, 800);
   } else {
     showFeedback(
       'Sin sesión recordada',

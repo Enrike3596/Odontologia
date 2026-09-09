@@ -87,7 +87,7 @@
     }
   </style>
 </head>
-<body class="bg-gray-50 text-gray-800 antialiased" data-page="citas">
+<body class="bg-gray-50 text-gray-800 antialiased" data-page="citas" data-require-auth="true">
 
   <!-- Layout: Sidebar + Main -->
   <div class="min-h-screen flex">
@@ -609,6 +609,8 @@
   </div>
 
   <!-- Scripts -->
+  <!-- Guardia de sesion: debe cargarse antes que los scripts de la pagina -->
+  <script th:src="@{/js/auth-guard.js}"></script>
   <script th:src="@{/js/citas.js}"></script>
   <script>
     // Mobile sidebar functionality

@@ -90,7 +90,7 @@
     body { min-height: max(884px, 100dvh); }
   </style>
 </head>
-<body class="bg-surface font-body-md text-on-surface pt-safe pb-safe flex flex-col antialiased selection:bg-secondary-fixed">
+<body class="bg-surface font-body-md text-on-surface pt-safe pb-safe flex flex-col antialiased selection:bg-secondary-fixed" data-guest-only="true">
 <main class="flex flex-col relative w-full bg-surface min-h-screen">
   <div class="flex flex-col w-full pb-8 max-w-md mx-auto md:max-w-lg">
 
@@ -326,6 +326,8 @@
     </div>
   </div>
 </main>
+<!-- Guardia de sesion: redirige a /dashboard si ya hay sesion (evita volver al login con "atras") -->
+<script th:src="@{/js/auth-guard.js}"></script>
 <script th:src="@{/js/login.js}"></script>
 </body>
 </html>
