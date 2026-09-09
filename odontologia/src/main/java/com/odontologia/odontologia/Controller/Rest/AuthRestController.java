@@ -1,5 +1,7 @@
 package com.odontologia.odontologia.Controller.Rest;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +31,7 @@ public class AuthRestController {
                 || request.getIdentifier() == null || request.getIdentifier().trim().isEmpty()
                 || request.getPassword() == null || request.getPassword().isEmpty()) {
             return ResponseEntity.badRequest()
-                    .body(java.util.Map.of("error", "Identificador y contraseña son requeridos"));
+                    .body(Map.of("error", "Identificador y contraseña son requeridos"));
         }
 
         try {
@@ -40,10 +42,10 @@ public class AuthRestController {
             // Usuario inactivo -> 403; credenciales invalidas -> 401
             if (msg != null && msg.toLowerCase().contains("inactivo")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(java.util.Map.of("error", msg));
+                        .body(Map.of("error", msg));
             }
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(java.util.Map.of("error", msg != null ? msg : "Credenciales inválidas"));
+                    .body(Map.of("error", msg != null ? msg : "Credenciales inválidas"));
         }
     }
 }

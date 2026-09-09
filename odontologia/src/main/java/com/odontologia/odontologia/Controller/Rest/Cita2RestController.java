@@ -13,13 +13,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.odontologia.odontologia.Dto.Cita2Dto;
-import com.odontologia.odontologia.Impl.Cita2ServiceImpl;
+import com.odontologia.odontologia.Service.Cita2Service;
 
 @RestController
 @RequestMapping("/api")
 public class Cita2RestController {
     @Autowired
-    private Cita2ServiceImpl cita2Service;
+    private Cita2Service cita2Service;
 
     // Listar todas las citas
 

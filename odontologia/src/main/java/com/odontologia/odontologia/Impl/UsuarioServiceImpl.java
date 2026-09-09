@@ -75,7 +75,12 @@ public class UsuarioServiceImpl implements UsuarioService {
 			
 			// Si no se proporciona username, generamos uno basado en email
 			if (usuarioDto.getUsername() == null || usuarioDto.getUsername().isEmpty()) {
-				u.setUsername(usuarioDto.getEmail().split("@")[0]);
+				String email = usuarioDto.getEmail();
+				if (email != null && email.contains("@")) {
+					u.setUsername(email.split("@")[0]);
+				} else {
+					throw new RuntimeException("El email no tiene un formato válido");
+				}
 			} else {
 				u.setUsername(usuarioDto.getUsername());
 			}
@@ -123,8 +128,8 @@ public class UsuarioServiceImpl implements UsuarioService {
 			existente.setPassword(usuarioDto.getPassword());
 		}
 		if (usuarioDto.getRol() != null && usuarioDto.getRol().getId() != null) {
-			Rol rol = new Rol();
-			rol.setId(usuarioDto.getRol().getId());
+			Rol rol = rolRepository.findById(usuarioDto.getRol().getId())
+					.orElseThrow(() -> new RuntimeException("El rol especificado no existe"));
 			existente.setRol(rol);
 		}
 
@@ -192,28 +197,5 @@ public class UsuarioServiceImpl implements UsuarioService {
 			dto.setRol(r);
 		}
 		return dto;
-	}
-
-	private Usuario convertirDtoAEntity(UsuarioDto dto) {
-		Usuario u = new Usuario();
-		u.setId(dto.getId());
-		u.setNombres(dto.getNombres());
-		u.setApellidos(dto.getApellidos());
-		u.setTipoDocumento(dto.getTipoDocumento());
-		u.setDocumento(dto.getDocumento());
-		u.setFechaNacimiento(dto.getFechaNacimiento());
-		u.setGenero(dto.getGenero());
-		u.setEmail(dto.getEmail());
-		u.setTelefono(dto.getTelefono());
-		u.setDireccion(dto.getDireccion());
-		u.setUsername(dto.getUsername());
-		u.setPassword(dto.getPassword());
-		u.setActivo(dto.getActivo() != null ? dto.getActivo() : true);
-		if (dto.getRol() != null && dto.getRol().getId() != null) {
-			Rol r = new Rol();
-			r.setId(dto.getRol().getId());
-			u.setRol(r);
-		}
-		return u;
 	}
 }

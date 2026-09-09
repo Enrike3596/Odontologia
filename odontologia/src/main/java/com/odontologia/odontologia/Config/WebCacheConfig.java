@@ -2,6 +2,7 @@ package com.odontologia.odontologia.Config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -20,15 +21,14 @@ public class WebCacheConfig implements WebMvcConfigurer {
 
     private static final HandlerInterceptor NO_CACHE_INTERCEPTOR = new HandlerInterceptor() {
         @Override
-        public boolean postHandle(HttpServletRequest request, HttpServletResponse response,
-                Object handler, org.springframework.web.servlet.ModelAndView modelAndView) {
+        public void postHandle(HttpServletRequest request, HttpServletResponse response,
+                Object handler, ModelAndView modelAndView) {
             // Solo vistas Thymeleaf (las API y estaticos quedan excluidos en el registro)
             if (modelAndView != null && modelAndView.hasView()) {
                 response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
                 response.setHeader("Pragma", "no-cache");
                 response.setDateHeader("Expires", 0);
             }
-            return true;
         }
     };
 

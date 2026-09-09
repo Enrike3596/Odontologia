@@ -1,3 +1,50 @@
 {
-    "java.compile.nullAnalysis.mode": "automatic"
+    // Desactiva el análisis de nulabilidad agresivo de JDT:
+    // con "automatic" marcaba decenas de falsos errores en el panel Problems
+    // aunque el proyecto compila correctamente con Maven.
+    "java.compile.nullAnalysis.mode": "disabled",
+    "java.configuration.updateBuildConfiguration": "automatic",
+    // Soporte Lombok (@Getter/@Setter/@Data...) en el language server.
+    // Sin esto, JDT reporta "cannot resolve method" en cada getter/setter.
+    "java.jdt.ls.lombokSupport.enabled": true,
+    "java.saveActions.organizeImports": true,
+    "java.format.settings.profile": "GoogleStyle",
+    "java.errors.incompleteClasspath.severity": "warning",
+    "java.trace.server": "off",
+
+    // Codificación coherente con pom.xml (project.build.sourceEncoding=UTF-8).
+    // Evita comentarios con tildes/ñ corruptos (odont��logos, Contrase��a...).
+    "files.encoding": "utf8",
+    "files.autoGuessEncoding": false,
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+    },
+    "editor.trimAutoWhitespace": true,
+
+    // No indexar ni validar el output de Maven.
+    "files.exclude": {
+        "**/target": true,
+        "**/.mvn": false
+    },
+    "search.exclude": {
+        "**/target": true
+    },
+
+    // Thymeleaf: declara los atributos th:* para que el validador HTML
+    // no los reporte como "Unknown attribute" en cada template.
+    "html.customData": [
+        ".vscode/thymeleaf.html-data.json"
+    ],
+    "html.validate.scripts": true,
+    "html.validate.styles": true,
+    "css.validate": true,
+    "javascript.validate.enable": true,
+
+    // El proyecto Maven vive en la subcarpeta odontologia/.
+    "java.import.generatesMetadataFilesAtProjectRoot": false,
+    "maven.view": "hierarchical"
 }

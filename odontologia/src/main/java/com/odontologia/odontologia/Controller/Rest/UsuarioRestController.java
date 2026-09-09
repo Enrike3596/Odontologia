@@ -1,6 +1,7 @@
 package com.odontologia.odontologia.Controller.Rest;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -47,7 +48,7 @@ public class UsuarioRestController {
             
             // Retornar error con mensaje descriptivo
             return ResponseEntity.badRequest()
-                .body(java.util.Map.of("error", e.getMessage()));
+                .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             // Log del error para debugging
             System.err.println("Error inesperado al crear usuario: " + e.getMessage());
@@ -55,7 +56,7 @@ public class UsuarioRestController {
             
             // Retornar error genérico
             return ResponseEntity.status(500)
-                .body(java.util.Map.of("error", "Error interno del servidor"));
+                .body(Map.of("error", "Error interno del servidor"));
         }
     }
 
@@ -74,7 +75,7 @@ public class UsuarioRestController {
 
     // Endpoint adicional para cambiar estado del usuario (activo/inactivo)
     @PutMapping("/usuarios/{id}/estado")
-    public ResponseEntity<String> cambiarEstadoUsuario(@PathVariable Long id, @RequestBody java.util.Map<String, Boolean> request) {
+    public ResponseEntity<String> cambiarEstadoUsuario(@PathVariable Long id, @RequestBody Map<String, Boolean> request) {
         try {
             Boolean activo = request.get("activo");
             if (activo == null) {
