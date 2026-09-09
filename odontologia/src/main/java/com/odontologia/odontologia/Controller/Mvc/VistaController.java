@@ -50,4 +50,9 @@ public class VistaController {
     public String configuracion() {
         return "configuracion"; // Carga templates/configuracion.html (por crear)
     }
+
+    @GetMapping("/login")
+    public String login() {
+        return "login"; // Carga templates/login.html
+    }
 }
