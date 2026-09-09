@@ -140,6 +140,35 @@ public class UsuarioServiceImpl implements UsuarioService {
 		usuarioRepository.deleteById(id);
 	}
 
+	@Override
+	public UsuarioDto autenticar(String identifier, String password) {
+		if (identifier == null || identifier.trim().isEmpty()) {
+			throw new RuntimeException("El identificador es requerido");
+		}
+		if (password == null || password.isEmpty()) {
+			throw new RuntimeException("La contraseña es requerida");
+		}
+
+		String id = identifier.trim();
+		Usuario usuario = usuarioRepository.findByEmail(id)
+				.or(() -> usuarioRepository.findByUsername(id))
+				.or(() -> usuarioRepository.findByDocumento(id))
+				.orElseThrow(() -> new RuntimeException("Credenciales inválidas"));
+
+		if (usuario.getActivo() == null || !usuario.getActivo()) {
+			throw new RuntimeException("Usuario inactivo. Contacte al administrador");
+		}
+
+		// NOTA: las contraseñas se almacenan en texto plano (compatibilidad con
+		// los usuarios existentes). Si a futuro se usa BCrypt, comparar aquí con
+		// passwordEncoder.matches(password, usuario.getPassword()).
+		if (!password.equals(usuario.getPassword())) {
+			throw new RuntimeException("Credenciales inválidas");
+		}
+
+		return convertirEntityADto(usuario);
+	}
+
 	private UsuarioDto convertirEntityADto(Usuario u) {
 		UsuarioDto dto = new UsuarioDto();
 		dto.setId(u.getId());

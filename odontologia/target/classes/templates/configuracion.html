@@ -203,6 +203,7 @@
         cancelButtonText: 'Cancelar'
       }).then((result) => {
         if (result.isConfirmed) {
+          try { localStorage.removeItem('clinica.session'); sessionStorage.removeItem('clinica.session'); } catch (e) {}
           window.location.href = '/login';
         }
       });

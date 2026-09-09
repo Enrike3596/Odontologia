@@ -1,7 +1,6 @@
-/* Login - Clinica Odontologica (solo frontend).
+/* Login - Clinica Odontologica.
  * Sin selector de tipo de usuario: el backend resuelve el rol tras validar credenciales.
- * TODO backend: conectar handleLoginAction() al endpoint real de autenticacion
- * (p. ej. POST /api/auth/login) y guardar token/sesion segura (cookie HttpOnly).
+ * Conectado al backend: POST /api/auth/login (AuthRestController -> UsuarioService.autenticar).
  */
 
 const TAB_ACTIVE = 'flex-1 py-2.5 px-4 rounded-full text-[13px] leading-[18px] tracking-[0.015em] font-semibold transition-all duration-300 flex items-center justify-center gap-2 bg-surface-container-lowest text-primary shadow-sm';
@@ -89,16 +88,16 @@ function showFeedback(title, desc, isSuccess = true) {
   banner.classList.add('flex');
 }
 
-// Login (simulado en frontend: valida, guarda sesion local y redirige al dashboard)
-function handleLoginAction(event) {
+// Login contra el backend: valida, guarda sesion local y redirige al dashboard
+async function handleLoginAction(event) {
   if (event) event.preventDefault();
 
-  const idInput = document.getElementById('input-identifier').value.trim();
-  const pwdInput = document.getElementById('input-password').value.trim();
+  const identifier = document.getElementById('input-identifier').value.trim();
+  const password = document.getElementById('input-password').value;
   const remember = document.getElementById('remember-me').checked;
   const btn = document.getElementById('btn-login-submit');
 
-  if (!idInput || !pwdInput) {
+  if (!identifier || !password.trim()) {
     showFeedback('Campos requeridos', 'Por favor ingresa tu identificación y clave para acceder al portal.', false);
     return;
   }
@@ -107,29 +106,64 @@ function handleLoginAction(event) {
   btn.classList.add('opacity-80');
   btn.innerHTML = LOGIN_BTN_LOADING;
 
-  // Simula latencia de red. Reemplazar por fetch() al endpoint real.
-  setTimeout(() => {
-    btn.disabled = false;
-    btn.classList.remove('opacity-80');
-    btn.innerHTML = LOGIN_BTN_DEFAULT;
-    showFeedback('Acceso Autorizado', 'Bienvenido a tu historial odontológico.', true);
+  try {
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ identifier, password })
+    });
+
+    let data = null;
+    try { data = await response.json(); } catch (e) { /* respuesta sin JSON */ }
+
+    if (!response.ok) {
+      const msg = (data && data.error) ? data.error : 'No se pudo iniciar sesión. Intenta de nuevo.';
+      showFeedback('Acceso denegado', msg, false);
+      return;
+    }
+
+    showFeedback('Acceso Autorizado', `Bienvenido, ${data.nombres || ''} ${data.apellidos || ''}`.trim() + '.', true);
 
     try {
       const storage = remember ? localStorage : sessionStorage;
-      storage.setItem('clinica.session', JSON.stringify({ identifier: idInput, ts: Date.now() }));
+      (remember ? sessionStorage : localStorage).removeItem('clinica.session');
+      storage.setItem('clinica.session', JSON.stringify({
+        id: data.id,
+        nombres: data.nombres,
+        apellidos: data.apellidos,
+        email: data.email,
+        username: data.username,
+        rol: data.rol ? data.rol.nombre : null,
+        ts: Date.now()
+      }));
     } catch (e) { /* almacenamiento no disponible: continuar igual */ }
 
     setTimeout(() => { window.location.href = '/dashboard'; }, 700);
-  }, 900);
+  } catch (error) {
+    showFeedback('Error de conexión', 'No se pudo contactar al servidor. Verifica tu conexión e intenta de nuevo.', false);
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('opacity-80');
+    btn.innerHTML = LOGIN_BTN_DEFAULT;
+  }
 }
 
-// Login biometrico (simulado)
+// Acceso biometrico: solo reutiliza una sesion previamente recordada en este dispositivo.
+// No autentica por si mismo para no crear una via de acceso sin credenciales.
 function triggerBiometrics() {
-  showFeedback('Validación Biométrica', 'Escaneando credencial FaceID / Huella registrada en dispositivo...', true);
-  setTimeout(() => {
-    showFeedback('Identidad Confirmada', 'Iniciando sesión segura con tu perfil médico.', true);
-    setTimeout(() => { window.location.href = '/dashboard'; }, 700);
-  }, 1100);
+  let remembered = null;
+  try { remembered = localStorage.getItem('clinica.session'); } catch (e) { /* sin acceso */ }
+
+  if (remembered) {
+    showFeedback('Validación Biométrica', 'Sesión recordada verificada en este dispositivo...', true);
+    setTimeout(() => { window.location.href = '/dashboard'; }, 800);
+  } else {
+    showFeedback(
+      'Sin sesión recordada',
+      'Activa "Recordar mi sesión" e inicia sesión con tu clave para habilitar el acceso rápido en este dispositivo.',
+      false
+    );
+  }
 }
 
 // Recuperacion de cuenta (simulado)
