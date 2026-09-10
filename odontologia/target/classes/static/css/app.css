@@ -1741,6 +1741,12 @@ html.sidebar-collapsed #sidebar .sidebar-logout-btn i {
     font-size: 0.9rem;
 }
 
+/* En colapsado solo quedan avatar + logout: ocultar la línea de email (text-xs) */
+#sidebar.collapsed .sidebar-footer [data-su="email"],
+html.sidebar-collapsed #sidebar .sidebar-footer [data-su="email"] {
+    display: none;
+}
+
 /* ============================================================================
    TOPBAR UNIFORME DE MÓDULOS - mismo estilo en todas las páginas
    ============================================================================ */
