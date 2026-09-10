@@ -86,6 +86,11 @@
         if (readStoredState()) applyCollapse(true);
     }
 
+    // Aplicar de inmediato (este script carga al final del body, cuando
+    // #sidebar ya existe): así el sidebar nace con su tamaño correcto y no
+    // hay brinco del sidebar ni del contenido en cada navegación.
+    // Se conserva el listener como respaldo por si el script se mueve al head.
+    initSidebarCollapse();
     document.addEventListener('DOMContentLoaded', initSidebarCollapse);
 
     window.addEventListener('resize', function () {

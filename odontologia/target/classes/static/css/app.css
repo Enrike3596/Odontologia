@@ -1456,6 +1456,10 @@ body {
 /* Mejorar el scroll suave */
 html {
     scroll-behavior: smooth;
+    /* Reserva siempre el espacio de la barra de scroll vertical:
+       evita el desplazamiento horizontal brusco del sidebar y del
+       contenido al navegar entre módulos con y sin scroll. */
+    scrollbar-gutter: stable;
 }
 
 /* Ajuste para dispositivos móviles */
