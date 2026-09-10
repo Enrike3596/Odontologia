@@ -1677,22 +1677,29 @@ html {
     color: #fff;
 }
 
-/* Estado colapsado: el sidebar se encoge a solo iconos */
-#sidebar.collapsed {
+/* Estado colapsado: el sidebar se encoge a solo iconos.
+   Cada regla tiene variante `html.sidebar-collapsed`, aplicada por un script
+   mínimo en el <head> ANTES del primer pintado: al navegar con el sidebar
+   colapsado nace ya encogido y no hay parpadeo ni re-colapso animado. */
+#sidebar.collapsed,
+html.sidebar-collapsed #sidebar {
     width: 5.25rem;
 }
 
-#sidebar.collapsed .sidebar-header {
+#sidebar.collapsed .sidebar-header,
+html.sidebar-collapsed #sidebar .sidebar-header {
     justify-content: center;
     padding-left: 0.5rem;
     padding-right: 0.5rem;
 }
 
-#sidebar.collapsed .sidebar-header > div:first-child {
+#sidebar.collapsed .sidebar-header > div:first-child,
+html.sidebar-collapsed #sidebar .sidebar-header > div:first-child {
     display: none;
 }
 
-#sidebar.collapsed .sidebar-nav a {
+#sidebar.collapsed .sidebar-nav a,
+html.sidebar-collapsed #sidebar .sidebar-nav a {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1701,30 +1708,36 @@ html {
     padding-right: 0;
 }
 
-#sidebar.collapsed .sidebar-nav a i {
+#sidebar.collapsed .sidebar-nav a i,
+html.sidebar-collapsed #sidebar .sidebar-nav a i {
     font-size: 1.05rem;
     margin-right: 0;
 }
 
-#sidebar.collapsed .sidebar-footer .text-sm {
+#sidebar.collapsed .sidebar-footer .text-sm,
+html.sidebar-collapsed #sidebar .sidebar-footer .text-sm {
     display: none;
 }
 
-#sidebar.collapsed .sidebar-footer .flex.items-center.gap-3 {
+#sidebar.collapsed .sidebar-footer .flex.items-center.gap-3,
+html.sidebar-collapsed #sidebar .sidebar-footer .flex.items-center.gap-3 {
     justify-content: center;
 }
 
-#sidebar.collapsed .sidebar-footer img {
+#sidebar.collapsed .sidebar-footer img,
+html.sidebar-collapsed #sidebar .sidebar-footer img {
     margin: 0 auto;
 }
 
-#sidebar.collapsed .sidebar-logout-btn {
+#sidebar.collapsed .sidebar-logout-btn,
+html.sidebar-collapsed #sidebar .sidebar-logout-btn {
     font-size: 0;
     padding-left: 0;
     padding-right: 0;
 }
 
-#sidebar.collapsed .sidebar-logout-btn i {
+#sidebar.collapsed .sidebar-logout-btn i,
+html.sidebar-collapsed #sidebar .sidebar-logout-btn i {
     font-size: 0.9rem;
 }
 
@@ -1883,7 +1896,8 @@ html {
         display: none;
     }
 
-    #sidebar.collapsed {
+    #sidebar.collapsed,
+    html.sidebar-collapsed #sidebar {
         width: 18rem;
     }
 }

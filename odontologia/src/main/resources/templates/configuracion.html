@@ -3,6 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <script>
+    /* Estado del sidebar antes del primer pintado: evita el parpadeo al navegar con el sidebar colapsado */
+    try { if (localStorage.getItem('clinica.sidebar.collapsed') === '1' && window.innerWidth > 768) { document.documentElement.classList.add('sidebar-collapsed'); } } catch (e) {}
+  </script>
   <title>Odontología · Configuración</title>
 
   <!-- Tailwind CDN (para desarrollo/prototipo) -->

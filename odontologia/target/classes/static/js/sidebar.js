@@ -68,6 +68,8 @@
         var sidebar = getSidebar();
         if (!sidebar) return;
         sidebar.classList.toggle('collapsed', collapsed);
+        // Mantener sincronizada la clase pre-pintado del <html>
+        try { document.documentElement.classList.toggle('sidebar-collapsed', collapsed); } catch (e) {}
         updateCollapseButton(sidebar, collapsed);
         updateLinkTooltips(sidebar, collapsed);
     }
@@ -98,6 +100,7 @@
         if (!sidebar) return;
         if (isMobileView()) {
             sidebar.classList.remove('collapsed');
+            try { document.documentElement.classList.remove('sidebar-collapsed'); } catch (e) {}
         } else {
             applyCollapse(readStoredState());
         }
