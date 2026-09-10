@@ -58,6 +58,9 @@
 
     <!-- SIDEBAR -->
     <aside id="sidebar" class="w-72 bg-white border-r flex flex-col">
+      <button type="button" class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" aria-label="Colapsar menú" title="Colapsar menú">
+        <i class="fas fa-chevron-left"></i>
+      </button>
       <div class="p-6 flex items-center justify-between sidebar-header">
         <div>
           <h1 class="text-2xl font-semibold text-indigo-700">Clínica <span class="text-indigo-500">Odontología</span></h1>
@@ -163,6 +166,7 @@
   <!-- Scripts -->
   <!-- Guardia de sesion: debe cargarse antes que los scripts de la pagina -->
   <script th:src="@{/js/auth-guard.js}"></script>
+  <script th:src="@{/js/sidebar.js}"></script>
   <script>
     // Mobile sidebar functionality
     document.addEventListener('DOMContentLoaded', function() {

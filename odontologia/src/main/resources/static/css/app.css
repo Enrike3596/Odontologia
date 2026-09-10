@@ -1409,7 +1409,7 @@ body {
     }
 }
 /* ============================================================================
-   NAVEGACI�N CON SCROLL SPY - Enlaces activos din�micos
+   NAVEGACIÓN CON SCROLL SPY - Enlaces activos dinámicos
    ============================================================================ */
 /* Estilo para el enlace activo en el navbar */
 .navbar-nav .nav-item a.page-scroll {
@@ -1458,7 +1458,7 @@ html {
     scroll-behavior: smooth;
 }
 
-/* Ajuste para dispositivos m�viles */
+/* Ajuste para dispositivos móviles */
 @media (max-width: 991px) {
     .navbar-nav .nav-item a.page-scroll.active::after {
         bottom: 0;
@@ -1595,5 +1595,101 @@ html {
 
     #sidebar.show {
         left: 0;
+    }
+}
+
+/* ============================================================================
+   SIDEBAR COLAPSABLE - modo iconos / tamaño normal
+   ============================================================================ */
+#sidebar {
+    transition: width 0.25s ease;
+}
+
+/* Botón flotante en el borde del sidebar para colapsar/expandir */
+.sidebar-collapse-btn {
+    position: absolute;
+    top: 1.1rem;
+    right: -0.85rem;
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 9999px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    color: #4f46e5;
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    transition: all 0.2s ease;
+    z-index: 5;
+}
+
+.sidebar-collapse-btn:hover {
+    background: #4f46e5;
+    border-color: #4f46e5;
+    color: #fff;
+}
+
+/* Estado colapsado: el sidebar se encoge a solo iconos */
+#sidebar.collapsed {
+    width: 5.25rem;
+}
+
+#sidebar.collapsed .sidebar-header {
+    justify-content: center;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+#sidebar.collapsed .sidebar-header > div:first-child {
+    display: none;
+}
+
+#sidebar.collapsed .sidebar-nav a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+#sidebar.collapsed .sidebar-nav a i {
+    font-size: 1.05rem;
+    margin-right: 0;
+}
+
+#sidebar.collapsed .sidebar-footer .text-sm {
+    display: none;
+}
+
+#sidebar.collapsed .sidebar-footer .flex.items-center.gap-3 {
+    justify-content: center;
+}
+
+#sidebar.collapsed .sidebar-footer img {
+    margin: 0 auto;
+}
+
+#sidebar.collapsed .sidebar-logout-btn {
+    font-size: 0;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+#sidebar.collapsed .sidebar-logout-btn i {
+    font-size: 0.9rem;
+}
+
+/* En móvil el botón de colapso se oculta (ahí el sidebar es drawer) */
+@media (max-width: 768px) {
+    .sidebar-collapse-btn {
+        display: none;
+    }
+
+    #sidebar.collapsed {
+        width: 18rem;
     }
 }
