@@ -1800,17 +1800,126 @@ html.sidebar-collapsed #sidebar .sidebar-logout-btn i {
     background-color: #e5e7eb;
 }
 
-/* Bloque de usuario del topbar: oculto en móvil, visible desde sm */
+/* Bloque de usuario del topbar: solo avatar; el menú se despliega al clic */
 .topbar-user {
-    display: none;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    position: relative;
 }
 
-@media (min-width: 640px) {
-    .topbar-user {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
+.topbar-avatar-btn {
+    border-radius: 9999px;
+    padding: 0;
+    background: transparent;
+    border: 2px solid transparent;
+    cursor: pointer;
+    line-height: 0;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.topbar-avatar-btn:hover {
+    border-color: #c7d2fe;
+    transform: scale(1.04);
+}
+
+.topbar-avatar-btn:focus-visible {
+    outline: 2px solid #4f46e5;
+    outline-offset: 2px;
+}
+
+.topbar-user-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.6rem);
+    min-width: 14rem;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.14);
+    padding: 0.5rem;
+    z-index: 60;
+}
+
+.topbar-user.open .topbar-user-menu {
+    display: block;
+    animation: userMenuIn 0.15s ease;
+}
+
+@keyframes userMenuIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.topbar-user-head {
+    padding: 0.55rem 0.75rem 0.65rem;
+    border-bottom: 1px solid #f1f5f9;
+    margin-bottom: 0.4rem;
+}
+
+.topbar-user-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #111827;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.topbar-user-email {
+    font-size: 0.75rem;
+    color: #6b7280;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.topbar-user-role {
+    display: inline-flex;
+    margin-top: 0.35rem;
+    padding: 0.1rem 0.55rem;
+    border-radius: 9999px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    background: #eef2ff;
+    color: #4f46e5;
+    border: 1px solid #e0e7ff;
+}
+
+.topbar-menu-logout {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #dc2626;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 0.55rem;
+    padding: 0.55rem 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.topbar-menu-logout:hover {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* Insignia de rol en el pie del sidebar */
+.sidebar-role-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.1rem 0.55rem;
+    border-radius: 9999px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    background: #eef2ff;
+    color: #4f46e5;
+    border: 1px solid #e0e7ff;
 }
 
 /* ============================================================================

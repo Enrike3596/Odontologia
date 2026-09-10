@@ -131,14 +131,16 @@
         </ul>
       </nav>
       <div class="p-4 border-t bg-white sidebar-footer">
-        <div class="text-sm text-gray-500">Usuario</div>
         <div class="flex items-center gap-3 mt-2">
           <img src="https://i.pravatar.cc/40?img=5" alt="avatar" class="w-9 h-9 rounded-full" />
-          <div class="text-sm">
-            <div class="font-medium">Administrador</div>
-            <div class="text-xs text-gray-400">admin@clinica.com</div>
+          <div class="text-sm min-w-0">
+            <div class="font-medium truncate" data-su="name">Cargando...</div>
+            <div class="mt-0.5">
+              <span class="sidebar-role-badge" data-su="role">...</span>
+            </div>
           </div>
         </div>
+        <div class="text-xs text-gray-400 truncate mt-1" data-su="email"></div>
         <div class="mt-3">
           <button type="button" class="sidebar-logout-btn" onclick="logout()">
             <i class="fas fa-sign-out-alt"></i>
@@ -183,10 +185,19 @@
 
           <!-- User -->
           <div class="topbar-user">
-            <img src="https://i.pravatar.cc/40?img=5" alt="avatar" class="w-9 h-9 rounded-full" />
-            <div class="text-right">
-              <div class="text-sm font-medium">Administrador</div>
-              <div class="text-xs text-gray-500">Sistema</div>
+            <button type="button" class="topbar-avatar-btn" onclick="toggleUserMenu(event)" aria-label="Abrir menú de usuario" aria-haspopup="true" aria-expanded="false">
+              <img src="https://i.pravatar.cc/40?img=5" alt="avatar" class="w-9 h-9 rounded-full" />
+            </button>
+            <div class="topbar-user-menu" role="menu">
+              <div class="topbar-user-head">
+                <p class="topbar-user-name" data-su="name">Cargando...</p>
+                <p class="topbar-user-email" data-su="email"></p>
+                <p class="topbar-user-role" data-su="role"></p>
+              </div>
+              <button type="button" class="topbar-menu-logout" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                Cerrar Sesión
+              </button>
             </div>
           </div>
         </div>
@@ -629,6 +640,7 @@
   <!-- Guardia de sesion: debe cargarse antes que los scripts de la pagina -->
   <script th:src="@{/js/auth-guard.js}"></script>
   <script th:src="@{/js/sidebar.js}"></script>
+  <script th:src="@{/js/user-session.js}"></script>
   <script th:src="@{/js/citas.js}"></script>
   <script>
     // Mobile sidebar functionality
