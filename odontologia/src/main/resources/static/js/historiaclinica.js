@@ -93,6 +93,8 @@ const HistoriasAPI = {
 // Estado global del módulo de historias clínicas
 const MedicalRecordsModule = {
     currentRecord: null,
+    // Caché de la lista para abrir ver/editar al instante (sin loader)
+    cachedRecords: [],
     editMode: false,
     editingRecordId: null,
     filters: {
@@ -440,8 +442,15 @@ function showValidationError(errors) {
  * Ver detalles de una historia clínica
  */
 async function viewRecord(recordId) {
+    // Apertura instantánea desde caché (sin loader visible)
+    const cached = (MedicalRecordsModule.cachedRecords || []).find(h => String(h.id) === String(recordId));
+    if (cached) {
+        showRecordDetailsModal(cached);
+        return;
+    }
+
     try {
-        // Mostrar loading
+        // Respaldo: traer de la API con indicador (solo si no está en caché)
         Swal.fire({
             title: 'Cargando historia clínica...',
             allowOutsideClick: false,
@@ -449,9 +458,6 @@ async function viewRecord(recordId) {
                 Swal.showLoading();
             }
         });
-        
-        // Simular carga de datos
-        await new Promise(resolve => setTimeout(resolve, 800));
         
         // Obtener datos reales de la API
         const record = await HistoriasAPI.getHistoriaById(recordId);
@@ -537,8 +543,15 @@ function closeViewRecordModal() {
  * Editar historia clínica
  */
 async function editRecord(recordId) {
+    // Apertura instantánea desde caché (sin loader visible)
+    const cached = (MedicalRecordsModule.cachedRecords || []).find(h => String(h.id) === String(recordId));
+    if (cached) {
+        await openNewRecordModal(cached);
+        return;
+    }
+
     try {
-        // Mostrar loading
+        // Respaldo: traer de la API con indicador (solo si no está en caché)
         Swal.fire({
             title: 'Cargando datos de la historia clínica...',
             allowOutsideClick: false,
@@ -574,8 +587,12 @@ async function editRecord(recordId) {
  */
 function editRecordFromModal() {
     if (MedicalRecordsModule.currentRecord) {
+        // Reutilizar el objeto en memoria (sin loader ni refetch)
+        const record = MedicalRecordsModule.currentRecord;
         closeViewRecordModal();
-        editRecord(MedicalRecordsModule.currentRecord.id);
+        openNewRecordModal(record).catch(error => {
+            console.error('Error al abrir edición de la historia:', error);
+        });
     }
 }
 
@@ -741,7 +758,10 @@ async function loadMedicalRecords() {
         
         // Obtener datos reales de la API
         const historias = await HistoriasAPI.getAllHistorias();
-        
+
+        // Guardar caché para apertura instantánea de ver/editar (sin loader)
+        MedicalRecordsModule.cachedRecords = Array.isArray(historias) ? historias : [];
+
         // Actualizar tabla con datos reales
         updateRecordsTable(historias);
         

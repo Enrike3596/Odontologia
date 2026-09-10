@@ -104,6 +104,8 @@ const PacientesAPI = {
 // Estado global del módulo de pacientes
 const PatientsModule = {
     currentPatient: null,
+    // Caché de la lista para abrir ver/editar al instante (sin loader)
+    cachedPatients: [],
     filters: {
         search: '',
         estado: '',
@@ -409,8 +411,15 @@ function showValidationError(errors) {
  * Ver detalles de un paciente
  */
 async function viewPatient(patientId) {
+    // Apertura instantánea desde caché (sin loader visible)
+    const cached = (PatientsModule.cachedPatients || []).find(p => String(p.id) === String(patientId));
+    if (cached) {
+        showPatientDetailsModal(cached);
+        return;
+    }
+
     try {
-        // Mostrar loading
+        // Respaldo: traer de la API con indicador (solo si no está en caché)
         Swal.fire({
             title: 'Cargando información...',
             allowOutsideClick: false,
@@ -497,10 +506,18 @@ function closeViewPatientModal() {
  * Editar paciente
  */
 async function editPatient(patientId) {
+    // Apertura instantánea desde caché (sin loader visible)
+    const cached = (PatientsModule.cachedPatients || []).find(p => String(p.id) === String(patientId));
+    if (cached) {
+        console.log('Editando paciente (caché):', patientId);
+        openEditPatientModal(cached);
+        return;
+    }
+
     try {
         console.log('Editando paciente:', patientId);
-        
-        // Mostrar loading
+
+        // Respaldo: traer de la API con indicador (solo si no está en caché)
         Swal.fire({
             title: 'Cargando información...',
             allowOutsideClick: false,
@@ -587,8 +604,10 @@ function openEditPatientModal(patient) {
  */
 function editPatientFromModal() {
     if (PatientsModule.currentPatient) {
+        // Reutilizar el objeto en memoria (sin loader ni refetch)
+        const patient = PatientsModule.currentPatient;
         closeViewPatientModal();
-        editPatient(PatientsModule.currentPatient.id);
+        openEditPatientModal(patient);
     }
 }
 
@@ -713,6 +732,9 @@ async function loadPatients() {
         
         // Usar la nueva API
         const patients = await PacientesAPI.getAllPacientes();
+
+        // Guardar caché para apertura instantánea de ver/editar (sin loader)
+        PatientsModule.cachedPatients = Array.isArray(patients) ? patients : [];
         
         // Actualizar la tabla con los datos reales
         renderPatientsTable(patients);

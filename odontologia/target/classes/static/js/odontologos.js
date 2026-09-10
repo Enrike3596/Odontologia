@@ -93,6 +93,8 @@ const OdontologosAPI = {
 // Estado global del módulo de odontólogos
 const DentistsModule = {
     currentDentist: null,
+    // Caché de la lista para abrir ver/editar al instante (sin loader)
+    cachedDentists: [],
     editMode: false,
     editingDentistId: null,
     filters: {
@@ -601,8 +603,15 @@ function showValidationError(errors) {
  * Ver detalles de un odontólogo
  */
 async function viewDentist(dentistId) {
+    // Apertura instantánea desde caché (sin loader visible)
+    const cached = (DentistsModule.cachedDentists || []).find(o => String(o.id) === String(dentistId));
+    if (cached) {
+        showDentistDetailsModal(cached);
+        return;
+    }
+
     try {
-        // Mostrar loading
+        // Respaldo: traer de la API con indicador (solo si no está en caché)
         Swal.fire({
             title: 'Cargando información...',
             allowOutsideClick: false,
@@ -716,8 +725,15 @@ function closeViewDentistModal() {
  * Editar odontólogo
  */
 async function editDentist(dentistId) {
+    // Apertura instantánea desde caché (sin loader visible)
+    const cached = (DentistsModule.cachedDentists || []).find(o => String(o.id) === String(dentistId));
+    if (cached) {
+        await openNewDentistModal(cached);
+        return;
+    }
+
     try {
-        // Mostrar loading
+        // Respaldo: traer de la API con indicador (solo si no está en caché)
         Swal.fire({
             title: 'Cargando datos del odontólogo...',
             allowOutsideClick: false,
@@ -753,8 +769,12 @@ async function editDentist(dentistId) {
  */
 function editDentistFromModal() {
     if (DentistsModule.currentDentist) {
+        // Reutilizar el objeto en memoria (sin loader ni refetch)
+        const dentist = DentistsModule.currentDentist;
         closeViewDentistModal();
-        editDentist(DentistsModule.currentDentist.id);
+        openNewDentistModal(dentist).catch(error => {
+            console.error('Error al abrir edición del odontólogo:', error);
+        });
     }
 }
 
@@ -996,7 +1016,10 @@ async function loadDentists() {
         
         // Obtener datos reales de la API
         const odontologos = await OdontologosAPI.getAllOdontologos();
-        
+
+        // Guardar caché para apertura instantánea de ver/editar (sin loader)
+        DentistsModule.cachedDentists = Array.isArray(odontologos) ? odontologos : [];
+
         // Actualizar tabla con datos reales
         updateDentistsTable(odontologos);
         

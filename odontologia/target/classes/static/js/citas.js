@@ -6,6 +6,8 @@
 // Estado global del módulo de citas
 const AppointmentsModule = {
     currentAppointment: null,
+    // Caché de la lista para abrir ver/editar al instante (sin loader)
+    cachedCitas: [],
     editMode: false,
     editingAppointmentId: null,
     filters: {
@@ -606,8 +608,15 @@ function showValidationError(errors) {
  * Ver detalles de una cita
  */
 async function viewAppointment(appointmentId) {
+    // Apertura instantánea desde caché (sin loader visible)
+    const cached = (AppointmentsModule.cachedCitas || []).find(c => String(c.id) === String(appointmentId));
+    if (cached) {
+        showAppointmentDetailsModal(cached);
+        return;
+    }
+
     try {
-        // Mostrar loading
+        // Respaldo: traer de la API con indicador (solo si no está en caché)
         Swal.fire({
             title: 'Cargando detalles de la cita...',
             allowOutsideClick: false,
@@ -696,8 +705,15 @@ function closeViewAppointmentModal() {
  * Editar cita
  */
 async function editAppointment(appointmentId) {
+    // Apertura instantánea desde caché (sin loader visible)
+    const cached = (AppointmentsModule.cachedCitas || []).find(c => String(c.id) === String(appointmentId));
+    if (cached) {
+        await openNewAppointmentModal(cached);
+        return;
+    }
+
     try {
-        // Mostrar loading
+        // Respaldo: traer de la API con indicador (solo si no está en caché)
         Swal.fire({
             title: 'Cargando datos de la cita...',
             allowOutsideClick: false,
@@ -1123,6 +1139,9 @@ async function loadAppointments() {
         
         // Cargar citas usando la API
         const citas = await CitasAPI.getAllCitas();
+
+        // Guardar caché para apertura instantánea de ver/editar (sin loader)
+        AppointmentsModule.cachedCitas = Array.isArray(citas) ? citas : [];
         
         console.log('✅ Citas cargadas exitosamente:', citas.length, 'citas encontradas');
         
@@ -1364,6 +1383,9 @@ function getPatientInitials(nombre) {
  */
 async function getAppointmentData(appointmentId) {
     try {
+        // Preferir caché (sin loader ni petición)
+        const cached = (AppointmentsModule.cachedCitas || []).find(c => String(c.id) === String(appointmentId));
+        if (cached) return cached;
         const appointment = await CitasAPI.getCitaById(appointmentId);
         return appointment;
     } catch (error) {

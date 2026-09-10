@@ -133,14 +133,23 @@ let currentUserForAction = null;
 
 // Funciones para las acciones de usuario en el sistema odontológico
 function viewUser(userId) {
-    // Mostrar indicador de carga en el modal
-    openViewUserModal();
-    
-    // Mostrar estado de carga
-    document.getElementById('viewUserTitle').textContent = 'Cargando detalles del usuario...';
-    document.getElementById('viewUserName').textContent = 'Cargando...';
-    document.getElementById('viewUserEmail').textContent = 'Cargando...';
-    
+    // Apertura instantánea desde caché (sin loader visible)
+    const cached = allUsers.find(u => u.id === parseInt(userId) || u.idUsuario === parseInt(userId));
+    if (cached) {
+        populateViewUserModal(cached);
+        openViewUserModal();
+        return;
+    }
+
+    // Respaldo: traer de la API con indicador (solo si no está en caché)
+    Swal.fire({
+        title: 'Cargando detalles del usuario...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
     fetch(`/api/usuarios/${userId}`, {
         headers: {
             'Accept': 'application/json',
@@ -154,11 +163,13 @@ function viewUser(userId) {
         return response.json();
     })
     .then(usuario => {
+        Swal.close();
         populateViewUserModal(usuario);
+        openViewUserModal();
     })
     .catch(error => {
         console.error('Error al cargar detalles del usuario:', error);
-        closeViewUserModal();
+        Swal.close();
         showErrorAlert(`Error al cargar los detalles del usuario: ${error.message}`);
     });
 }
