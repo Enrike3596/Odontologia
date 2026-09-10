@@ -609,7 +609,21 @@ function loadUsers() {
 function renderUsersTable(usuarios) {
     const tbody = document.getElementById('usuariosTableBody');
     if (!tbody) return;
-    
+
+    // Paginación real del lado cliente
+    const fullList = Array.isArray(usuarios) ? usuarios : [];
+    if (typeof renderUsersTable.currentPage !== 'number') renderUsersTable.currentPage = 1;
+    renderUsersTable.lastList = fullList;
+    const pager = TablePager.paginate(fullList, renderUsersTable.currentPage, 10);
+    renderUsersTable.currentPage = pager.page;
+    TablePager.register('usuarios', function (page) {
+        renderUsersTable.currentPage = page;
+        renderUsersTable(renderUsersTable.lastList || []);
+    });
+    TablePager.renderBar('usuariosPager', pager, 'usuarios');
+    updateSummaryCards(fullList);
+    usuarios = pager.rows;
+
     if (usuarios.length === 0) {
         tbody.innerHTML = `
             <tr>
@@ -739,7 +753,7 @@ function updateSummaryCards(usuarios) {
     const recepcionistas = total - odontologos - administradores;
     
     // Actualizar las tarjetas con los conteos
-    const cards = document.querySelectorAll('.summary-card h3');
+    const cards = document.querySelectorAll('.sys-stat-card .sys-stat-value');
     if (cards.length >= 4) {
         cards[0].textContent = total.toLocaleString();
         cards[1].textContent = odontologos.toLocaleString();

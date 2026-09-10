@@ -1020,8 +1020,21 @@ async function loadDentists() {
         // Guardar caché para apertura instantánea de ver/editar (sin loader)
         DentistsModule.cachedDentists = Array.isArray(odontologos) ? odontologos : [];
 
+        // Paginación real del lado cliente
+        TablePager.register('odontologos', function (page) {
+            DentistsModule.pagination.currentPage = page;
+            const pg = TablePager.paginate(DentistsModule.cachedDentists || [], page, DentistsModule.pagination.itemsPerPage);
+            DentistsModule.pagination.currentPage = pg.page;
+            updateDentistsTable(pg.rows);
+            TablePager.renderBar('odontologosPager', pg, 'odontologos');
+        });
+        const odontologosPager = TablePager.paginate(odontologos, DentistsModule.pagination.currentPage, DentistsModule.pagination.itemsPerPage);
+        DentistsModule.pagination.currentPage = odontologosPager.page;
+        DentistsModule.pagination.totalItems = odontologosPager.total;
+
         // Actualizar tabla con datos reales
-        updateDentistsTable(odontologos);
+        updateDentistsTable(odontologosPager.rows);
+        TablePager.renderBar('odontologosPager', odontologosPager, 'odontologos');
         
         // Actualizar estadísticas
         updateDentistsStats(odontologos);
@@ -1355,22 +1368,46 @@ function updateDentistsTable(odontologos) {
  * Actualiza las estadísticas de odontólogos
  */
 function updateDentistsStats(odontologos) {
-    // Buscar y actualizar los elementos de estadísticas en las cards
-    const statsCards = document.querySelectorAll('.grid .bg-white .text-2xl');
-    
-    if (statsCards.length >= 4) {
-        // Total de odontólogos
-        statsCards[0].textContent = odontologos.length;
-        
-        // Odontólogos disponibles hoy (simulamos que todos están disponibles)
-        statsCards[1].textContent = odontologos.length;
-        
-        // Especialidades (simulamos 8 especialidades)
-        statsCards[2].textContent = '8';
-        
-        // Citas agendadas (simulamos un número)
-        statsCards[3].textContent = odontologos.length * 6;
-    }
+    const list = Array.isArray(odontologos) ? odontologos : [];
+    const norm = function (s) {
+        return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    };
+
+    // Disponibles hoy: su campo diasTrabajo incluye el día actual
+    const dias = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+    const hoy = dias[new Date().getDay()];
+    const disponibles = list.filter(function (o) {
+        return norm(o.diasTrabajo).split(',').map(function (d) { return norm(d).trim(); }).includes(hoy);
+    }).length;
+
+    // Especialidades distintas reales en el sistema
+    const especs = new Set();
+    list.forEach(function (o) {
+        String(o.especialidades || '').split(',').forEach(function (e) {
+            const t = e.trim();
+            if (t) especs.add(t.toLowerCase());
+        });
+    });
+
+    // Conteos reales en el orden de las tarjetas: total, disponibles hoy, especialidades, citas
+    const values = [list.length, disponibles, especs.size, null];
+
+    const paint = function (vals) {
+        const cards = document.querySelectorAll('.sys-stat-card .sys-stat-value');
+        cards.forEach(function (el, i) {
+            if (vals[i] !== undefined && vals[i] !== null) el.textContent = Number(vals[i]).toLocaleString();
+        });
+    };
+    paint(values);
+
+    // Citas agendadas reales (conteo del sistema)
+    fetch('/api/citas', { headers: { 'Accept': 'application/json' } })
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(function (c) {
+            values[3] = Array.isArray(c) ? c.length : 0;
+            paint(values);
+        })
+        .catch(function () { /* se conserva el valor inicial */ });
 }
 
 /**

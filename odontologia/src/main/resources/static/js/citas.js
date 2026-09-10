@@ -1145,8 +1145,21 @@ async function loadAppointments() {
         
         console.log('✅ Citas cargadas exitosamente:', citas.length, 'citas encontradas');
         
+        // Paginación real del lado cliente
+        TablePager.register('citas', function (page) {
+            AppointmentsModule.pagination.currentPage = page;
+            const pg = TablePager.paginate(AppointmentsModule.cachedCitas || [], page, AppointmentsModule.pagination.itemsPerPage);
+            AppointmentsModule.pagination.currentPage = pg.page;
+            updateAppointmentsTable(pg.rows);
+            TablePager.renderBar('citasPager', pg, 'citas');
+        });
+        const citasPager = TablePager.paginate(citas, AppointmentsModule.pagination.currentPage, AppointmentsModule.pagination.itemsPerPage);
+        AppointmentsModule.pagination.currentPage = citasPager.page;
+        AppointmentsModule.pagination.totalItems = citasPager.total;
+
         // Actualizar la tabla de citas
-        updateAppointmentsTable(citas);
+        updateAppointmentsTable(citasPager.rows);
+        TablePager.renderBar('citasPager', citasPager, 'citas');
         
         // Actualizar estadísticas
         updateAppointmentStats(citas);
@@ -1534,29 +1547,27 @@ function updateAppointmentsTable(citas) {
  * Actualiza las estadísticas de citas
  */
 function updateAppointmentStats(citas) {
+    const list = Array.isArray(citas) ? citas : [];
     const today = new Date().toISOString().split('T')[0];
-    
-    // Citas de hoy
-    const todayAppointments = citas.filter(cita => cita.fecha === today);
-    const todayElement = document.getElementById('todayAppointments');
-    if (todayElement) todayElement.textContent = todayAppointments.length;
-    
-    // Citas pendientes
-    const pendingAppointments = citas.filter(cita => cita.estado === 'PENDIENTE');
-    const pendingElement = document.getElementById('pendingAppointments');
-    if (pendingElement) pendingElement.textContent = pendingAppointments.length;
-    
-    // Citas completadas (del mes actual)
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
-    const completedAppointments = citas.filter(cita => {
-        const citaDate = new Date(cita.fecha);
-        return cita.estado === 'COMPLETADA' && 
-               citaDate.getMonth() === currentMonth && 
-               citaDate.getFullYear() === currentYear;
+    const now = new Date();
+
+    // Conteos reales en el orden de las tarjetas: hoy, pendientes, completadas, canceladas
+    const values = [
+        list.filter(cita => cita.fecha === today).length,
+        list.filter(cita => cita.estado === 'PENDIENTE').length,
+        list.filter(cita => {
+            const citaDate = new Date(cita.fecha);
+            return cita.estado === 'COMPLETADA' &&
+                   citaDate.getMonth() === now.getMonth() &&
+                   citaDate.getFullYear() === now.getFullYear();
+        }).length,
+        list.filter(cita => cita.estado === 'CANCELADA').length
+    ];
+
+    const cards = document.querySelectorAll('.sys-stat-card .sys-stat-value');
+    cards.forEach(function (el, i) {
+        if (values[i] !== undefined) el.textContent = values[i].toLocaleString();
     });
-    const completedElement = document.getElementById('completedAppointments');
-    if (completedElement) completedElement.textContent = completedAppointments.length;
 }
 
 /**

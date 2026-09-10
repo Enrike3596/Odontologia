@@ -736,8 +736,21 @@ async function loadPatients() {
         // Guardar caché para apertura instantánea de ver/editar (sin loader)
         PatientsModule.cachedPatients = Array.isArray(patients) ? patients : [];
         
+        // Paginación real del lado cliente
+        TablePager.register('pacientes', function (page) {
+            PatientsModule.pagination.currentPage = page;
+            const pg = TablePager.paginate(PatientsModule.cachedPatients || [], page, PatientsModule.pagination.itemsPerPage);
+            PatientsModule.pagination.currentPage = pg.page;
+            renderPatientsTable(pg.rows);
+            TablePager.renderBar('pacientesPager', pg, 'pacientes');
+        });
+        const pacientesPager = TablePager.paginate(patients, PatientsModule.pagination.currentPage, PatientsModule.pagination.itemsPerPage);
+        PatientsModule.pagination.currentPage = pacientesPager.page;
+        PatientsModule.pagination.totalItems = pacientesPager.total;
+
         // Actualizar la tabla con los datos reales
-        renderPatientsTable(patients);
+        renderPatientsTable(pacientesPager.rows);
+        TablePager.renderBar('pacientesPager', pacientesPager, 'pacientes');
         
         // Actualizar estadísticas
         updatePatientsStats(patients);
@@ -840,25 +853,34 @@ function renderPatientsTable(patients) {
  * Actualiza las estadísticas de pacientes
  */
 function updatePatientsStats(patients) {
-    // Buscar y actualizar los elementos de estadísticas en las cards
-    const statsCards = document.querySelectorAll('.grid .bg-white .text-2xl');
-    
-    if (statsCards.length >= 4) {
-        // Total de pacientes
-        statsCards[0].textContent = patients.length;
-        
-        // Pacientes nuevos (simulamos últimos 30 días)
-        const nuevos = Math.floor(patients.length * 0.1);
-        statsCards[1].textContent = nuevos;
-        
-        // Citas pendientes (simulamos)
-        const citasPendientes = patients.length * 2;
-        statsCards[2].textContent = citasPendientes;
-        
-        // Historias completadas (simulamos 80%)
-        const historiasCompletas = Math.floor(patients.length * 0.8);
-        statsCards[3].textContent = historiasCompletas;
-    }
+    const list = Array.isArray(patients) ? patients : [];
+    const isF = function (p) { return String(p.genero || '').toUpperCase().startsWith('F'); };
+    const isM = function (p) { return String(p.genero || '').toUpperCase().startsWith('M'); };
+
+    // Conteos reales en el orden de las tarjetas: total, mujeres, hombres, historias
+    const values = [
+        list.length,
+        list.filter(isF).length,
+        list.filter(isM).length,
+        null
+    ];
+
+    const paint = function (vals) {
+        const cards = document.querySelectorAll('.sys-stat-card .sys-stat-value');
+        cards.forEach(function (el, i) {
+            if (vals[i] !== undefined && vals[i] !== null) el.textContent = Number(vals[i]).toLocaleString();
+        });
+    };
+    paint(values);
+
+    // Historias clínicas reales (conteo del sistema)
+    fetch('/api/historias-clinicas', { headers: { 'Accept': 'application/json' } })
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(function (h) {
+            values[3] = Array.isArray(h) ? h.length : 0;
+            paint(values);
+        })
+        .catch(function () { /* se conserva el valor inicial */ });
 }
 
 /**

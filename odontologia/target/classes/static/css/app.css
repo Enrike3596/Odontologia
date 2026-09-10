@@ -90,6 +90,137 @@ body {
     max-width: calc(100vw - 3rem);
 }
 
+/* ============================================================================
+   TABLAS INFORMATIVAS - diseño uniforme en todos los módulos
+   ============================================================================ */
+.sys-table-title {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    font-weight: 600;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.sys-table-count {
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: #eef2ff;
+    color: #4f46e5;
+    border: 1px solid #e0e7ff;
+    padding: 0.15rem 0.6rem;
+    border-radius: 9999px;
+}
+
+table.sys-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.sys-table thead th {
+    background: #f8fafc;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #64748b;
+    font-weight: 600;
+    padding: 0.8rem 1rem;
+    border-bottom: 2px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+.sys-table tbody td {
+    padding: 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+
+.sys-table tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.sys-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.sys-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Paginación real del lado cliente */
+.sys-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.sys-pagination-info {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.sys-pagination-btns {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+}
+
+.sys-page-btn {
+    min-width: 2rem;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    color: #374151;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.sys-page-btn:hover:not(:disabled) {
+    background: #f9fafb;
+    border-color: #c7d2fe;
+    color: #4f46e5;
+}
+
+.sys-page-btn-active {
+    background: #4f46e5;
+    border-color: #4f46e5;
+    color: #fff;
+    font-weight: 600;
+}
+
+.sys-page-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.sys-page-dots {
+    padding: 0 0.25rem;
+    color: #9ca3af;
+    font-size: 0.875rem;
+}
+
+/* Columna de acciones fija en móvil para no perderla al desplazar */
+@media (max-width: 640px) {
+    .sys-table thead th:last-child,
+    .sys-table tbody td:last-child:not([colspan]) {
+        position: sticky;
+        right: 0;
+        background: #fff;
+        box-shadow: -8px 0 12px -12px rgba(15, 23, 42, 0.25);
+    }
+
+    .sys-table thead th:last-child {
+        background: #f8fafc;
+    }
+}
+
 /* Transiciones suaves para modales */
 .modal-content {
     transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;

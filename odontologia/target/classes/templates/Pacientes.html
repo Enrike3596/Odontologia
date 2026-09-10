@@ -221,8 +221,8 @@
                 <i class="fas fa-calendar-check"></i>
               </div>
               <div class="ml-4">
-                <p class="sys-stat-value">1,234</p>
-                <p class="sys-stat-label">Pacientes Activos</p>
+              <p class="sys-stat-value">0</p>
+              <p class="sys-stat-label">Mujeres</p>
               </div>
             </div>
           </div>
@@ -235,8 +235,8 @@
                 <i class="fas fa-clock"></i>
               </div>
               <div class="ml-4">
-                <p class="sys-stat-value">89</p>
-                <p class="sys-stat-label">Citas Pendientes</p>
+              <p class="sys-stat-value">0</p>
+              <p class="sys-stat-label">Hombres</p>
               </div>
             </div>
           </div>
@@ -261,7 +261,7 @@
       <div class="bg-white rounded-lg shadow-sm border">
         <div class="p-6 border-b">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold">Lista de pacientes</h3>
+            <h3 class="sys-table-title"><i class="fas fa-user-injured text-blue-500"></i>Lista de pacientes <span class="sys-table-count" data-table-count="pacientes">0</span></h3>
             <button class="text-gray-500 hover:text-gray-700" onclick="toggleFilters()">
               <i class="fas fa-filter"></i>
             </button>
@@ -319,7 +319,7 @@
         </div>
 
         <div class="overflow-x-auto">
-          <table class="min-w-full">
+          <table class="min-w-full sys-table">
             <thead class="bg-gray-50">
               <tr>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paciente</th>
@@ -337,23 +337,9 @@
         </div>
 
         <!-- Paginación -->
-        <div class="px-6 py-4 border-t flex items-center justify-between">
-          <div class="text-sm text-gray-500">
-            Mostrando 1-10 de 2,456 resultados
-          </div>
-          <div class="flex space-x-1">
-            <button class="px-3 py-1 border rounded-md text-sm bg-gray-100 text-gray-400" disabled>
-              <i class="fas fa-chevron-left"></i>
-            </button>
-            <button class="px-3 py-1 border rounded-md text-sm bg-indigo-600 text-white">1</button>
-            <button class="px-3 py-1 border rounded-md text-sm hover:bg-gray-50">2</button>
-            <button class="px-3 py-1 border rounded-md text-sm hover:bg-gray-50">3</button>
-            <button class="px-3 py-1 border rounded-md text-sm hover:bg-gray-50">...</button>
-            <button class="px-3 py-1 border rounded-md text-sm hover:bg-gray-50">246</button>
-            <button class="px-3 py-1 border rounded-md text-sm hover:bg-gray-50">
-              <i class="fas fa-chevron-right"></i>
-            </button>
-          </div>
+        <div class="px-6 py-4 border-t sys-pagination" id="pacientesPager">
+          <div class="sys-pagination-info" data-pager-info>Cargando...</div>
+          <div class="sys-pagination-btns" data-pager-btns></div>
         </div>
       </div>
     </main>
@@ -554,6 +540,7 @@
   <script th:src="@{/js/auth-guard.js}"></script>
   <script th:src="@{/js/sidebar.js}"></script>
   <script th:src="@{/js/user-session.js}"></script>
+  <script th:src="@{/js/table-pager.js}"></script>
   <script th:src="@{/js/pacientes.js}"></script>
   <script>
     // Mobile sidebar functionality

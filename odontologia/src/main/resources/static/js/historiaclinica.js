@@ -762,8 +762,21 @@ async function loadMedicalRecords() {
         // Guardar caché para apertura instantánea de ver/editar (sin loader)
         MedicalRecordsModule.cachedRecords = Array.isArray(historias) ? historias : [];
 
+        // Paginación real del lado cliente
+        TablePager.register('historias', function (page) {
+            MedicalRecordsModule.pagination.currentPage = page;
+            const pg = TablePager.paginate(MedicalRecordsModule.cachedRecords || [], page, MedicalRecordsModule.pagination.itemsPerPage);
+            MedicalRecordsModule.pagination.currentPage = pg.page;
+            updateRecordsTable(pg.rows);
+            TablePager.renderBar('historiasPager', pg, 'historias');
+        });
+        const historiasPager = TablePager.paginate(historias, MedicalRecordsModule.pagination.currentPage, MedicalRecordsModule.pagination.itemsPerPage);
+        MedicalRecordsModule.pagination.currentPage = historiasPager.page;
+        MedicalRecordsModule.pagination.totalItems = historiasPager.total;
+
         // Actualizar tabla con datos reales
-        updateRecordsTable(historias);
+        updateRecordsTable(historiasPager.rows);
+        TablePager.renderBar('historiasPager', historiasPager, 'historias');
         
         // Actualizar estadísticas
         updateRecordsStats(historias);
@@ -1069,23 +1082,24 @@ function updateRecordsTable(historias) {
  * Actualiza las estadísticas de historias clínicas
  */
 function updateRecordsStats(historias) {
-    // Total de historias
-    const totalElement = document.getElementById('totalRecords');
-    if (totalElement) totalElement.textContent = historias.length;
-    
-    // Historias activas (que tienen observaciones recientes)
-    const activeRecords = historias.filter(historia => 
-        historia.observaciones && historia.observaciones.trim().length > 0
-    );
-    const activeElement = document.getElementById('activeRecords');
-    if (activeElement) activeElement.textContent = activeRecords.length;
-    
-    // Historias con alergias
-    const allergiesRecords = historias.filter(historia => 
-        historia.alergias && historia.alergias.trim().length > 0 && historia.alergias !== 'Ninguna'
-    );
-    const allergiesElement = document.getElementById('allergiesRecords');
-    if (allergiesElement) allergiesElement.textContent = allergiesRecords.length;
+    const list = Array.isArray(historias) ? historias : [];
+    const hasText = function (v, exclude) {
+        const t = String(v || '').trim();
+        return t.length > 0 && t !== exclude;
+    };
+
+    // Conteos reales en el orden de las tarjetas
+    const values = [
+        list.length,
+        list.filter(function (h) { return hasText(h.observaciones, ''); }).length,
+        list.filter(function (h) { return hasText(h.alergias, 'Ninguna'); }).length,
+        list.filter(function (h) { return hasText(h.medicamentos, 'Ninguno'); }).length
+    ];
+
+    const cards = document.querySelectorAll('.sys-stat-card .sys-stat-value');
+    cards.forEach(function (el, i) {
+        if (values[i] !== undefined) el.textContent = values[i].toLocaleString();
+    });
 }
 
 /**
