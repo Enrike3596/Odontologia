@@ -181,7 +181,7 @@
       </header>
 
       <!-- Main Statistics Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <div id="statsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <!-- Citas de Hoy -->
         <div class="sys-stat-card">
           <div class="sys-stat-card-inner">
@@ -225,16 +225,16 @@
           <div class="sys-stat-card-inner">
             <div class="flex items-center">
               <div class="sys-stat-icon sys-accent-purple">
-                <i class="fas fa-dollar-sign"></i>
+                <i class="fas fa-file-medical"></i>
               </div>
               <div class="ml-4">
-                <p class="sys-stat-value" id="monthlyRevenue">$45,230</p>
-                <p class="sys-stat-label">Ingresos del Mes</p>
+                <p class="sys-stat-value" id="totalRecords">0</p>
+                <p class="sys-stat-label">Historias Clínicas</p>
               </div>
             </div>
             <div class="sys-stat-trend sys-trend-up">
-              <i class="fas fa-arrow-up"></i>
-              <span>+15% vs mes anterior</span>
+              <i class="fas fa-check-circle"></i>
+              <span>Total en sistema</span>
             </div>
           </div>
         </div>
@@ -283,86 +283,9 @@
           
           <div class="p-6">
             <div class="space-y-4" id="todayAppointmentsList">
-              <!-- Cita 1 -->
-              <div class="flex items-center p-4 bg-emerald-50 border border-emerald-200 rounded-lg hover:shadow-md transition-shadow">
-                <div class="flex-shrink-0 text-center mr-4">
-                  <div class="text-sm font-semibold text-emerald-700">08:00</div>
-                  <div class="text-xs text-emerald-600">AM</div>
-                </div>
-                <div class="flex-1">
-                  <div class="flex items-center justify-between">
-                    <div>
-                      <h4 class="font-medium text-gray-900">María González Pérez</h4>
-                      <p class="text-sm text-gray-600">
-                        <i class="fas fa-tooth mr-1 text-emerald-500"></i>
-                        Limpieza dental - Dr. Roberto Martínez
-                      </p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Confirmada</span>
-                      <button class="p-2 text-blue-600 hover:bg-blue-100 rounded-full" onclick="viewAppointmentQuick(1)" title="Ver detalles">
-                        <i class="fas fa-eye text-sm"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Cita 2 -->
-              <div class="flex items-center p-4 bg-blue-50 border border-blue-200 rounded-lg hover:shadow-md transition-shadow">
-                <div class="flex-shrink-0 text-center mr-4">
-                  <div class="text-sm font-semibold text-blue-700">10:30</div>
-                  <div class="text-xs text-blue-600">AM</div>
-                </div>
-                <div class="flex-1">
-                  <div class="flex items-center justify-between">
-                    <div>
-                      <h4 class="font-medium text-gray-900">Carlos Ramírez López</h4>
-                      <p class="text-sm text-gray-600">
-                        <i class="fas fa-procedures mr-1 text-blue-500"></i>
-                        Endodoncia - Dra. María López
-                      </p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">Pendiente</span>
-                      <button class="p-2 text-blue-600 hover:bg-blue-100 rounded-full" onclick="viewAppointmentQuick(2)" title="Ver detalles">
-                        <i class="fas fa-eye text-sm"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Cita 3 -->
-              <div class="flex items-center p-4 bg-purple-50 border border-purple-200 rounded-lg hover:shadow-md transition-shadow">
-                <div class="flex-shrink-0 text-center mr-4">
-                  <div class="text-sm font-semibold text-purple-700">14:00</div>
-                  <div class="text-xs text-purple-600">PM</div>
-                </div>
-                <div class="flex-1">
-                  <div class="flex items-center justify-between">
-                    <div>
-                      <h4 class="font-medium text-gray-900">Ana Sofía Herrera</h4>
-                      <p class="text-sm text-gray-600">
-                        <i class="fas fa-smile mr-1 text-purple-500"></i>
-                        Ortodoncia - Dr. Luis García
-                      </p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Confirmada</span>
-                      <button class="p-2 text-blue-600 hover:bg-blue-100 rounded-full" onclick="viewAppointmentQuick(3)" title="Ver detalles">
-                        <i class="fas fa-eye text-sm"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Ver más citas -->
-              <div class="text-center pt-4">
-                <button class="text-sm text-gray-500 hover:text-gray-700 underline" onclick="viewAllAppointments()">
-                  Ver las 21 citas restantes del día
-                </button>
+              <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-spinner fa-spin text-3xl mb-3"></i>
+                <p>Cargando agenda del día...</p>
               </div>
             </div>
           </div>
@@ -371,43 +294,19 @@
         <!-- Resumen Rápido -->
         <div class="space-y-6">
           
-          <!-- Estado de Consultorios -->
+          <!-- Resumen por Estado -->
           <div class="bg-white rounded-lg shadow-sm border">
             <div class="p-6 border-b">
               <h3 class="text-lg font-semibold text-gray-900">
-                <i class="fas fa-hospital mr-2 text-blue-500"></i>
-                Estado de Consultorios
+                <i class="fas fa-chart-pie mr-2 text-blue-500"></i>
+                Resumen por Estado
               </h3>
             </div>
             <div class="p-6">
-              <div class="space-y-4">
-                <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                  <div class="flex items-center">
-                    <div class="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                    <span class="text-sm font-medium">Consultorio 1</span>
-                  </div>
-                  <span class="text-xs text-green-700 bg-green-100 px-2 py-1 rounded">Ocupado</span>
-                </div>
-                <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
-                  <div class="flex items-center">
-                    <div class="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
-                    <span class="text-sm font-medium">Consultorio 2</span>
-                  </div>
-                  <span class="text-xs text-yellow-700 bg-yellow-100 px-2 py-1 rounded">En Limpieza</span>
-                </div>
-                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div class="flex items-center">
-                    <div class="w-3 h-3 bg-gray-400 rounded-full mr-3"></div>
-                    <span class="text-sm font-medium">Consultorio 3</span>
-                  </div>
-                  <span class="text-xs text-gray-700 bg-gray-100 px-2 py-1 rounded">Disponible</span>
-                </div>
-                <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                  <div class="flex items-center">
-                    <div class="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                    <span class="text-sm font-medium">Consultorio 4</span>
-                  </div>
-                  <span class="text-xs text-green-700 bg-green-100 px-2 py-1 rounded">Ocupado</span>
+              <div class="space-y-4" id="statusSummaryList">
+                <div class="text-center py-8 text-gray-500">
+                  <i class="fas fa-spinner fa-spin text-3xl mb-3"></i>
+                  <p>Cargando resumen...</p>
                 </div>
               </div>
             </div>
@@ -422,27 +321,10 @@
               </h3>
             </div>
             <div class="p-6">
-              <div class="space-y-4">
-                <div class="flex items-start p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <i class="fas fa-exclamation-triangle text-red-500 mt-1 mr-3"></i>
-                  <div>
-                    <p class="text-sm font-medium text-red-800">Cita urgente pendiente</p>
-                    <p class="text-xs text-red-600">Juan Pablo - Dolor severo</p>
-                  </div>
-                </div>
-                <div class="flex items-start p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <i class="fas fa-clock text-yellow-500 mt-1 mr-3"></i>
-                  <div>
-                    <p class="text-sm font-medium text-yellow-800">Recordatorio de cita</p>
-                    <p class="text-xs text-yellow-600">3 pacientes para mañana</p>
-                  </div>
-                </div>
-                <div class="flex items-start p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <i class="fas fa-info-circle text-blue-500 mt-1 mr-3"></i>
-                  <div>
-                    <p class="text-sm font-medium text-blue-800">Inventario bajo</p>
-                    <p class="text-xs text-blue-600">Reabastecer materiales</p>
-                  </div>
+              <div class="space-y-4" id="alertsList">
+                <div class="text-center py-8 text-gray-500">
+                  <i class="fas fa-spinner fa-spin text-3xl mb-3"></i>
+                  <p>Cargando alertas...</p>
                 </div>
               </div>
             </div>
@@ -480,63 +362,24 @@
         </div>
       </div>
 
-      <!-- Recent Activity -->
+      <!-- Próximas Citas -->
       <div class="bg-white rounded-lg shadow-sm border">
         <div class="p-6 border-b">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-gray-900">
-              <i class="fas fa-history mr-2 text-gray-500"></i>
-              Actividad Reciente
+              <i class="fas fa-calendar-day mr-2 text-emerald-500"></i>
+              Próximas Citas
             </h3>
             <button class="text-sm text-blue-600 hover:text-blue-800" onclick="viewAllActivity()">
-              Ver todo el historial
+              Ver todas
             </button>
           </div>
         </div>
         <div class="p-6">
-          <div class="space-y-4" id="recentActivityList">
-            <div class="flex items-center p-4 hover:bg-gray-50 rounded-lg transition-colors">
-              <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-4">
-                <i class="fas fa-user-plus text-green-600"></i>
-              </div>
-              <div class="flex-1">
-                <p class="text-sm font-medium text-gray-900">Nuevo paciente registrado</p>
-                <p class="text-xs text-gray-500">Pedro Rodríguez se registró en el sistema</p>
-              </div>
-              <span class="text-xs text-gray-400">Hace 15 min</span>
-            </div>
-            
-            <div class="flex items-center p-4 hover:bg-gray-50 rounded-lg transition-colors">
-              <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-                <i class="fas fa-calendar-check text-blue-600"></i>
-              </div>
-              <div class="flex-1">
-                <p class="text-sm font-medium text-gray-900">Cita completada</p>
-                <p class="text-xs text-gray-500">Limpieza dental de María González</p>
-              </div>
-              <span class="text-xs text-gray-400">Hace 1 hora</span>
-            </div>
-            
-            <div class="flex items-center p-4 hover:bg-gray-50 rounded-lg transition-colors">
-              <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-4">
-                <i class="fas fa-file-medical text-purple-600"></i>
-              </div>
-              <div class="flex-1">
-                <p class="text-sm font-medium text-gray-900">Historia clínica actualizada</p>
-                <p class="text-xs text-gray-500">Dr. Martínez actualizó el expediente de Carlos Ramírez</p>
-              </div>
-              <span class="text-xs text-gray-400">Hace 2 horas</span>
-            </div>
-            
-            <div class="flex items-center p-4 hover:bg-gray-50 rounded-lg transition-colors">
-              <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mr-4">
-                <i class="fas fa-dollar-sign text-orange-600"></i>
-              </div>
-              <div class="flex-1">
-                <p class="text-sm font-medium text-gray-900">Pago recibido</p>
-                <p class="text-xs text-gray-500">Ana Herrera pagó $150.000 por ortodoncia</p>
-              </div>
-              <span class="text-xs text-gray-400">Hace 3 horas</span>
+          <div class="space-y-4" id="upcomingList">
+            <div class="text-center py-8 text-gray-500">
+              <i class="fas fa-spinner fa-spin text-3xl mb-3"></i>
+              <p>Cargando próximas citas...</p>
             </div>
           </div>
         </div>
@@ -621,29 +464,23 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Paciente <span class="text-red-500">*</span></label>
-              <select required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
-                <option value="">Seleccionar paciente...</option>
-                <option value="1">María González Pérez</option>
-                <option value="2">Carlos Ramírez López</option>
-                <option value="3">Ana Sofía Herrera</option>
+              <select id="qaPaciente" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+                <option value="">Cargando pacientes...</option>
               </select>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Odontólogo <span class="text-red-500">*</span></label>
-              <select required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
-                <option value="">Seleccionar odontólogo...</option>
-                <option value="1">Dr. Roberto Martínez</option>
-                <option value="2">Dra. María López</option>
-                <option value="3">Dr. Luis García</option>
+              <select id="qaOdontologo" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+                <option value="">Cargando odontólogos...</option>
               </select>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Fecha <span class="text-red-500">*</span></label>
-              <input type="date" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+              <input type="date" id="qaFecha" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Hora <span class="text-red-500">*</span></label>
-              <select required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+              <select id="qaHora" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
                 <option value="">Seleccionar hora...</option>
                 <option value="08:00">08:00 AM</option>
                 <option value="09:00">09:00 AM</option>
@@ -655,10 +492,16 @@
                 <option value="17:00">05:00 PM</option>
               </select>
             </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Cita <span class="text-red-500">*</span></label>
+              <select id="qaTipo" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+                <option value="">Cargando tipos de cita...</option>
+              </select>
+            </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Motivo de consulta</label>
-            <textarea rows="3" placeholder="Descripción breve del motivo..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"></textarea>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Motivo de consulta</label>
+              <textarea id="qaMotivo" rows="3" placeholder="Descripción breve del motivo..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"></textarea>
           </div>
           
           <div class="flex justify-end space-x-3 pt-4">
@@ -731,33 +574,12 @@
 
     // Notifications functionality
     function toggleNotifications() {
+      const html = (typeof buildNotificationsHtml === 'function')
+        ? buildNotificationsHtml()
+        : '<p class="text-sm text-gray-500 text-center py-4">Sin notificaciones por ahora.</p>';
       Swal.fire({
         title: 'Notificaciones',
-        html: `
-          <div class="text-left space-y-3">
-            <div class="flex items-center p-3 bg-red-50 rounded-lg">
-              <i class="fas fa-exclamation-triangle text-red-500 mr-3"></i>
-              <div>
-                <p class="font-medium text-red-800">Cita urgente pendiente</p>
-                <p class="text-xs text-red-600">Juan Pablo - Dolor severo</p>
-              </div>
-            </div>
-            <div class="flex items-center p-3 bg-yellow-50 rounded-lg">
-              <i class="fas fa-clock text-yellow-500 mr-3"></i>
-              <div>
-                <p class="font-medium text-yellow-800">Recordatorio de cita</p>
-                <p class="text-xs text-yellow-600">3 pacientes para mañana</p>
-              </div>
-            </div>
-            <div class="flex items-center p-3 bg-blue-50 rounded-lg">
-              <i class="fas fa-info-circle text-blue-500 mr-3"></i>
-              <div>
-                <p class="font-medium text-blue-800">Inventario bajo</p>
-                <p class="text-xs text-blue-600">Reabastecer materiales</p>
-              </div>
-            </div>
-          </div>
-        `,
+        html: html,
         showCloseButton: true,
         showConfirmButton: false,
         width: '400px'
