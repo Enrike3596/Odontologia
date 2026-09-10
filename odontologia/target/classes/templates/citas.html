@@ -147,8 +147,8 @@
     <!-- MAIN -->
     <main class="flex-1 min-w-0 p-4 md:p-6">
       <!-- Topbar -->
-      <header class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-        <div>
+      <header class="topbar-module">
+        <div class="topbar-module-title">
           <h2 class="text-xl font-semibold text-emerald-700">
             <i class="fas fa-calendar-alt mr-2 text-emerald-500"></i>
             Gestión de Citas Médicas
@@ -156,9 +156,9 @@
           <p class="text-sm text-gray-500">Programa, administra y gestiona las citas odontológicas de la clínica.</p>
         </div>
 
-        <div class="flex flex-wrap items-center gap-3">
+        <div class="topbar-module-actions">
           <!-- Mobile menu toggle -->
-          <button id="mobileMenuToggle" class="md:hidden p-2 rounded-lg bg-gray-100" aria-label="Abrir menú">
+          <button id="mobileMenuToggle" class="topbar-module-btn md:hidden" aria-label="Abrir menú">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
             </svg>
@@ -166,10 +166,9 @@
 
           <!-- Actions -->
           <div class="flex flex-wrap items-center gap-2">
-            <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors" onclick="openNewAppointmentModal()">
-              <i class="fas fa-plus mr-1 sm:mr-2"></i>
-              <span class="hidden sm:inline">Nueva Cita</span>
-              <span class="sm:hidden">Nueva</span>
+            <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" onclick="openNewAppointmentModal()">
+              <i class="fas fa-calendar-plus mr-2"></i>
+              Nueva Cita
             </button>
             <button class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors hidden md:block" onclick="openCalendarView()">
               <i class="fas fa-calendar mr-1 sm:mr-2"></i>
@@ -179,7 +178,7 @@
           </div>
 
           <!-- User -->
-          <div class="hidden lg:flex items-center gap-3">
+          <div class="topbar-user">
             <img src="https://i.pravatar.cc/40?img=5" alt="avatar" class="w-9 h-9 rounded-full" />
             <div class="text-right">
               <div class="text-sm font-medium">Administrador</div>

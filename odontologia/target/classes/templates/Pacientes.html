@@ -147,15 +147,18 @@
     <!-- MAIN -->
     <main class="flex-1 min-w-0 p-4 md:p-6">
       <!-- Topbar -->
-      <header class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-        <div>
-          <h2 class="text-xl font-semibold">Pacientes</h2>
+      <header class="topbar-module">
+        <div class="topbar-module-title">
+          <h2 class="text-xl font-semibold text-blue-700">
+            <i class="fas fa-user-injured mr-2 text-blue-500"></i>
+            Pacientes
+          </h2>
           <p class="text-sm text-gray-500">Gestiona la información de los pacientes de la clínica odontológica.</p>
         </div>
 
-        <div class="flex flex-wrap items-center gap-3">
+        <div class="topbar-module-actions">
           <!-- Mobile menu toggle -->
-          <button id="mobileMenuToggle" class="md:hidden p-2 rounded-lg bg-gray-100" aria-label="Abrir menú">
+          <button id="mobileMenuToggle" class="topbar-module-btn md:hidden" aria-label="Abrir menú">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
             </svg>
@@ -163,15 +166,14 @@
 
           <!-- Actions -->
           <div class="flex items-center gap-3">
-            <button class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors" onclick="openNewPatientModal()">
-              <i class="fas fa-user-plus mr-1 sm:mr-2"></i>
-              <span class="hidden sm:inline">Nuevo Paciente</span>
-              <span class="sm:hidden">Nuevo</span>
+            <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" onclick="openNewPatientModal()">
+              <i class="fas fa-user-plus mr-2"></i>
+              Nuevo Paciente
             </button>
           </div>
 
           <!-- User -->
-          <div class="hidden lg:flex items-center gap-3">
+          <div class="topbar-user">
             <img src="https://i.pravatar.cc/40?img=5" alt="avatar" class="w-9 h-9 rounded-full" />
             <div class="text-right">
               <div class="text-sm font-medium">Recepcionista</div>
