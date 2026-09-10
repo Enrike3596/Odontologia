@@ -1302,7 +1302,7 @@ function updateDentistsTable(odontologos) {
                     </div>
                 </div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-6 py-4 whitespace-nowrap hidden md:table-cell">
                 <div class="text-sm text-gray-900">${odontologo.matricula}</div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
@@ -1310,7 +1310,7 @@ function updateDentistsTable(odontologos) {
                     Activo
                 </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-6 py-4 whitespace-nowrap hidden lg:table-cell">
                 <span class="text-sm text-gray-900">Odontología General</span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

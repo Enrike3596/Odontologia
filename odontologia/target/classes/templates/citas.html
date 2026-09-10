@@ -190,50 +190,58 @@
 
       <!-- Cards de resumen de citas -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <div class="bg-white p-6 rounded-lg shadow-sm border">
-          <div class="flex items-center">
-            <div class="p-3 rounded-full bg-emerald-100 text-emerald-600">
-              <i class="fas fa-calendar-check text-xl"></i>
-            </div>
-            <div class="ml-4">
-              <p class="text-2xl font-semibold text-gray-900">24</p>
-              <p class="text-sm text-gray-500">Citas Hoy</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white p-6 rounded-lg shadow-sm border">
-          <div class="flex items-center">
-            <div class="p-3 rounded-full bg-blue-100 text-blue-600">
-              <i class="fas fa-clock text-xl"></i>
-            </div>
-            <div class="ml-4">
-              <p class="text-2xl font-semibold text-gray-900">8</p>
-              <p class="text-sm text-gray-500">Pendientes</p>
+        <div class="sys-stat-card">
+          <div class="sys-stat-card-inner">
+            <div class="flex items-center">
+              <div class="sys-stat-icon sys-accent-emerald">
+                <i class="fas fa-calendar-check"></i>
+              </div>
+              <div class="ml-4">
+                <p class="sys-stat-value">24</p>
+                <p class="sys-stat-label">Citas Hoy</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="bg-white p-6 rounded-lg shadow-sm border">
-          <div class="flex items-center">
-            <div class="p-3 rounded-full bg-green-100 text-green-600">
-              <i class="fas fa-check-circle text-xl"></i>
-            </div>
-            <div class="ml-4">
-              <p class="text-2xl font-semibold text-gray-900">16</p>
-              <p class="text-sm text-gray-500">Completadas</p>
+        <div class="sys-stat-card">
+          <div class="sys-stat-card-inner">
+            <div class="flex items-center">
+              <div class="sys-stat-icon sys-accent-blue">
+                <i class="fas fa-clock"></i>
+              </div>
+              <div class="ml-4">
+                <p class="sys-stat-value">8</p>
+                <p class="sys-stat-label">Pendientes</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="bg-white p-6 rounded-lg shadow-sm border">
-          <div class="flex items-center">
-            <div class="p-3 rounded-full bg-red-100 text-red-600">
-              <i class="fas fa-times-circle text-xl"></i>
+        <div class="sys-stat-card">
+          <div class="sys-stat-card-inner">
+            <div class="flex items-center">
+              <div class="sys-stat-icon sys-accent-green">
+                <i class="fas fa-check-circle"></i>
+              </div>
+              <div class="ml-4">
+                <p class="sys-stat-value">16</p>
+                <p class="sys-stat-label">Completadas</p>
+              </div>
             </div>
-            <div class="ml-4">
-              <p class="text-2xl font-semibold text-gray-900">2</p>
-              <p class="text-sm text-gray-500">Canceladas</p>
+          </div>
+        </div>
+
+        <div class="sys-stat-card">
+          <div class="sys-stat-card-inner">
+            <div class="flex items-center">
+              <div class="sys-stat-icon sys-accent-red">
+                <i class="fas fa-times-circle"></i>
+              </div>
+              <div class="ml-4">
+                <p class="sys-stat-value">2</p>
+                <p class="sys-stat-label">Canceladas</p>
+              </div>
             </div>
           </div>
         </div>

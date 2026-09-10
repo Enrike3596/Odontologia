@@ -646,8 +646,8 @@ function renderUsersTable(usuarios) {
                         </div>
                     </div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatValue(usuario.documento || usuario.numeroIdentificacion)}</td>
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">${formatValue(usuario.documento || usuario.numeroIdentificacion)}</td>
+                <td class="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
                     <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColorClass(roleClass)}">
                         ${roleText}
                     </span>
@@ -657,7 +657,7 @@ function renderUsersTable(usuarios) {
                         ${statusText}
                     </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Hace 2 horas</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">Hace 2 horas</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div class="flex space-x-2">
                         <button class="text-indigo-600 hover:text-indigo-900" onclick="viewUser(${usuario.id || usuario.idUsuario})" title="Ver detalles">

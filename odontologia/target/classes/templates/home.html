@@ -168,77 +168,77 @@
       <!-- Main Statistics Cards -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <!-- Citas de Hoy -->
-        <div class="bg-gradient-to-r from-emerald-500 to-emerald-600 p-6 rounded-lg shadow-sm text-white">
-          <div class="flex items-center">
-            <div class="p-3 rounded-full bg-white bg-opacity-20">
-              <i class="fas fa-calendar-check text-xl"></i>
+        <div class="sys-stat-card">
+          <div class="sys-stat-card-inner">
+            <div class="flex items-center">
+              <div class="sys-stat-icon sys-accent-emerald">
+                <i class="fas fa-calendar-check"></i>
+              </div>
+              <div class="ml-4">
+                <p class="sys-stat-value" id="todayAppointments">24</p>
+                <p class="sys-stat-label">Citas de Hoy</p>
+              </div>
             </div>
-            <div class="ml-4">
-              <p class="text-2xl font-bold" id="todayAppointments">24</p>
-              <p class="text-emerald-100">Citas de Hoy</p>
-            </div>
-          </div>
-          <div class="mt-4">
-            <div class="flex items-center text-emerald-100">
-              <i class="fas fa-arrow-up text-xs mr-1"></i>
-              <span class="text-xs">+12% vs ayer</span>
+            <div class="sys-stat-trend sys-trend-up">
+              <i class="fas fa-arrow-up"></i>
+              <span>+12% vs ayer</span>
             </div>
           </div>
         </div>
 
         <!-- Pacientes Activos -->
-        <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-lg shadow-sm text-white">
-          <div class="flex items-center">
-            <div class="p-3 rounded-full bg-white bg-opacity-20">
-              <i class="fas fa-user-injured text-xl"></i>
+        <div class="sys-stat-card">
+          <div class="sys-stat-card-inner">
+            <div class="flex items-center">
+              <div class="sys-stat-icon sys-accent-blue">
+                <i class="fas fa-user-injured"></i>
+              </div>
+              <div class="ml-4">
+                <p class="sys-stat-value" id="activePatients">1,247</p>
+                <p class="sys-stat-label">Pacientes Activos</p>
+              </div>
             </div>
-            <div class="ml-4">
-              <p class="text-2xl font-bold" id="activePatients">1,247</p>
-              <p class="text-blue-100">Pacientes Activos</p>
-            </div>
-          </div>
-          <div class="mt-4">
-            <div class="flex items-center text-blue-100">
-              <i class="fas fa-arrow-up text-xs mr-1"></i>
-              <span class="text-xs">+8% este mes</span>
+            <div class="sys-stat-trend sys-trend-up">
+              <i class="fas fa-arrow-up"></i>
+              <span>+8% este mes</span>
             </div>
           </div>
         </div>
 
         <!-- Ingresos del Mes -->
-        <div class="bg-gradient-to-r from-purple-500 to-purple-600 p-6 rounded-lg shadow-sm text-white">
-          <div class="flex items-center">
-            <div class="p-3 rounded-full bg-white bg-opacity-20">
-              <i class="fas fa-dollar-sign text-xl"></i>
+        <div class="sys-stat-card">
+          <div class="sys-stat-card-inner">
+            <div class="flex items-center">
+              <div class="sys-stat-icon sys-accent-purple">
+                <i class="fas fa-dollar-sign"></i>
+              </div>
+              <div class="ml-4">
+                <p class="sys-stat-value" id="monthlyRevenue">$45,230</p>
+                <p class="sys-stat-label">Ingresos del Mes</p>
+              </div>
             </div>
-            <div class="ml-4">
-              <p class="text-2xl font-bold" id="monthlyRevenue">$45,230</p>
-              <p class="text-purple-100">Ingresos del Mes</p>
-            </div>
-          </div>
-          <div class="mt-4">
-            <div class="flex items-center text-purple-100">
-              <i class="fas fa-arrow-up text-xs mr-1"></i>
-              <span class="text-xs">+15% vs mes anterior</span>
+            <div class="sys-stat-trend sys-trend-up">
+              <i class="fas fa-arrow-up"></i>
+              <span>+15% vs mes anterior</span>
             </div>
           </div>
         </div>
 
         <!-- Odontólogos Disponibles -->
-        <div class="bg-gradient-to-r from-orange-500 to-orange-600 p-6 rounded-lg shadow-sm text-white">
-          <div class="flex items-center">
-            <div class="p-3 rounded-full bg-white bg-opacity-20">
-              <i class="fas fa-user-md text-xl"></i>
+        <div class="sys-stat-card">
+          <div class="sys-stat-card-inner">
+            <div class="flex items-center">
+              <div class="sys-stat-icon sys-accent-orange">
+                <i class="fas fa-user-md"></i>
+              </div>
+              <div class="ml-4">
+                <p class="sys-stat-value" id="availableDoctors">8</p>
+                <p class="sys-stat-label">Odontólogos Disponibles</p>
+              </div>
             </div>
-            <div class="ml-4">
-              <p class="text-2xl font-bold" id="availableDoctors">8</p>
-              <p class="text-orange-100">Odontólogos Disponibles</p>
-            </div>
-          </div>
-          <div class="mt-4">
-            <div class="flex items-center text-orange-100">
-              <i class="fas fa-check-circle text-xs mr-1"></i>
-              <span class="text-xs">4 activos ahora</span>
+            <div class="sys-stat-trend sys-trend-up">
+              <i class="fas fa-check-circle"></i>
+              <span>4 activos ahora</span>
             </div>
           </div>
         </div>

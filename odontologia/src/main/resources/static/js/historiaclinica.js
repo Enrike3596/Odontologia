@@ -1018,16 +1018,16 @@ function updateRecordsTable(historias) {
                     </div>
                 </div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-6 py-4 whitespace-nowrap hidden md:table-cell">
                 <div class="text-sm text-gray-900">${historia.antecedentes || '-'}</div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-6 py-4 whitespace-nowrap hidden lg:table-cell">
                 <div class="text-sm text-gray-900">${historia.alergias || 'Ninguna'}</div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm text-gray-900">${historia.medicamentos || 'Ninguno'}</div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-6 py-4 whitespace-nowrap hidden lg:table-cell">
                 <div class="text-sm text-gray-900">${historia.observaciones || '-'}</div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
