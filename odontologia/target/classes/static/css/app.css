@@ -1471,3 +1471,129 @@ html {
         padding: 8px 12px !important;
     }
 }
+
+/* ============================================================================
+   LAYOUT PRINCIPAL - Sidebar estatico con scroll interno + logout siempre visible
+   ============================================================================ */
+/* El contenedor flex no debe estirar el sidebar: el sidebar mide 100vh fijo */
+.layout-shell {
+    display: flex;
+    align-items: flex-start;
+}
+
+/* Sidebar fijo en desktop: no se alarga con el contenido del main */
+#sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    max-height: 100vh;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+    z-index: 40;
+}
+
+/* Cabecera del sidebar: fija, no hace scroll */
+#sidebar .sidebar-header {
+    flex-shrink: 0;
+}
+
+/* Zona de navegacion: UNICA parte con scroll dentro del sidebar */
+#sidebar .sidebar-nav {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+#sidebar .sidebar-nav::-webkit-scrollbar {
+    width: 6px;
+}
+
+#sidebar .sidebar-nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#sidebar .sidebar-nav::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+#sidebar .sidebar-nav::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Pie del sidebar: fijo, siempre visible con usuario + cerrar sesion */
+#sidebar .sidebar-footer {
+    flex-shrink: 0;
+}
+
+/* Boton de cerrar sesion del sidebar */
+.sidebar-logout-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #dc2626;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sidebar-logout-btn:hover {
+    background: #fee2e2;
+    color: #991b1b;
+    border-color: #fca5a5;
+}
+
+/* El contenido principal puede crecer sin afectar al sidebar */
+.layout-shell > main {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+/* Componente sidebar reutilizable (/components/sidebar.html) con misma logica */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    max-height: 100vh;
+}
+
+.sidebar .sidebar-menu {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.sidebar .sidebar-footer {
+    flex-shrink: 0;
+}
+
+/* Responsivo: en movil el sidebar es drawer superpuesto */
+@media (max-width: 768px) {
+    #sidebar {
+        position: fixed;
+        top: 0;
+        left: -288px;
+        height: 100dvh;
+        max-height: 100dvh;
+        z-index: 1000;
+        transition: left 0.3s ease;
+    }
+
+    #sidebar.show {
+        left: 0;
+    }
+}

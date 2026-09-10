@@ -24,11 +24,8 @@
   <link rel="stylesheet" th:href="@{/css/app.css}" />
   
   <style>
-    /* Asegurar que el sidebar se muestre correctamente */
-    #sidebar {
-      min-height: 100vh;
-      box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
-    }
+    /* Layout del sidebar centralizado en /css/app.css: estatico (sticky 100vh),
+       scroll interno en .sidebar-nav y footer fijo con cerrar sesion */
     
     /* Responsivo para móviles */
     @media (max-width: 768px) {
@@ -48,11 +45,7 @@
       }
     }
     
-    @media (min-width: 769px) {
-      #sidebar {
-        position: relative;
-      }
-    }
+    /* En desktop el sidebar es sticky de 100vh (ver app.css): no usar position relative */
     
     /* Efectos hover para navegación */
     .nav-link:hover {
@@ -63,19 +56,19 @@
 </head>
 <body class="bg-gray-50 text-gray-800 antialiased" data-page="dashboard" data-require-auth="true">
 
-  <!-- Layout: Sidebar + Main -->
-  <div class="min-h-screen flex">
+  <!-- Layout: Sidebar + Main (layout-shell: el sidebar es sticky 100vh, no se estira) -->
+  <div class="min-h-screen flex layout-shell items-start">
 
     <!-- SIDEBAR -->
     <aside id="sidebar" class="w-72 bg-white border-r flex flex-col">
-      <div class="p-6 flex items-center justify-between">
+      <div class="p-6 flex items-center justify-between sidebar-header">
         <div>
           <h1 class="text-2xl font-semibold text-indigo-700">Clínica <span class="text-indigo-500">Odontología</span></h1>
           <p class="text-sm text-gray-500 mt-1">Panel de administración</p>
         </div>
       </div>
 
-      <nav class="mt-4 px-2 flex-1 overflow-auto" aria-label="Main navigation">
+      <nav class="mt-4 px-2 flex-1 sidebar-nav custom-scrollbar" aria-label="Main navigation">
         <ul class="space-y-1">
           <li><a href="/dashboard" class="nav-link block px-4 py-2 rounded-lg hover:bg-indigo-50 text-indigo-600 font-medium bg-indigo-50" data-view="dashboard">
             <i class="fas fa-chart-line mr-3 text-indigo-500"></i>Dashboard
@@ -100,7 +93,7 @@
           </a></li>
         </ul>
       </nav>
-      <div class="p-4 border-t">
+      <div class="p-4 border-t bg-white sidebar-footer">
         <div class="text-sm text-gray-500">Usuario Activo</div>
         <div class="flex items-center gap-3 mt-2">
           <img src="https://i.pravatar.cc/40?img=5" alt="avatar" class="w-9 h-9 rounded-full" />
@@ -110,7 +103,7 @@
           </div>
         </div>
         <div class="mt-3">
-          <button class="w-full text-xs text-red-600 hover:text-red-800 flex items-center justify-center gap-1" onclick="logout()">
+          <button type="button" class="sidebar-logout-btn" onclick="logout()">
             <i class="fas fa-sign-out-alt"></i>
             Cerrar Sesión
           </button>
@@ -572,7 +565,7 @@
         </ul>
       </nav>
       
-      <div class="p-4 border-t">
+      <div class="p-4 border-t bg-white sidebar-footer">
         <div class="text-sm text-gray-500">Usuario Activo</div>
         <div class="flex items-center gap-3 mt-2">
           <img src="https://i.pravatar.cc/40?img=5" alt="avatar" class="w-9 h-9 rounded-full" />
@@ -582,7 +575,7 @@
           </div>
         </div>
         <div class="mt-3">
-          <button class="w-full text-xs text-red-600 hover:text-red-800 flex items-center justify-center gap-1" onclick="logout()">
+          <button type="button" class="sidebar-logout-btn" onclick="logout()">
             <i class="fas fa-sign-out-alt"></i>
             Cerrar Sesión
           </button>

@@ -1,6 +1,9 @@
 <!-- Sidebar - Sistema Odontológico -->
 <nav class="sidebar">
-    <ul class="sidebar-menu">
+    <div class="sidebar-header">
+        <!-- Cabecera fija del sidebar (no hace scroll) -->
+    </div>
+    <ul class="sidebar-menu custom-scrollbar">
         <li>
             <a href="dashboard" data-view="dashboard">
                 <i class="fas fa-tachometer-alt"></i>
@@ -62,4 +65,10 @@
             </a>
         </li>
     </ul>
+    <div class="sidebar-footer">
+        <button type="button" class="sidebar-logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Cerrar Sesión</span>
+        </button>
+    </div>
 </nav>
