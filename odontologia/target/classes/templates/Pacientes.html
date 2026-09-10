@@ -24,9 +24,13 @@
     /* Layout del sidebar centralizado en /css/app.css: estatico (sticky 100vh),
        scroll interno en .sidebar-nav y footer fijo con cerrar sesion */
     
-    /* Prevenir overflow horizontal */
-    body, html {
-      overflow-x: hidden;
+    /* Prevenir overflow horizontal SIN romper el sidebar sticky:
+       overflow-x:hidden en body/html creaba un scroll-container que
+       desactivaba el sticky y el sidebar se partía al hacer scroll.
+       overflow-x:clip recorta igual pero mantiene el sticky intacto. */
+    body {
+      overflow-x: hidden; /* fallback para navegadores antiguos */
+      overflow-x: clip;
     }
     
     /* Asegurar que las tablas no causen overflow */
