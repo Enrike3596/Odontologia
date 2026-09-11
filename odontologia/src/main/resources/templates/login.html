@@ -87,7 +87,13 @@
       main > :last-child { margin-bottom: 0 !important; }
     }
     ::-webkit-scrollbar { display: none; }
-    body { min-height: max(884px, 100dvh); }
+    body {
+      min-height: max(884px, 100dvh);
+      background: linear-gradient(180deg, #c9f2fb 0%, #eaf3ff 38%, #f8f7ff 100%);
+    }
+    .login-page-surface {
+      background: linear-gradient(180deg, #c9f2fb 0%, #eaf3ff 38%, #f8f7ff 100%);
+    }
     /* Borde degradado del sistema para el contenedor del login (solo borde, sin hover) */
     .login-card-border {
       border-radius: 20px;
@@ -101,12 +107,12 @@
     }
   </style>
 </head>
-<body class="bg-surface font-body-md text-on-surface pt-safe pb-safe flex flex-col antialiased selection:bg-secondary-fixed" data-guest-only="true">
-<main class="flex flex-col relative w-full bg-surface min-h-screen">
+<body class="font-body-md text-on-surface pt-safe pb-safe flex flex-col antialiased selection:bg-secondary-fixed" data-guest-only="true">
+<main class="flex flex-col relative w-full login-page-surface min-h-screen">
   <div class="flex flex-col w-full pb-8 max-w-md mx-auto md:max-w-lg">
 
     <!-- Encabezado / Hero -->
-    <div class="relative w-full overflow-hidden bg-gradient-to-b from-secondary-container/20 via-surface-container-low to-surface px-5 pt-8 pb-6 text-center">
+    <div class="relative w-full overflow-hidden bg-transparent px-5 pt-8 pb-6 text-center">
       <div class="pointer-events-none absolute -top-12 left-1/2 -translate-x-1/2 w-72 h-72 rounded-full bg-secondary-fixed-dim/20 blur-3xl"></div>
       <div class="pointer-events-none absolute top-10 right-4 w-28 h-28 rounded-full bg-primary-fixed/25 blur-2xl"></div>
 
