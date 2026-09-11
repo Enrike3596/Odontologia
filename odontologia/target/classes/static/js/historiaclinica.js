@@ -766,12 +766,12 @@ async function loadMedicalRecords() {
         TablePager.register('historias', function (page, pageSize) {
             if (pageSize) MedicalRecordsModule.pagination.itemsPerPage = pageSize;
             MedicalRecordsModule.pagination.currentPage = page;
-            const pg = TablePager.paginate(MedicalRecordsModule.cachedRecords || [], page, MedicalRecordsModule.pagination.itemsPerPage);
+            const pg = TablePager.paginate(getFilteredHistorias(), page, MedicalRecordsModule.pagination.itemsPerPage);
             MedicalRecordsModule.pagination.currentPage = pg.page;
             updateRecordsTable(pg.rows);
             TablePager.renderBar('historiasPager', pg, 'historias');
         });
-        const historiasPager = TablePager.paginate(historias, MedicalRecordsModule.pagination.currentPage, MedicalRecordsModule.pagination.itemsPerPage);
+        const historiasPager = TablePager.paginate(getFilteredHistorias(), MedicalRecordsModule.pagination.currentPage, MedicalRecordsModule.pagination.itemsPerPage);
         MedicalRecordsModule.pagination.currentPage = historiasPager.page;
         MedicalRecordsModule.pagination.totalItems = historiasPager.total;
 
@@ -829,34 +829,59 @@ function toggleFilters() {
 /**
  * Aplicar filtros de búsqueda
  */
+function historiaHasText(v, exclude) {
+    const t = String(v || '').trim();
+    return t.length > 0 && t !== exclude;
+}
+
+function getFilteredHistorias() {
+    const list = MedicalRecordsModule.cachedRecords || [];
+    const f = MedicalRecordsModule.filters || {};
+    const q = String(f.search || '').trim().toLowerCase();
+    return list.filter(function (h) {
+        if (q) {
+            const hay = [
+                h.paciente && (h.paciente.nombres + ' ' + h.paciente.apellidos),
+                h.antecedentes, h.alergias, h.medicamentos, h.observaciones
+            ].map(function (v) { return String(v || '').toLowerCase(); }).join(' | ');
+            if (hay.indexOf(q) === -1) return false;
+        }
+        if (f.alergias === 'si' && !historiaHasText(h.alergias, 'Ninguna')) return false;
+        if (f.alergias === 'no' && historiaHasText(h.alergias, 'Ninguna')) return false;
+        if (f.medicacion === 'si' && !historiaHasText(h.medicamentos, 'Ninguno')) return false;
+        if (f.medicacion === 'no' && historiaHasText(h.medicamentos, 'Ninguno')) return false;
+        return true;
+    });
+}
+
+function renderHistoriasFiltradas() {
+    const filtered = getFilteredHistorias();
+    const pager = TablePager.paginate(filtered, MedicalRecordsModule.pagination.currentPage, MedicalRecordsModule.pagination.itemsPerPage);
+    MedicalRecordsModule.pagination.currentPage = pager.page;
+    MedicalRecordsModule.pagination.totalItems = pager.total;
+    updateRecordsTable(pager.rows);
+    TablePager.renderBar('historiasPager', pager, 'historias');
+}
+
 function applyFilters() {
     const filtersSection = document.getElementById('filtersSection');
 
     if (filtersSection) {
         const searchInput = filtersSection.querySelector('input[type="text"]');
-        const estadoSelect = filtersSection.querySelectorAll('select')[0];
-        const odontologoSelect = filtersSection.querySelectorAll('select')[1];
-        const fechaSelect = filtersSection.querySelectorAll('select')[2];
+        const alergiasSelect = filtersSection.querySelectorAll('select')[0];
+        const medicacionSelect = filtersSection.querySelectorAll('select')[1];
 
         MedicalRecordsModule.filters = {
             search: searchInput?.value || '',
-            estado: estadoSelect?.value || '',
-            odontologo: odontologoSelect?.value || '',
-            fecha: fechaSelect?.value || ''
+            alergias: alergiasSelect?.value || '',
+            medicacion: medicacionSelect?.value || ''
         };
 
         console.log('🔍 Aplicando filtros:', MedicalRecordsModule.filters);
 
-        // Simular filtrado
-        Swal.fire({
-            icon: 'success',
-            title: 'Filtros aplicados',
-            text: 'La lista de historias clínicas ha sido filtrada según los criterios seleccionados.',
-            timer: 1500,
-            showConfirmButton: false
-        });
-
-        loadMedicalRecords();
+        // Filtrado real sobre la caché (sin recarga ni mensajes simulados)
+        MedicalRecordsModule.pagination.currentPage = 1;
+        renderHistoriasFiltradas();
     }
 }
 
@@ -874,26 +899,27 @@ function clearFilters() {
 
         MedicalRecordsModule.filters = {
             search: '',
-            estado: '',
-            odontologo: '',
-            fecha: ''
+            alergias: '',
+            medicacion: ''
         };
 
         console.log('🧹 Filtros limpiados');
 
-        loadMedicalRecords();
+        MedicalRecordsModule.pagination.currentPage = 1;
+        renderHistoriasFiltradas();
     }
 }
 
 /**
- * Maneja la búsqueda en tiempo real
+ * Maneja la búsqueda en tiempo real (filtra la caché sin recargar)
  */
 function handleSearchInput(e) {
     const query = e.target.value.trim();
     console.log('🔍 Búsqueda en tiempo real:', query);
 
     MedicalRecordsModule.filters.search = query;
-    loadMedicalRecords();
+    MedicalRecordsModule.pagination.currentPage = 1;
+    renderHistoriasFiltradas();
 }
 
 /**

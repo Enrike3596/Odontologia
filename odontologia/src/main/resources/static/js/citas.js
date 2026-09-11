@@ -1143,18 +1143,40 @@ async function loadAppointments() {
         // Guardar caché para apertura instantánea de ver/editar (sin loader)
         AppointmentsModule.cachedCitas = Array.isArray(citas) ? citas : [];
 
+        // Poblar filtro de odontólogos con datos reales (una sola vez)
+        try {
+            const odoFilter = document.querySelectorAll('#filtersSection select')[1];
+            if (odoFilter && odoFilter.options.length <= 4) {
+                const odosResp = await fetch('/api/odontologos');
+                if (odosResp.ok) {
+                    const odos = await odosResp.json();
+                    if (Array.isArray(odos) && odos.length > 0) {
+                        const current = odoFilter.value;
+                        odoFilter.innerHTML = '<option value="">Todos los odontólogos</option>';
+                        odos.forEach(function (o) {
+                            const op = document.createElement('option');
+                            op.value = o.id;
+                            op.textContent = 'Dr. ' + (((o.nombre || '') + ' ' + (o.apellido || '')).trim() || ('#' + o.id));
+                            odoFilter.appendChild(op);
+                        });
+                        odoFilter.value = current;
+                    }
+                }
+            }
+        } catch (e) { /* se conservan las opciones base */ }
+
         console.log('✅ Citas cargadas exitosamente:', citas.length, 'citas encontradas');
 
         // Paginación real del lado cliente
         TablePager.register('citas', function (page, pageSize) {
             if (pageSize) AppointmentsModule.pagination.itemsPerPage = pageSize;
             AppointmentsModule.pagination.currentPage = page;
-            const pg = TablePager.paginate(AppointmentsModule.cachedCitas || [], page, AppointmentsModule.pagination.itemsPerPage);
+            const pg = TablePager.paginate(getFilteredCitas(), page, AppointmentsModule.pagination.itemsPerPage);
             AppointmentsModule.pagination.currentPage = pg.page;
             updateAppointmentsTable(pg.rows);
             TablePager.renderBar('citasPager', pg, 'citas');
         });
-        const citasPager = TablePager.paginate(citas, AppointmentsModule.pagination.currentPage, AppointmentsModule.pagination.itemsPerPage);
+        const citasPager = TablePager.paginate(getFilteredCitas(), AppointmentsModule.pagination.currentPage, AppointmentsModule.pagination.itemsPerPage);
         AppointmentsModule.pagination.currentPage = citasPager.page;
         AppointmentsModule.pagination.totalItems = citasPager.total;
 
@@ -1212,6 +1234,59 @@ function toggleFilters() {
     }
 }
 
+function citasWeekRange() {
+    const now = new Date();
+    const day = (now.getDay() + 6) % 7; // lunes = 0
+    const mon = new Date(now);
+    mon.setDate(now.getDate() - day);
+    const sun = new Date(mon);
+    sun.setDate(mon.getDate() + 6);
+    const key = function (d) {
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    };
+    return { from: key(mon), to: key(sun) };
+}
+
+function getFilteredCitas() {
+    const list = AppointmentsModule.cachedCitas || [];
+    const f = AppointmentsModule.filters || {};
+    const q = String(f.search || '').trim().toLowerCase();
+    const now = new Date();
+    const todayKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+    const week = (f.fecha === 'esta-semana') ? citasWeekRange() : null;
+    return list.filter(function (cita) {
+        if (q) {
+            const hay = [
+                cita.paciente && cita.paciente.nombres,
+                cita.paciente && cita.paciente.apellidos,
+                cita.paciente && cita.paciente.documento,
+                cita.paciente && cita.paciente.email,
+                cita.odontologo && cita.odontologo.nombre,
+                cita.odontologo && cita.odontologo.apellido
+            ].map(function (v) { return String(v || '').toLowerCase(); }).join(' | ');
+            if (hay.indexOf(q) === -1) return false;
+        }
+        if (f.estado && String(cita.estado || '') !== f.estado) return false;
+        if (f.odontologo && String((cita.odontologo && cita.odontologo.id) || '') !== String(f.odontologo)) return false;
+        if (f.fecha && f.fecha !== 'personalizada') {
+            const key = String(cita.fecha || '').slice(0, 10);
+            if (f.fecha === 'hoy' && key !== todayKey) return false;
+            if (f.fecha === 'esta-semana' && (key < week.from || key > week.to)) return false;
+            if (f.fecha === 'este-mes' && key.slice(0, 7) !== todayKey.slice(0, 7)) return false;
+        }
+        return true;
+    });
+}
+
+function renderCitasFiltradas() {
+    const filtered = getFilteredCitas();
+    const pager = TablePager.paginate(filtered, AppointmentsModule.pagination.currentPage, AppointmentsModule.pagination.itemsPerPage);
+    AppointmentsModule.pagination.currentPage = pager.page;
+    AppointmentsModule.pagination.totalItems = pager.total;
+    updateAppointmentsTable(pager.rows);
+    TablePager.renderBar('citasPager', pager, 'citas');
+}
+
 /**
  * Aplicar filtros de búsqueda
  */
@@ -1233,16 +1308,9 @@ function applyFilters() {
 
         console.log('🔍 Aplicando filtros:', AppointmentsModule.filters);
 
-        // Simular filtrado
-        Swal.fire({
-            icon: 'success',
-            title: 'Filtros aplicados',
-            text: 'La lista de citas ha sido filtrada según los criterios seleccionados.',
-            timer: 1500,
-            showConfirmButton: false
-        });
-
-        loadAppointments();
+        // Filtrado real sobre la caché (sin recarga ni mensajes simulados)
+        AppointmentsModule.pagination.currentPage = 1;
+        renderCitasFiltradas();
     }
 }
 
@@ -1267,19 +1335,21 @@ function clearFilters() {
 
         console.log('🧹 Filtros limpiados');
 
-        loadAppointments();
+        AppointmentsModule.pagination.currentPage = 1;
+        renderCitasFiltradas();
     }
 }
 
 /**
- * Maneja la búsqueda en tiempo real
+ * Maneja la búsqueda en tiempo real (filtra la caché sin recargar)
  */
 function handleSearchInput(e) {
     const query = e.target.value.trim();
     console.log('🔍 Búsqueda en tiempo real:', query);
 
     AppointmentsModule.filters.search = query;
-    loadAppointments();
+    AppointmentsModule.pagination.currentPage = 1;
+    renderCitasFiltradas();
 }
 
 /**

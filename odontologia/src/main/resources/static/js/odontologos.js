@@ -1024,12 +1024,12 @@ async function loadDentists() {
         TablePager.register('odontologos', function (page, pageSize) {
             if (pageSize) DentistsModule.pagination.itemsPerPage = pageSize;
             DentistsModule.pagination.currentPage = page;
-            const pg = TablePager.paginate(DentistsModule.cachedDentists || [], page, DentistsModule.pagination.itemsPerPage);
+            const pg = TablePager.paginate(getFilteredOdontologos(), page, DentistsModule.pagination.itemsPerPage);
             DentistsModule.pagination.currentPage = pg.page;
             updateDentistsTable(pg.rows);
             TablePager.renderBar('odontologosPager', pg, 'odontologos');
         });
-        const odontologosPager = TablePager.paginate(odontologos, DentistsModule.pagination.currentPage, DentistsModule.pagination.itemsPerPage);
+        const odontologosPager = TablePager.paginate(getFilteredOdontologos(), DentistsModule.pagination.currentPage, DentistsModule.pagination.itemsPerPage);
         DentistsModule.pagination.currentPage = odontologosPager.page;
         DentistsModule.pagination.totalItems = odontologosPager.total;
 
@@ -1087,34 +1087,75 @@ function toggleFilters() {
 /**
  * Aplicar filtros de búsqueda
  */
+function normTxt(s) {
+    return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function trabajaHoy(diasTrabajo) {
+    const dias = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+    const hoy = dias[new Date().getDay()];
+    return normTxt(diasTrabajo).split(',').map(function (d) { return normTxt(d).trim(); }).includes(hoy);
+}
+
+const ESP_LABEL = {
+    general: 'odontologia general',
+    ortodoncia: 'ortodoncia',
+    endodoncia: 'endodoncia',
+    periodoncia: 'periodoncia',
+    cirugia: 'cirugia',
+    protesis: 'protesis',
+    pediatrica: 'odontopediatria',
+    estetica: 'estetica'
+};
+
+function getFilteredOdontologos() {
+    const list = DentistsModule.cachedDentists || [];
+    const f = DentistsModule.filters || {};
+    const q = String(f.search || '').trim().toLowerCase();
+    return list.filter(function (o) {
+        if (q) {
+            const hay = [o.nombre, o.apellido, o.documento, o.matricula, o.especialidades, o.email]
+                .map(function (v) { return String(v || '').toLowerCase(); }).join(' | ');
+            if (hay.indexOf(q) === -1) return false;
+        }
+        if (f.especialidad) {
+            const label = ESP_LABEL[f.especialidad] || f.especialidad;
+            if (normTxt(o.especialidades).indexOf(label) === -1) return false;
+        }
+        if (f.disponibilidad === 'disponible' && !trabajaHoy(o.diasTrabajo)) return false;
+        if (f.disponibilidad === 'no-disponible' && trabajaHoy(o.diasTrabajo)) return false;
+        return true;
+    });
+}
+
+function renderOdontologosFiltrados() {
+    const filtered = getFilteredOdontologos();
+    const pager = TablePager.paginate(filtered, DentistsModule.pagination.currentPage, DentistsModule.pagination.itemsPerPage);
+    DentistsModule.pagination.currentPage = pager.page;
+    DentistsModule.pagination.totalItems = pager.total;
+    updateDentistsTable(pager.rows);
+    TablePager.renderBar('odontologosPager', pager, 'odontologos');
+}
+
 function applyFilters() {
     const filtersSection = document.getElementById('filtersSection');
 
     if (filtersSection) {
         const searchInput = filtersSection.querySelector('input[type="text"]');
         const especialidadSelect = filtersSection.querySelectorAll('select')[0];
-        const estadoSelect = filtersSection.querySelectorAll('select')[1];
-        const disponibilidadSelect = filtersSection.querySelectorAll('select')[2];
+        const disponibilidadSelect = filtersSection.querySelectorAll('select')[1];
 
         DentistsModule.filters = {
             search: searchInput?.value || '',
             especialidad: especialidadSelect?.value || '',
-            estado: estadoSelect?.value || '',
             disponibilidad: disponibilidadSelect?.value || ''
         };
 
         console.log('🔍 Aplicando filtros:', DentistsModule.filters);
 
-        // Simular filtrado
-        Swal.fire({
-            icon: 'success',
-            title: 'Filtros aplicados',
-            text: 'La lista de odontólogos ha sido filtrada según los criterios seleccionados.',
-            timer: 1500,
-            showConfirmButton: false
-        });
-
-        loadDentists();
+        // Filtrado real sobre la caché (sin recarga ni mensajes simulados)
+        DentistsModule.pagination.currentPage = 1;
+        renderOdontologosFiltrados();
     }
 }
 
@@ -1133,25 +1174,26 @@ function clearFilters() {
         DentistsModule.filters = {
             search: '',
             especialidad: '',
-            estado: '',
             disponibilidad: ''
         };
 
         console.log('🧹 Filtros limpiados');
 
-        loadDentists();
+        DentistsModule.pagination.currentPage = 1;
+        renderOdontologosFiltrados();
     }
 }
 
 /**
- * Maneja la búsqueda en tiempo real
+ * Maneja la búsqueda en tiempo real (filtra la caché sin recargar)
  */
 function handleSearchInput(e) {
     const query = e.target.value.trim();
     console.log('🔍 Búsqueda en tiempo real:', query);
 
     DentistsModule.filters.search = query;
-    loadDentists();
+    DentistsModule.pagination.currentPage = 1;
+    renderOdontologosFiltrados();
 }
 
 /**

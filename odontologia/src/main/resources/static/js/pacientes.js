@@ -740,12 +740,12 @@ async function loadPatients() {
         TablePager.register('pacientes', function (page, pageSize) {
             if (pageSize) PatientsModule.pagination.itemsPerPage = pageSize;
             PatientsModule.pagination.currentPage = page;
-            const pg = TablePager.paginate(PatientsModule.cachedPatients || [], page, PatientsModule.pagination.itemsPerPage);
+            const pg = TablePager.paginate(getFilteredPacientes(), page, PatientsModule.pagination.itemsPerPage);
             PatientsModule.pagination.currentPage = pg.page;
             renderPatientsTable(pg.rows);
             TablePager.renderBar('pacientesPager', pg, 'pacientes');
         });
-        const pacientesPager = TablePager.paginate(patients, PatientsModule.pagination.currentPage, PatientsModule.pagination.itemsPerPage);
+        const pacientesPager = TablePager.paginate(getFilteredPacientes(), PatientsModule.pagination.currentPage, PatientsModule.pagination.itemsPerPage);
         PatientsModule.pagination.currentPage = pacientesPager.page;
         PatientsModule.pagination.totalItems = pacientesPager.total;
 
@@ -912,6 +912,51 @@ function toggleFilters() {
     }
 }
 
+function pacienteEdad(fechaNac) {
+    if (!fechaNac) return null;
+    const b = new Date(fechaNac);
+    if (isNaN(b.getTime())) return null;
+    const now = new Date();
+    let edad = now.getFullYear() - b.getFullYear();
+    const m = now.getMonth() - b.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < b.getDate())) edad--;
+    return edad;
+}
+
+function getFilteredPacientes() {
+    const list = PatientsModule.cachedPatients || [];
+    const f = PatientsModule.filters || {};
+    const q = String(f.search || '').trim().toLowerCase();
+    return list.filter(function (p) {
+        if (q) {
+            const hay = [p.nombres, p.apellidos, p.documento, p.email, p.telefono]
+                .map(function (v) { return String(v || '').toLowerCase(); }).join(' | ');
+            if (hay.indexOf(q) === -1) return false;
+        }
+        if (f.genero) {
+            const g = String(p.genero || '').toUpperCase().charAt(0);
+            if (g !== String(f.genero).toUpperCase().charAt(0)) return false;
+        }
+        if (f.edad) {
+            const e = pacienteEdad(p.fechaNacimiento);
+            if (e === null) return false;
+            if (f.edad === '0-17' && e >= 18) return false;
+            if (f.edad === '18-64' && (e < 18 || e > 64)) return false;
+            if (f.edad === '65+' && e < 65) return false;
+        }
+        return true;
+    });
+}
+
+function renderPacientesFiltrados() {
+    const filtered = getFilteredPacientes();
+    const pager = TablePager.paginate(filtered, PatientsModule.pagination.currentPage, PatientsModule.pagination.itemsPerPage);
+    PatientsModule.pagination.currentPage = pager.page;
+    PatientsModule.pagination.totalItems = pager.total;
+    renderPatientsTable(pager.rows);
+    TablePager.renderBar('pacientesPager', pager, 'pacientes');
+}
+
 /**
  * Aplicar filtros de búsqueda
  */
@@ -920,29 +965,20 @@ function applyFilters() {
 
     if (filtersSection) {
         const searchInput = filtersSection.querySelector('input[type="text"]');
-        const estadoSelect = filtersSection.querySelectorAll('select')[0];
-        const generoSelect = filtersSection.querySelectorAll('select')[1];
-        const edadSelect = filtersSection.querySelectorAll('select')[2];
+        const generoSelect = filtersSection.querySelectorAll('select')[0];
+        const edadSelect = filtersSection.querySelectorAll('select')[1];
 
         PatientsModule.filters = {
             search: searchInput?.value || '',
-            estado: estadoSelect?.value || '',
             genero: generoSelect?.value || '',
             edad: edadSelect?.value || ''
         };
 
         console.log('🔍 Aplicando filtros:', PatientsModule.filters);
 
-        // Simular filtrado
-        Swal.fire({
-            icon: 'success',
-            title: 'Filtros aplicados',
-            text: 'La lista de pacientes ha sido filtrada según los criterios seleccionados.',
-            timer: 1500,
-            showConfirmButton: false
-        });
-
-        loadPatients();
+        // Filtrado real sobre la caché (sin recarga ni mensajes simulados)
+        PatientsModule.pagination.currentPage = 1;
+        renderPacientesFiltrados();
     }
 }
 
@@ -960,26 +996,27 @@ function clearFilters() {
 
         PatientsModule.filters = {
             search: '',
-            estado: '',
             genero: '',
             edad: ''
         };
 
         console.log('🧹 Filtros limpiados');
 
-        loadPatients();
+        PatientsModule.pagination.currentPage = 1;
+        renderPacientesFiltrados();
     }
 }
 
 /**
- * Maneja la búsqueda en tiempo real
+ * Maneja la búsqueda en tiempo real (filtra la caché sin recargar)
  */
 function handleSearchInput(e) {
     const query = e.target.value.trim();
     console.log('🔍 Búsqueda en tiempo real:', query);
 
     PatientsModule.filters.search = query;
-    loadPatients();
+    PatientsModule.pagination.currentPage = 1;
+    renderPacientesFiltrados();
 }
 
 /**

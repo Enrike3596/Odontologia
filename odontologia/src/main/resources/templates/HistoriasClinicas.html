@@ -239,42 +239,27 @@
 
         <!-- Filtros colapsables -->
         <div class="px-6 py-4 bg-gray-50 border-b hidden" id="filtersSection">
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
-              <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Paciente, odontólogo, diagnóstico...">
+              <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Paciente, antecedentes, diagnóstico...">
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Alergias</label>
               <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="">Todos los estados</option>
-                <option value="abierta">Abierta</option>
-                <option value="en-tratamiento">En Tratamiento</option>
-                <option value="seguimiento">En Seguimiento</option>
-                <option value="cerrada">Cerrada</option>
+                <option value="">Todas</option>
+                <option value="si">Con alergias</option>
+                <option value="no">Sin alergias</option>
               </select>
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Odontólogo</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Medicación</label>
               <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="">Todos los odontólogos</option>
-                <option value="1">Dr. Roberto Martínez</option>
-                <option value="2">Dra. María López</option>
-                <option value="3">Dr. Carlos Rodríguez</option>
-                <option value="4">Dra. Ana García</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Fecha</label>
-              <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="">Todas las fechas</option>
-                <option value="hoy">Hoy</option>
-                <option value="ultima-semana">Última semana</option>
-                <option value="ultimo-mes">Último mes</option>
-                <option value="ultimo-trimestre">Último trimestre</option>
+                <option value="">Todas</option>
+                <option value="si">Con medicación</option>
+                <option value="no">Sin medicación</option>
               </select>
             </div>
           </div>

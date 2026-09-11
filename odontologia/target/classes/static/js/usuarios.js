@@ -548,30 +548,66 @@ function togglePassword(inputId) {
 // Funciones para filtros
 function toggleFilters() {
     const filtersSection = document.getElementById('filtersSection');
-    const toggleBtn = document.querySelector('.filter-toggle-btn');
-
-    if (filtersSection.style.display === 'none' || filtersSection.style.display === '') {
-        filtersSection.style.display = 'block';
-        toggleBtn.classList.add('active');
-    } else {
-        filtersSection.style.display = 'none';
-        toggleBtn.classList.remove('active');
+    if (filtersSection) {
+        filtersSection.classList.toggle('hidden');
     }
 }
 
+function readUsuarioFilters() {
+    const section = document.getElementById('filtersSection');
+    if (!section) return { search: '', rol: '', estado: '' };
+    const searchEl = section.querySelector('input[type="text"]');
+    const selects = section.querySelectorAll('select');
+    return {
+        search: searchEl ? searchEl.value : '',
+        rol: selects[0] ? selects[0].value : '',
+        estado: selects[1] ? selects[1].value : ''
+    };
+}
+
+function usuarioRolNombre(u) {
+    if (u.rol && typeof u.rol === 'object') return u.rol.nombre || u.nombreRol || '';
+    return u.rol || u.nombreRol || '';
+}
+
+function usuarioActivo(u) {
+    return u.activo === true || u.estado === 'ACTIVO';
+}
+
+function getFilteredUsuarios() {
+    const list = Array.isArray(allUsers) ? allUsers : [];
+    const f = readUsuarioFilters();
+    const q = String(f.search || '').trim().toLowerCase();
+    return list.filter(function (u) {
+        if (q) {
+            const hay = [u.nombres, u.firstName, u.apellidos, u.lastName, u.username, u.email, u.correoElectronico, u.documento, u.numeroIdentificacion]
+                .map(function (v) { return String(v || '').toLowerCase(); }).join(' | ');
+            if (hay.indexOf(q) === -1) return false;
+        }
+        if (f.rol && usuarioRolNombre(u).toLowerCase().indexOf(String(f.rol).toLowerCase()) === -1) return false;
+        if (f.estado === 'activo' && !usuarioActivo(u)) return false;
+        if (f.estado === 'inactivo' && usuarioActivo(u)) return false;
+        return true;
+    });
+}
+
+function renderUsuariosFiltrados() {
+    renderUsersTable.currentPage = 1;
+    renderUsersTable(getFilteredUsuarios());
+}
+
 function applyFilters() {
-    // Implementar lógica de filtros
-    console.log('Aplicando filtros...');
-    showInfoAlert('Filtros aplicados');
+    renderUsersTable.currentPage = 1;
+    renderUsersTable(getFilteredUsuarios());
 }
 
 function clearFilters() {
-    // Limpiar todos los campos de filtro
     const filterInputs = document.querySelectorAll('#filtersSection input, #filtersSection select');
-    filterInputs.forEach(input => {
+    filterInputs.forEach(function (input) {
         input.value = '';
     });
-    showInfoAlert('Filtros limpiados');
+    renderUsersTable.currentPage = 1;
+    renderUsersTable(getFilteredUsuarios());
 }
 
 // Función para formatear valores y manejar nulos/undefined
