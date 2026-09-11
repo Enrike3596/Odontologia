@@ -454,23 +454,23 @@
   </div>
 
   <!-- Modal de Ver Detalles del Usuario -->
-  <div id="viewUserModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
-      <div class="mt-3">
-        <div class="flex items-center justify-between mb-4">
+  <div id="viewUserModal" class="sys-detail-modal fixed inset-0 overflow-y-auto h-full w-full hidden z-50">
+    <div class="sys-detail-dialog relative mx-auto">
+      <div class="sys-detail-content">
+        <div class="sys-detail-topbar">
           <h3 class="text-lg font-medium text-gray-900" id="viewUserTitle">Detalles del Usuario</h3>
-          <button onclick="closeViewUserModal()" class="text-gray-400 hover:text-gray-600">
+          <button onclick="closeViewUserModal()" class="sys-detail-close" aria-label="Cerrar detalles">
             <i class="fas fa-times"></i>
           </button>
         </div>
 
-        <div class="space-y-6">
+        <div class="sys-detail-body">
           <!-- Información básica del usuario -->
-          <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-            <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center" id="viewUserAvatar">
+          <div class="sys-detail-hero">
+            <div class="sys-detail-avatar" id="viewUserAvatar">
               <i class="fas fa-user text-indigo-600 text-xl"></i>
             </div>
-            <div>
+            <div class="sys-detail-identity">
               <h4 class="text-lg font-semibold" id="viewUserName">Nombre del Usuario</h4>
               <p class="text-gray-600" id="viewUserEmail">email@example.com</p>
               <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800" id="viewUserRole">
@@ -480,8 +480,8 @@
           </div>
 
           <!-- Detalles -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
+          <div class="sys-detail-grid">
+            <div class="sys-detail-section">
               <h5 class="font-medium text-gray-900 mb-3">Información Personal</h5>
               <div class="space-y-2 text-sm">
                 <div><strong>Documento:</strong> <span id="viewUserDocument">-</span></div>
@@ -489,7 +489,7 @@
                 <div><strong>Género:</strong> <span id="viewUserGender">-</span></div>
               </div>
             </div>
-            <div>
+            <div class="sys-detail-section">
               <h5 class="font-medium text-gray-900 mb-3">Información de Contacto</h5>
               <div class="space-y-2 text-sm">
                 <div><strong>Teléfono:</strong> <span id="viewUserPhone">-</span></div>
@@ -499,8 +499,8 @@
             </div>
           </div>
 
-          <div class="flex justify-end space-x-3 pt-4">
-            <button type="button" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors" onclick="closeViewUserModal()">
+          <div class="sys-detail-footer">
+            <button type="button" class="sys-action-btn sys-action-neutral" onclick="closeViewUserModal()">
               <i class="fas fa-times mr-2"></i> Cerrar
             </button>
             <button type="button" class="sys-action-btn sys-action-secondary" onclick="editUserFromModal()">

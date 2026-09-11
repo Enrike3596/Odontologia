@@ -595,23 +595,23 @@
   </div>
 
   <!-- Modal de Ver Detalles del Odontólogo -->
-  <div id="viewDentistModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
-      <div class="mt-3">
-        <div class="flex items-center justify-between mb-4">
+  <div id="viewDentistModal" class="sys-detail-modal fixed inset-0 overflow-y-auto h-full w-full hidden z-50">
+    <div class="sys-detail-dialog relative mx-auto">
+      <div class="sys-detail-content">
+        <div class="sys-detail-topbar">
           <h3 class="text-lg font-medium text-gray-900" id="viewDentistTitle">Detalles del Odontólogo</h3>
-          <button onclick="closeViewDentistModal()" class="text-gray-400 hover:text-gray-600">
+          <button onclick="closeViewDentistModal()" class="sys-detail-close" aria-label="Cerrar detalles">
             <i class="fas fa-times"></i>
           </button>
         </div>
 
-        <div class="space-y-6">
+        <div class="sys-detail-body">
           <!-- Información básica del odontólogo -->
-          <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-            <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center" id="viewDentistAvatar">
+          <div class="sys-detail-hero">
+            <div class="sys-detail-avatar" id="viewDentistAvatar">
               <i class="fas fa-user-md text-emerald-600 text-xl"></i>
             </div>
-            <div>
+            <div class="sys-detail-identity">
               <h4 class="text-lg font-semibold" id="viewDentistName">Nombre del Odontólogo</h4>
               <p class="text-gray-600" id="viewDentistEmail">email@example.com</p>
               <div class="flex gap-2 mt-2">
@@ -626,8 +626,8 @@
           </div>
 
           <!-- Detalles -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
+          <div class="sys-detail-grid">
+            <div class="sys-detail-section">
               <h5 class="font-medium text-gray-900 mb-3">Información Personal</h5>
               <div class="space-y-2 text-sm">
                 <div><strong>Documento:</strong> <span id="viewDentistDocument">-</span></div>
@@ -637,7 +637,7 @@
                 <div><strong>Dirección:</strong> <span id="viewDentistAddress">-</span></div>
               </div>
             </div>
-            <div>
+            <div class="sys-detail-section">
               <h5 class="font-medium text-gray-900 mb-3">Información Profesional</h5>
               <div class="space-y-2 text-sm">
                 <div><strong>Licencia:</strong> <span id="viewDentistLicense">-</span></div>
@@ -651,8 +651,8 @@
             </div>
           </div>
 
-          <div class="flex justify-end space-x-3 pt-4">
-            <button type="button" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors" onclick="closeViewDentistModal()">
+          <div class="sys-detail-footer">
+            <button type="button" class="sys-action-btn sys-action-neutral" onclick="closeViewDentistModal()">
               <i class="fas fa-times mr-2"></i> Cerrar
             </button>
             <button type="button" class="sys-action-btn sys-action-secondary" onclick="editDentistFromModal()">
