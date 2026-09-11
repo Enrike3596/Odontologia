@@ -23,11 +23,11 @@
 
   <!-- Custom CSS -->
   <link rel="stylesheet" th:href="@{/css/app.css}" />
-  
+
   <style>
     /* Layout del sidebar centralizado en /css/app.css: estatico (sticky 100vh),
        scroll interno en .sidebar-nav y footer fijo con cerrar sesion */
-    
+
     /* Responsivo para móviles */
     @media (max-width: 768px) {
       #sidebar {
@@ -36,18 +36,18 @@
         z-index: 1000;
         transition: left 0.3s ease;
       }
-      
+
       #sidebar.show {
         left: 0;
       }
-      
+
       main {
         margin-left: 0 !important;
       }
     }
-    
+
     /* En desktop el sidebar es sticky de 100vh (ver app.css): no usar position relative */
-    
+
     /* Efectos hover para navegación */
     .nav-link:hover {
       transform: translateX(4px);
@@ -139,7 +139,7 @@
 
           <!-- Actions -->
           <div class="flex items-center gap-3">
-            <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" onclick="openNewDentistModal()">
+            <button class="sys-action-btn sys-action-primary" onclick="openNewDentistModal()">
               <i class="fas fa-user-md mr-2"></i>
               Nuevo Odontólogo
             </button>
@@ -229,7 +229,7 @@
         <div class="p-6 border-b">
           <div class="flex items-center justify-between">
             <h3 class="sys-table-title"><i class="fas fa-user-md text-purple-500"></i>Lista de odontólogos <span class="sys-table-count" data-table-count="odontologos">0</span></h3>
-            <button class="text-gray-500 hover:text-gray-700" onclick="toggleFilters()">
+            <button class="sys-table-action sys-action-neutral" onclick="toggleFilters()" aria-label="Mostrar filtros" title="Mostrar filtros">
               <i class="fas fa-filter"></i>
             </button>
           </div>
@@ -242,7 +242,7 @@
               <label class="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
               <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Nombre, documento, especialidad...">
             </div>
-            
+
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Especialidad</label>
               <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -257,7 +257,7 @@
                 <option value="estetica">Estética Dental</option>
               </select>
             </div>
-            
+
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
               <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -278,9 +278,9 @@
               </select>
             </div>
           </div>
-          
+
           <div class="flex justify-end mt-4 space-x-3">
-            <button class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors" onclick="applyFilters()">
+            <button class="sys-action-btn sys-action-secondary" onclick="applyFilters()">
               <i class="fas fa-search mr-2"></i>
               Aplicar
             </button>
@@ -337,21 +337,21 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label for="nombre" class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
-                <input type="text" id="nombre" name="nombre" required 
+                <input type="text" id="nombre" name="nombre" required
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
                        placeholder="Ingrese el nombre">
               </div>
-              
+
               <div>
                 <label for="apellido" class="block text-sm font-medium text-gray-700 mb-1">Apellido *</label>
-                <input type="text" id="apellido" name="apellido" required 
+                <input type="text" id="apellido" name="apellido" required
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
                        placeholder="Ingrese el apellido">
               </div>
 
               <div>
                 <label for="tipoDocumento" class="block text-sm font-medium text-gray-700 mb-1">Tipo Documento *</label>
-                <select id="tipoDocumento" name="tipoDocumento" required 
+                <select id="tipoDocumento" name="tipoDocumento" required
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
                   <option value="">Seleccione tipo</option>
                   <option value="CC">Cédula de Ciudadanía</option>
@@ -362,20 +362,20 @@
 
               <div>
                 <label for="documento" class="block text-sm font-medium text-gray-700 mb-1">Documento *</label>
-                <input type="text" id="documento" name="documento" required 
+                <input type="text" id="documento" name="documento" required
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
                        placeholder="Número de documento">
               </div>
 
               <div>
                 <label for="fechaNacimiento" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Nacimiento *</label>
-                <input type="date" id="fechaNacimiento" name="fechaNacimiento" required 
+                <input type="date" id="fechaNacimiento" name="fechaNacimiento" required
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
               </div>
 
               <div>
                 <label for="genero" class="block text-sm font-medium text-gray-700 mb-1">Género *</label>
-                <select id="genero" name="genero" required 
+                <select id="genero" name="genero" required
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
                   <option value="">Seleccione género</option>
                   <option value="M">Masculino</option>
@@ -386,21 +386,21 @@
 
               <div>
                 <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input type="email" id="email" name="email" 
+                <input type="email" id="email" name="email"
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
                        placeholder="correo@ejemplo.com">
               </div>
 
               <div>
                 <label for="telefono" class="block text-sm font-medium text-gray-700 mb-1">Teléfono *</label>
-                <input type="tel" id="telefono" name="telefono" required 
+                <input type="tel" id="telefono" name="telefono" required
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
                        placeholder="Número de teléfono">
               </div>
 
               <div class="md:col-span-2">
                 <label for="direccion" class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
-                <input type="text" id="direccion" name="direccion" 
+                <input type="text" id="direccion" name="direccion"
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
                        placeholder="Dirección completa">
               </div>
@@ -416,7 +416,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="md:col-span-2">
                 <label for="matricula" class="block text-sm font-medium text-gray-700 mb-1">Matrícula Profesional *</label>
-                <input type="text" id="matricula" name="matricula" required 
+                <input type="text" id="matricula" name="matricula" required
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
                        placeholder="Ej: MP-12345"
                        pattern="MP-[0-9]{4,6}"
@@ -426,21 +426,21 @@
 
               <div>
                 <label for="universidad" class="block text-sm font-medium text-gray-700 mb-1">Universidad *</label>
-                <input type="text" id="universidad" name="universidad" required 
+                <input type="text" id="universidad" name="universidad" required
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
                        placeholder="Universidad de graduación">
               </div>
 
               <div>
                 <label for="anoGraduacion" class="block text-sm font-medium text-gray-700 mb-1">Año de Graduación *</label>
-                <input type="number" id="anoGraduacion" name="anoGraduacion" required 
+                <input type="number" id="anoGraduacion" name="anoGraduacion" required
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
                        placeholder="2020" min="1950" max="2024">
               </div>
 
               <div>
                 <label for="experiencia" class="block text-sm font-medium text-gray-700 mb-1">Años de Experiencia *</label>
-                <input type="number" id="experiencia" name="experiencia" required 
+                <input type="number" id="experiencia" name="experiencia" required
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
                        placeholder="5" min="0" max="50">
               </div>
@@ -498,21 +498,21 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label for="contactoEmergenciaNombre" class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                <input type="text" id="contactoEmergenciaNombre" name="contactoEmergenciaNombre" 
+                <input type="text" id="contactoEmergenciaNombre" name="contactoEmergenciaNombre"
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
                        placeholder="Nombre del contacto">
               </div>
 
               <div>
                 <label for="contactoEmergenciaParentesco" class="block text-sm font-medium text-gray-700 mb-1">Parentesco</label>
-                <input type="text" id="contactoEmergenciaParentesco" name="contactoEmergenciaParentesco" 
+                <input type="text" id="contactoEmergenciaParentesco" name="contactoEmergenciaParentesco"
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
                        placeholder="Padre, madre, hermano, etc.">
               </div>
 
               <div>
                 <label for="contactoEmergenciaTelefono" class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-                <input type="tel" id="contactoEmergenciaTelefono" name="contactoEmergenciaTelefono" 
+                <input type="tel" id="contactoEmergenciaTelefono" name="contactoEmergenciaTelefono"
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
                        placeholder="Teléfono de emergencia">
               </div>
@@ -528,13 +528,13 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label for="horaInicio" class="block text-sm font-medium text-gray-700 mb-1">Hora Inicio</label>
-                <input type="time" id="horaInicio" name="horaInicio" 
+                <input type="time" id="horaInicio" name="horaInicio"
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
               </div>
 
               <div>
                 <label for="horaFin" class="block text-sm font-medium text-gray-700 mb-1">Hora Fin</label>
-                <input type="time" id="horaFin" name="horaFin" 
+                <input type="time" id="horaFin" name="horaFin"
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
               </div>
 
@@ -586,7 +586,7 @@
               <i class="fas fa-times mr-2"></i>
               Cancelar
             </button>
-            <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors">
+            <button type="submit" class="sys-action-btn sys-action-primary">
               <i class="fas fa-save mr-2"></i>
               Guardar Odontólogo
             </button>
@@ -606,7 +606,7 @@
             <i class="fas fa-times"></i>
           </button>
         </div>
-        
+
         <div class="space-y-6">
           <!-- Información básica del odontólogo -->
           <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
@@ -657,10 +657,10 @@
             <button type="button" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors" onclick="closeViewDentistModal()">
               <i class="fas fa-times mr-2"></i> Cerrar
             </button>
-            <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors" onclick="editDentistFromModal()">
+            <button type="button" class="sys-action-btn sys-action-secondary" onclick="editDentistFromModal()">
               <i class="fas fa-edit mr-2"></i> Editar Odontólogo
             </button>
-            <button type="button" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors" onclick="viewScheduleFromModal()">
+            <button type="button" class="sys-action-btn sys-action-primary" onclick="viewScheduleFromModal()">
               <i class="fas fa-calendar-alt mr-2"></i> Ver Horarios
             </button>
           </div>
@@ -681,7 +681,7 @@
     document.addEventListener('DOMContentLoaded', function() {
       const mobileMenuToggle = document.getElementById('mobileMenuToggle');
       const sidebar = document.getElementById('sidebar');
-      
+
       if (mobileMenuToggle && sidebar) {
         mobileMenuToggle.addEventListener('click', function() {
           if (window.innerWidth <= 768) {
@@ -689,7 +689,7 @@
           }
         });
       }
-      
+
       // Handle window resize
       window.addEventListener('resize', function() {
         if (window.innerWidth > 768) {

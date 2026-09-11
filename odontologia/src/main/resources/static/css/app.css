@@ -290,6 +290,166 @@ table.sys-table {
 }
 
 /* ============================================================================
+   BOTONES DE ACCIONES DEL SISTEMA
+   ============================================================================ */
+.sys-action-btn {
+    min-height: 2.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    padding: 0.65rem 1rem;
+    border: 1px solid transparent;
+    border-radius: 0.65rem;
+    font-size: 0.8125rem;
+    font-weight: 650;
+    line-height: 1.1;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.sys-action-btn i,
+.sys-action-btn svg {
+    flex: 0 0 auto;
+}
+
+.sys-action-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.sys-action-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.sys-action-btn:focus-visible,
+.sys-table-action:focus-visible {
+    outline: 3px solid rgba(14, 165, 233, 0.28);
+    outline-offset: 2px;
+}
+
+.sys-action-btn:disabled,
+.sys-table-action:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.sys-action-primary {
+    color: #fff;
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    box-shadow: 0 5px 12px rgba(5, 150, 105, 0.2);
+}
+
+.sys-action-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+    box-shadow: 0 8px 18px rgba(5, 150, 105, 0.28);
+}
+
+.sys-action-secondary {
+    color: #1d4ed8;
+    background: #eff6ff;
+    border-color: #bfdbfe;
+}
+
+.sys-action-secondary:hover:not(:disabled) {
+    background: #dbeafe;
+    border-color: #93c5fd;
+    box-shadow: 0 5px 12px rgba(37, 99, 235, 0.12);
+}
+
+.sys-action-neutral {
+    color: #475569;
+    background: #f8fafc;
+    border-color: #e2e8f0;
+}
+
+.sys-action-neutral:hover:not(:disabled) {
+    color: #1e293b;
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.sys-table-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.35rem;
+}
+
+.sys-table-action {
+    width: 2.15rem;
+    height: 2.15rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    border-radius: 0.55rem;
+    cursor: pointer;
+    transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.sys-table-action:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.sys-table-action-view {
+    color: #2563eb;
+    background: #eff6ff;
+    border-color: #dbeafe;
+}
+
+.sys-table-action-view:hover:not(:disabled) {
+    background: #dbeafe;
+    border-color: #bfdbfe;
+}
+
+.sys-table-action-edit {
+    color: #b45309;
+    background: #fffbeb;
+    border-color: #fde68a;
+}
+
+.sys-table-action-edit:hover:not(:disabled) {
+    background: #fef3c7;
+    border-color: #fcd34d;
+}
+
+.sys-table-action-status {
+    color: #7c3aed;
+    background: #f5f3ff;
+    border-color: #ddd6fe;
+}
+
+.sys-table-action-status:hover:not(:disabled) {
+    background: #ede9fe;
+    border-color: #c4b5fd;
+}
+
+.sys-table-action-delete {
+    color: #dc2626;
+    background: #fef2f2;
+    border-color: #fecaca;
+}
+
+.sys-table-action-delete:hover:not(:disabled) {
+    background: #fee2e2;
+    border-color: #fca5a5;
+}
+
+@media (max-width: 640px) {
+    .sys-action-btn {
+        min-height: 2.35rem;
+        padding: 0.6rem 0.8rem;
+    }
+
+    .sys-table-action {
+        width: 2rem;
+        height: 2rem;
+    }
+}
+
+/* ============================================================================
    ESTILOS PARA MÓDULO DE CITAS
    ============================================================================ */
 /* Tarjetas de citas con efecto hover */
@@ -358,7 +518,7 @@ table.sys-table {
     .stat-card {
         margin-bottom: 1rem;
     }
-    
+
     .modal-content {
         margin: 1rem;
         max-height: 90vh;
@@ -1078,34 +1238,34 @@ table.sys-table {
         margin: 10px;
         max-height: 95vh;
     }
-    
+
     .new-modal-form,
     .details-container,
     .status-modal-body,
     .delete-modal-body {
         padding: 20px;
     }
-    
+
     .form-row {
         grid-template-columns: 1fr;
     }
-    
+
     .details-header {
         flex-direction: column;
         text-align: center;
         gap: 15px;
     }
-    
+
     .detail-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .form-actions,
     .status-form-actions,
     .delete-form-actions {
         flex-direction: column;
     }
-    
+
     .delete-form-actions {
         flex-direction: column-reverse;
     }
@@ -1249,20 +1409,20 @@ table.sys-table {
     .team-box {
         padding: 30px 20px;
     }
-    
+
     .team-img {
         width: 160px;
         height: 160px;
     }
-    
+
     .team-content h4 {
         font-size: 22px;
     }
-    
+
     .team-content p {
         font-size: 13px;
     }
-    
+
     .team-social li a {
         width: 38px;
         height: 38px;
@@ -1470,29 +1630,29 @@ table.sys-table {
     .testimonial-box {
         padding: 30px 25px;
     }
-    
+
     .testimonial-avatar {
         width: 60px;
         height: 60px;
     }
-    
+
     .testimonial-avatar img {
         width: 100%;
         height: 100%;
     }
-    
+
     .testimonial-avatar span {
         font-size: 22px;
     }
-    
+
     .testimonial-info h4 {
         font-size: 18px;
     }
-    
+
     .testimonial-text {
         font-size: 14px;
     }
-    
+
     .testimonial-quote i {
         font-size: 70px;
     }
@@ -1504,54 +1664,54 @@ table.sys-table {
         padding: 25px 20px;
         margin-bottom: 30px;
     }
-    
+
     .testimonial-header {
         flex-direction: column;
         text-align: center;
         gap: 12px;
     }
-    
+
     .testimonial-avatar {
         width: 65px;
         height: 65px;
     }
-    
+
     .testimonial-avatar img {
         width: 100%;
         height: 100%;
     }
-    
+
     .testimonial-avatar span {
         font-size: 24px;
     }
-    
+
     .testimonial-info h4 {
         font-size: 17px;
     }
-    
+
     .testimonial-info .treatment {
         font-size: 12px;
     }
-    
+
     .testimonial-rating {
         justify-content: center;
         margin-bottom: 15px;
     }
-    
+
     .testimonial-rating i {
         font-size: 16px;
     }
-    
+
     .testimonial-text {
         font-size: 13px;
         text-align: center;
     }
-    
+
     .testimonial-quote {
         bottom: 15px;
         right: 15px;
     }
-    
+
     .testimonial-quote i {
         font-size: 60px;
     }
@@ -1562,20 +1722,20 @@ table.sys-table {
     .testimonial-box {
         padding: 20px 15px;
     }
-    
+
     .testimonial-avatar {
         width: 55px;
         height: 55px;
     }
-    
+
     .testimonial-avatar span {
         font-size: 20px;
     }
-    
+
     .testimonial-info h4 {
         font-size: 16px;
     }
-    
+
     .testimonial-text {
         font-size: 12.5px;
     }
@@ -1640,7 +1800,7 @@ html {
         bottom: 0;
         height: 2px;
     }
-    
+
     .navbar-nav .nav-item a.page-scroll.active {
         background-color: rgba(0, 173, 181, 0.1);
         border-radius: 5px;

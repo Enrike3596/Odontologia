@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Aumentar z-index para que SweetAlert siempre quede por encima de modales personalizados
     style.innerHTML = `.swal2-container { z-index: 7000 !important; }`;
     document.head.appendChild(style);
-    
+
     // Test para verificar que el archivo JavaScript se carga correctamente
     console.log('usuarios.js - Sistema Odontológico cargado correctamente');
 });
@@ -180,19 +180,19 @@ function populateViewUserModal(usuario) {
     document.getElementById('viewUserTitle').textContent = `Detalles de ${nombreCompleto}`;
     document.getElementById('viewUserName').textContent = nombreCompleto;
     document.getElementById('viewUserEmail').textContent = formatValue(usuario.email || usuario.correoElectronico);
-    
+
     // Avatar con iniciales
     const avatar = document.getElementById('viewUserAvatar');
     const initials = getInitials(usuario.nombres, usuario.apellidos);
     avatar.innerHTML = `<i class="fas fa-user"></i>`;
-    
+
     // Badges de rol y estado adaptados al sistema odontológico
     const roleElement = document.getElementById('viewUserRole');
-    
+
     // Determinar rol del sistema odontológico
     let roleClass = 'recepcionista';
     let roleText = 'Recepcionista';
-    
+
     if (usuario.rol) {
         const roleName = usuario.rol.nombre || usuario.nombreRol || '';
         if (roleName.toLowerCase().includes('admin')) {
@@ -206,20 +206,20 @@ function populateViewUserModal(usuario) {
             roleText = 'Recepcionista';
         }
     }
-    
+
     roleElement.className = `role-badge ${roleClass}`;
     roleElement.textContent = roleText;
-    
+
     // Estado del usuario
     const isActive = usuario.activo === true || usuario.estado === 'ACTIVO';
     const statusClass = isActive ? 'active' : 'inactive';
     const statusText = isActive ? 'Activo' : 'Inactivo';
-    
+
     // Información personal
     document.getElementById('viewUserDocument').textContent = formatValue(usuario.documento || usuario.numeroIdentificacion);
     document.getElementById('viewUserBirthdate').textContent = formatValue(usuario.fechaNacimiento);
     document.getElementById('viewUserGender').textContent = formatValue(usuario.genero);
-    
+
     // Información de contacto
     document.getElementById('viewUserPhone').textContent = formatValue(usuario.telefono);
     document.getElementById('viewUserAddress').textContent = formatValue(usuario.direccion);
@@ -254,7 +254,7 @@ function editUserFromModal() {
 function editUser(userId) {
     // Buscar el usuario en la lista cargada o hacer petición
     const user = allUsers.find(u => u.id === parseInt(userId) || u.idUsuario === parseInt(userId));
-    
+
     if (user) {
         populateEditUserModal(user);
         openEditUserModal();
@@ -277,10 +277,10 @@ function populateEditUserModal(usuario) {
     // Título del modal
     const nombreCompleto = `${formatValue(usuario.nombres || usuario.firstName)} ${formatValue(usuario.apellidos || usuario.lastName)}`;
     document.getElementById('editUserTitle').textContent = `Editar Usuario - ${nombreCompleto}`;
-    
+
     // Llenar campos del formulario
     document.getElementById('editUserId').value = usuario.id || usuario.idUsuario;
-    
+
     // Mapear rol a valores del sistema odontológico
     let roleValue = 'recepcionista';
     if (usuario.rol || usuario.nombreRol) {
@@ -294,39 +294,39 @@ function populateEditUserModal(usuario) {
         }
     }
     document.getElementById('editRole').value = roleValue;
-    
+
     // Información personal
     document.getElementById('editFirstName').value = formatValue(usuario.nombres || usuario.firstName, '');
     document.getElementById('editLastName').value = formatValue(usuario.apellidos || usuario.lastName, '');
-    
+
     // Tipo de documento
     let docType = 'CC';
     if (usuario.tipoDocumento || usuario.tipoIdentificacion) {
         const tipo = (usuario.tipoDocumento || usuario.tipoIdentificacion).toUpperCase();
-        docType = tipo.includes('CEDULA') ? 'CC' : 
-                  tipo.includes('TARJETA') ? 'TI' : 
-                  tipo.includes('EXTRANJERIA') ? 'CE' : 
+        docType = tipo.includes('CEDULA') ? 'CC' :
+                  tipo.includes('TARJETA') ? 'TI' :
+                  tipo.includes('EXTRANJERIA') ? 'CE' :
                   tipo.includes('PASAPORTE') ? 'PP' : 'CC';
     }
     document.getElementById('editIdType').value = docType;
-    
+
     document.getElementById('editIdNumber').value = formatValue(usuario.documento || usuario.numeroIdentificacion, '');
     document.getElementById('editBirthDate').value = formatValue(usuario.fechaNacimiento, '');
-    
+
     // Género
     let gender = 'M';
     if (usuario.genero) {
         const gen = usuario.genero.toUpperCase();
-        gender = gen.includes('MASCULINO') || gen === 'M' ? 'M' : 
+        gender = gen.includes('MASCULINO') || gen === 'M' ? 'M' :
                 gen.includes('FEMENINO') || gen === 'F' ? 'F' : 'O';
     }
     document.getElementById('editGender').value = gender;
-    
+
     // Información de contacto
     document.getElementById('editEmail').value = formatValue(usuario.email || usuario.correoElectronico, '');
     document.getElementById('editPhone').value = formatValue(usuario.telefono, '');
     document.getElementById('editAddress').value = formatValue(usuario.direccion, '');
-    
+
     // Limpiar campos de contraseña
     if (document.getElementById('editPassword')) {
         document.getElementById('editPassword').value = '';
@@ -357,7 +357,7 @@ function closeEditUserModal() {
 function toggleUserStatus(userId) {
     // Buscar el usuario en la lista de usuarios cargados
     const user = allUsers.find(u => u.id === parseInt(userId) || u.idUsuario === parseInt(userId));
-    
+
     if (user) {
         populateToggleStatusModal(user);
         openToggleStatusModal();
@@ -368,25 +368,25 @@ function toggleUserStatus(userId) {
 
 function populateToggleStatusModal(user) {
     currentUserForAction = user;
-    
+
     const isActive = user.activo === true || user.estado === 'ACTIVO';
     const action = isActive ? 'deactivate' : 'activate';
-    
+
     // Actualizar contenido del modal
     const title = document.getElementById('toggleStatusTitle');
     const icon = document.getElementById('toggleStatusIcon');
     const warning = document.getElementById('statusWarning');
     const warningTitle = document.getElementById('warningTitle');
     const warningMessage = document.getElementById('warningMessage');
-    
+
     // Información del usuario
     document.getElementById('toggleUserName').textContent = `${user.nombres || user.firstName} ${user.apellidos || user.lastName}`;
     document.getElementById('toggleUserEmail').textContent = user.email || user.correoElectronico;
-    
+
     // Avatar con iniciales
     const avatar = document.getElementById('toggleUserAvatar');
     avatar.innerHTML = '<i class="fas fa-user"></i>';
-    
+
     if (isActive) {
         title.textContent = 'Desactivar Usuario';
         icon.innerHTML = '<i class="fas fa-user-slash"></i>';
@@ -402,7 +402,7 @@ function populateToggleStatusModal(user) {
         warningMessage.textContent = 'El usuario podrá acceder nuevamente al sistema odontológico.';
         warning.className = 'status-warning success';
     }
-    
+
     // Configurar el evento del botón de confirmación
     const confirmBtn = document.getElementById('confirmStatusBtn');
     if (confirmBtn) {
@@ -432,13 +432,13 @@ function closeToggleStatusModal() {
 function confirmToggleStatus(userId, action) {
     const actionText = action === 'activate' ? 'activado' : 'desactivado';
     const activo = action === 'activate';
-    
+
     // Deshabilitar el botón para evitar doble click
     const confirmBtn = document.getElementById('confirmStatusBtn');
     const originalText = confirmBtn.innerHTML;
     confirmBtn.disabled = true;
     confirmBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${action === 'activate' ? 'Activando' : 'Desactivando'}...`;
-    
+
     // Realizar petición PUT al servidor para cambiar el estado
     fetch(`/api/usuarios/${userId}/estado`, {
         method: 'PUT',
@@ -472,7 +472,7 @@ function confirmToggleStatus(userId, action) {
 function deleteUser(userId) {
     // Buscar el usuario en la lista de usuarios cargados
     const user = allUsers.find(u => u.id === parseInt(userId) || u.idUsuario === parseInt(userId));
-    
+
     if (user) {
         const userName = `${user.nombres || user.firstName} ${user.apellidos || user.lastName}`;
         confirmDeleteUserAction(userId, userName, confirmDeleteUser);
@@ -511,7 +511,7 @@ function openNewUserModal() {
     if (modal) {
         modal.style.display = 'flex';
         modal.classList.add('show');
-        
+
         // Limpiar formulario
         const form = document.getElementById('newUserForm');
         if (form) {
@@ -535,7 +535,7 @@ function closeNewUserModal() {
 function togglePassword(inputId) {
     const input = document.getElementById(inputId);
     const icon = input.nextElementSibling.querySelector('i');
-    
+
     if (input.type === 'password') {
         input.type = 'text';
         icon.className = 'fas fa-eye-slash';
@@ -549,7 +549,7 @@ function togglePassword(inputId) {
 function toggleFilters() {
     const filtersSection = document.getElementById('filtersSection');
     const toggleBtn = document.querySelector('.filter-toggle-btn');
-    
+
     if (filtersSection.style.display === 'none' || filtersSection.style.display === '') {
         filtersSection.style.display = 'block';
         toggleBtn.classList.add('active');
@@ -635,16 +635,16 @@ function renderUsersTable(usuarios) {
         `;
         return;
     }
-    
+
     tbody.innerHTML = usuarios.map(usuario => {
         const isActive = usuario.activo === true || usuario.estado === 'ACTIVO';
         const statusClass = isActive ? 'active' : 'inactive';
         const statusText = isActive ? 'Activo' : 'Inactivo';
-        
+
         // Determinar rol
         let roleClass = 'recepcionista';
         let roleText = 'Recepcionista';
-        
+
         if (usuario.rol) {
             const roleName = (usuario.rol.nombre || usuario.nombreRol || '').toLowerCase();
             if (roleName.includes('admin')) {
@@ -655,7 +655,7 @@ function renderUsersTable(usuarios) {
                 roleText = 'Odontólogo';
             }
         }
-        
+
         return `
             <tr>
                 <td class="px-6 py-4 whitespace-nowrap">
@@ -684,17 +684,17 @@ function renderUsersTable(usuarios) {
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">Hace 2 horas</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div class="flex space-x-2">
-                        <button class="text-indigo-600 hover:text-indigo-900" onclick="viewUser(${usuario.id || usuario.idUsuario})" title="Ver detalles">
+                    <div class="sys-table-actions">
+                        <button class="sys-table-action sys-table-action-view" onclick="viewUser(${usuario.id || usuario.idUsuario})" title="Ver detalles" aria-label="Ver detalles">
                             <i class="fas fa-eye"></i>
                         </button>
-                        <button class="text-blue-600 hover:text-blue-900" onclick="editUser(${usuario.id || usuario.idUsuario})" title="Editar">
+                        <button class="sys-table-action sys-table-action-edit" onclick="editUser(${usuario.id || usuario.idUsuario})" title="Editar" aria-label="Editar">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="text-yellow-600 hover:text-yellow-900" onclick="toggleUserStatus(${usuario.id || usuario.idUsuario})" title="Cambiar estado">
+                        <button class="sys-table-action sys-table-action-status" onclick="toggleUserStatus(${usuario.id || usuario.idUsuario})" title="Cambiar estado" aria-label="Cambiar estado">
                             <i class="fas fa-user-slash"></i>
                         </button>
-                        <button class="text-red-600 hover:text-red-900" onclick="deleteUser(${usuario.id || usuario.idUsuario})" title="Eliminar">
+                        <button class="sys-table-action sys-table-action-delete" onclick="deleteUser(${usuario.id || usuario.idUsuario})" title="Eliminar" aria-label="Eliminar">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -740,7 +740,7 @@ function getInitials(nombres, apellidos) {
 // Función para actualizar las tarjetas de resumen
 function updateSummaryCards(usuarios) {
     if (!usuarios || usuarios.length === 0) return;
-    
+
     const total = usuarios.length;
     const odontologos = usuarios.filter(u => {
         const roleName = (u.rol?.nombre || u.nombreRol || '').toLowerCase();
@@ -751,7 +751,7 @@ function updateSummaryCards(usuarios) {
         return roleName.includes('admin');
     }).length;
     const recepcionistas = total - odontologos - administradores;
-    
+
     // Actualizar las tarjetas con los conteos
     const cards = document.querySelectorAll('.sys-stat-card .sys-stat-value');
     if (cards.length >= 4) {
@@ -783,10 +783,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (form) {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            
+
             // Obtener datos del formulario
             const formData = new FormData(form);
-            
+
             // Construir objeto de usuario con los nombres correctos del DTO
             const usuarioData = {
                 nombres: formData.get('nombres'),
@@ -801,7 +801,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 password: formData.get('password'),
                 activo: true
             };
-            
+
             // Validar datos antes de enviar
             console.log('Datos del formulario capturados:', {
                 nombres: usuarioData.nombres,
@@ -810,21 +810,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 documento: usuarioData.documento,
                 rol: usuarioData.rol
             });
-            
+
             // Validar campos requeridos
             if (!usuarioData.nombres || !usuarioData.apellidos || !usuarioData.email) {
                 showWarningAlert('Por favor complete todos los campos requeridos');
                 return;
             }
-            
+
             if (usuarioData.password !== formData.get('confirmPassword')) {
                 showWarningAlert('Las contraseñas no coinciden');
                 return;
             }
-            
+
             // Generar username basado en email si no se proporciona
             usuarioData.username = usuarioData.email.split('@')[0];
-            
+
             // Convertir role a objeto para el DTO
             const roleValue = formData.get('role');
             if (roleValue) {
@@ -836,9 +836,9 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 console.log('No se proporcionó rol, se usará por defecto');
             }
-            
+
             console.log('Datos finales a enviar:', usuarioData);
-            
+
             // Enviar datos al servidor
             crearUsuario(usuarioData);
         });
@@ -849,26 +849,26 @@ document.addEventListener('DOMContentLoaded', function() {
     if (editForm) {
         editForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            
+
             // Obtener datos del formulario
             const formData = new FormData(editForm);
             const usuarioData = Object.fromEntries(formData);
-            
+
             // Validar campos requeridos
             if (!usuarioData.firstName || !usuarioData.lastName || !usuarioData.email) {
                 showWarningAlert('Por favor complete todos los campos requeridos');
                 return;
             }
-            
+
             // Si se proporcionan contraseñas, validar que coincidan
             if (usuarioData.password && usuarioData.password !== usuarioData.confirmPassword) {
                 showWarningAlert('Las contraseñas no coinciden');
                 return;
             }
-            
+
             // Remover confirmPassword antes de enviar
             delete usuarioData.confirmPassword;
-            
+
             // Mapear campos al DTO
             const usuarioDto = {
                 id: usuarioData.id,
@@ -897,7 +897,7 @@ document.addEventListener('DOMContentLoaded', function() {
             actualizarUsuario(usuarioDto.id, usuarioDto);
         });
     }
-    
+
     // Cargar usuarios al inicializar
     loadUsers();
 });
@@ -909,19 +909,19 @@ document.addEventListener('click', function(event) {
     if (newUserModal && event.target === newUserModal) {
         closeNewUserModal();
     }
-    
+
     // Cerrar modal de ver usuario
     const viewUserModal = document.getElementById('viewUserModal');
     if (viewUserModal && event.target === viewUserModal) {
         closeViewUserModal();
     }
-    
+
     // Cerrar modal de editar usuario
     const editUserModal = document.getElementById('editUserModal');
     if (editUserModal && event.target === editUserModal) {
         closeEditUserModal();
     }
-    
+
     // Cerrar modal de cambiar estado
     const toggleStatusModal = document.getElementById('toggleUserStatusModal');
     if (toggleStatusModal && event.target === toggleStatusModal) {
@@ -934,7 +934,7 @@ async function crearUsuario(usuarioData) {
     try {
         // Validar datos antes de enviar
         console.log('Datos a enviar:', usuarioData);
-        
+
         // Mostrar loading
         Swal.fire({
             title: 'Creando usuario...',
@@ -944,7 +944,7 @@ async function crearUsuario(usuarioData) {
                 Swal.showLoading();
             }
         });
-        
+
         // Llamada real a la API
         const response = await fetch('/api/usuarios', {
             method: 'POST',
@@ -954,7 +954,7 @@ async function crearUsuario(usuarioData) {
             },
             body: JSON.stringify(usuarioData)
         });
-        
+
         if (!response.ok) {
             // Obtener el mensaje de error del servidor
             let errorMessage;
@@ -967,12 +967,12 @@ async function crearUsuario(usuarioData) {
             }
             throw new Error(errorMessage);
         }
-        
+
         const newUser = await response.json();
-        
+
         // Cerrar modal
         closeNewUserModal();
-        
+
         // Mostrar éxito
         await Swal.fire({
             icon: 'success',
@@ -991,18 +991,18 @@ async function crearUsuario(usuarioData) {
             confirmButtonText: 'Entendido',
             confirmButtonColor: '#16a34a'
         });
-        
+
         // Recargar lista
         loadUsers();
-        
+
         // Limpiar formulario
         document.getElementById('newUserForm').reset();
-        
+
     } catch (error) {
         console.error('Error detallado al crear usuario:', error);
-        
+
         let errorMessage = 'No se pudo crear el usuario. Por favor intente nuevamente.';
-        
+
         if (error.message.includes('duplicate key') || error.message.includes('already exists') || error.message.includes('UNIQUE')) {
             errorMessage = 'Ya existe un usuario con ese email o documento. Por favor use datos diferentes.';
         } else if (error.message.includes('constraint') || error.message.includes('required')) {
@@ -1012,7 +1012,7 @@ async function crearUsuario(usuarioData) {
         } else if (error.message && error.message !== 'No se pudo crear el usuario. Por favor intente nuevamente.') {
             errorMessage = error.message;
         }
-        
+
         Swal.fire({
             icon: 'error',
             title: 'Error al crear usuario',
@@ -1034,7 +1034,7 @@ async function actualizarUsuario(id, usuarioData) {
                 Swal.showLoading();
             }
         });
-        
+
         // Llamada real a la API
         const response = await fetch(`/api/usuarios/${id}`, {
             method: 'PUT',
@@ -1043,16 +1043,16 @@ async function actualizarUsuario(id, usuarioData) {
             },
             body: JSON.stringify(usuarioData)
         });
-        
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const updatedUser = await response.json();
-        
+
         // Cerrar modal
         closeEditUserModal();
-        
+
         // Mostrar éxito
         await Swal.fire({
             icon: 'success',
@@ -1071,13 +1071,13 @@ async function actualizarUsuario(id, usuarioData) {
             confirmButtonText: 'Entendido',
             confirmButtonColor: '#0284c7'
         });
-        
+
         // Recargar lista
         loadUsers();
-        
+
     } catch (error) {
         console.error('Error al actualizar usuario:', error);
-        
+
         Swal.fire({
             icon: 'error',
             title: 'Error al actualizar usuario',

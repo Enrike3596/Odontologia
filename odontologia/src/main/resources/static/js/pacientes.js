@@ -833,14 +833,14 @@ function renderPatientsTable(patients) {
                 <span class="text-sm text-gray-900">${getGenderLabel(patient.genero)}</span>
             </td>
             <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <div class="flex justify-end gap-1">
-                    <button onclick="viewPatient(${patient.id})" class="p-2 text-blue-600 hover:bg-blue-100 rounded-full" title="Ver detalles">
+                <div class="sys-table-actions">
+                    <button onclick="viewPatient(${patient.id})" class="sys-table-action sys-table-action-view" title="Ver detalles" aria-label="Ver detalles">
                         <i class="fas fa-eye text-sm"></i>
                     </button>
-                    <button onclick="editPatient(${patient.id})" class="p-2 text-yellow-600 hover:bg-yellow-100 rounded-full" title="Editar">
+                    <button onclick="editPatient(${patient.id})" class="sys-table-action sys-table-action-edit" title="Editar" aria-label="Editar">
                         <i class="fas fa-edit text-sm"></i>
                     </button>
-                    <button onclick="deletePatient(${patient.id})" class="p-2 text-red-600 hover:bg-red-100 rounded-full" title="Eliminar">
+                    <button onclick="deletePatient(${patient.id})" class="sys-table-action sys-table-action-delete" title="Eliminar" aria-label="Eliminar">
                         <i class="fas fa-trash text-sm"></i>
                     </button>
                 </div>

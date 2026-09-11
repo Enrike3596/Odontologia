@@ -23,11 +23,11 @@
 
   <!-- Custom CSS -->
   <link rel="stylesheet" th:href="@{/css/app.css}" />
-  
+
   <style>
     /* Layout del sidebar centralizado en /css/app.css: estatico (sticky 100vh),
        scroll interno en .sidebar-nav y footer fijo con cerrar sesion */
-    
+
     /* Responsivo para móviles */
     @media (max-width: 768px) {
       #sidebar {
@@ -36,18 +36,18 @@
         z-index: 1000;
         transition: left 0.3s ease;
       }
-      
+
       #sidebar.show {
         left: 0;
       }
-      
+
       main {
         margin-left: 0 !important;
       }
     }
-    
+
     /* En desktop el sidebar es sticky de 100vh (ver app.css): no usar position relative */
-    
+
     /* Efectos hover para navegación */
     .nav-link:hover {
       transform: translateX(4px);
@@ -229,7 +229,7 @@
         <div class="p-6 border-b">
           <div class="flex items-center justify-between">
             <h3 class="sys-table-title"><i class="fas fa-file-medical text-teal-500"></i>Historias clínicas <span class="sys-table-count" data-table-count="historias">0</span></h3>
-            <button class="text-gray-500 hover:text-gray-700" onclick="toggleFilters()">
+            <button class="sys-table-action sys-action-neutral" onclick="toggleFilters()" aria-label="Mostrar filtros" title="Mostrar filtros">
               <i class="fas fa-filter"></i>
             </button>
           </div>
@@ -242,7 +242,7 @@
               <label class="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
               <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Paciente, odontólogo, diagnóstico...">
             </div>
-            
+
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
               <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -253,7 +253,7 @@
                 <option value="cerrada">Cerrada</option>
               </select>
             </div>
-            
+
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Odontólogo</label>
               <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -276,9 +276,9 @@
               </select>
             </div>
           </div>
-          
+
           <div class="flex justify-end mt-4 space-x-3">
-            <button class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors" onclick="applyFilters()">
+            <button class="sys-action-btn sys-action-secondary" onclick="applyFilters()">
               <i class="fas fa-search mr-2"></i>
               Aplicar
             </button>
@@ -576,7 +576,7 @@
             <i class="fas fa-times"></i>
           </button>
         </div>
-        
+
         <div class="space-y-6">
           <!-- Información del paciente -->
           <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
@@ -666,10 +666,10 @@
             <button type="button" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors" onclick="closeViewRecordModal()">
               <i class="fas fa-times mr-2"></i> Cerrar
             </button>
-            <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors" onclick="editRecordFromModal()">
+            <button type="button" class="sys-action-btn sys-action-secondary" onclick="editRecordFromModal()">
               <i class="fas fa-edit mr-2"></i> Editar Historia
             </button>
-            <button type="button" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors" onclick="addEntryFromModal()">
+            <button type="button" class="sys-action-btn sys-action-primary" onclick="addEntryFromModal()">
               <i class="fas fa-plus mr-2"></i> Agregar Entrada
             </button>
           </div>
@@ -690,7 +690,7 @@
     document.addEventListener('DOMContentLoaded', function() {
       const mobileMenuToggle = document.getElementById('mobileMenuToggle');
       const sidebar = document.getElementById('sidebar');
-      
+
       if (mobileMenuToggle && sidebar) {
         mobileMenuToggle.addEventListener('click', function() {
           if (window.innerWidth <= 768) {
@@ -698,7 +698,7 @@
           }
         });
       }
-      
+
       // Handle window resize
       window.addEventListener('resize', function() {
         if (window.innerWidth > 768) {

@@ -135,16 +135,16 @@ document.addEventListener('DOMContentLoaded', function() {
  */
 function initializeMedicalRecordsModule() {
     console.log('📋🦷 Inicializando módulo de historias clínicas');
-    
+
     // Configurar eventos
     setupEventListeners();
-    
+
     // Cargar datos iniciales
     loadMedicalRecords();
-    
+
     // Configurar filtros
     setupFilters();
-    
+
     // Mostrar mensaje de bienvenida
     showWelcomeMessage();
 }
@@ -158,19 +158,19 @@ function setupEventListeners() {
     if (newRecordForm) {
         newRecordForm.addEventListener('submit', handleNewRecordSubmit);
     }
-    
+
     // Selector de paciente para generar número de historia
     const pacienteSelect = document.getElementById('pacienteId');
     if (pacienteSelect) {
         pacienteSelect.addEventListener('change', generateRecordNumber);
     }
-    
+
     // Filtros en tiempo real
     const searchInput = document.querySelector('#filtersSection input[type="text"]');
     if (searchInput) {
         searchInput.addEventListener('input', debounce(handleSearchInput, 300));
     }
-    
+
     // Mobile menu toggle
     const mobileMenuToggle = document.getElementById('mobileMenuToggle');
     if (mobileMenuToggle) {
@@ -184,31 +184,31 @@ function setupEventListeners() {
 async function openNewRecordModal(editData = null) {
     const modal = document.getElementById('newRecordModal');
     const form = document.getElementById('newRecordForm');
-    
+
     if (modal && form) {
         // Limpiar formulario
         form.reset();
-        
+
         // Configurar modo (crear o editar)
         const isEditMode = editData !== null;
         MedicalRecordsModule.editMode = isEditMode;
         MedicalRecordsModule.editingRecordId = isEditMode ? editData.id : null;
-        
+
         // Cambiar título del modal
         const modalTitle = modal.querySelector('h3');
         if (modalTitle) {
             modalTitle.textContent = isEditMode ? 'Editar Historia Clínica' : 'Nueva Historia Clínica';
         }
-        
+
         // Cambiar texto del botón
         const submitButton = form.querySelector('button[type="submit"]');
         if (submitButton) {
             submitButton.textContent = isEditMode ? 'Actualizar Historia' : 'Crear Historia';
         }
-        
+
         // Cargar selects primero
         await loadPacientesSelect();
-        
+
         // Si es modo edición, cargar datos
         if (isEditMode) {
             try {
@@ -220,7 +220,7 @@ async function openNewRecordModal(editData = null) {
                 document.getElementById('enfermedades').value = editData.enfermedades || '';
                 document.getElementById('cirugias').value = editData.cirugias || '';
                 document.getElementById('observaciones').value = editData.observaciones || '';
-                
+
             } catch (error) {
                 console.error('Error al cargar datos para edición:', error);
                 Swal.fire({
@@ -232,16 +232,16 @@ async function openNewRecordModal(editData = null) {
                 return;
             }
         }
-        
+
         // Mostrar modal
         modal.classList.remove('hidden');
-        
+
         // Focus en el primer campo
         setTimeout(() => {
             const firstSelect = form.querySelector('select');
             if (firstSelect) firstSelect.focus();
         }, 100);
-        
+
         // Animación
         setTimeout(() => {
             modal.classList.add('show');
@@ -260,7 +260,7 @@ function closeNewRecordModal() {
             modal.classList.add('hidden');
         }, 300);
     }
-    
+
     // Resetear modo de edición
     MedicalRecordsModule.editMode = false;
     MedicalRecordsModule.editingRecordId = null;
@@ -272,7 +272,7 @@ function closeNewRecordModal() {
 function generateRecordNumber() {
     const pacienteSelect = document.getElementById('pacienteId');
     const numeroHistoriaInput = document.getElementById('numeroHistoria');
-    
+
     if (pacienteSelect && numeroHistoriaInput && pacienteSelect.value) {
         // Generar número de historia clínica basado en fecha y ID del paciente
         const fecha = new Date();
@@ -280,7 +280,7 @@ function generateRecordNumber() {
         const month = String(fecha.getMonth() + 1).padStart(2, '0');
         const pacienteId = pacienteSelect.value.padStart(3, '0');
         const numeroHistoria = `HC-${year}${month}${pacienteId}`;
-        
+
         numeroHistoriaInput.value = numeroHistoria;
     }
 }
@@ -290,17 +290,17 @@ function generateRecordNumber() {
  */
 async function handleNewRecordSubmit(e) {
     e.preventDefault();
-    
+
     const formData = new FormData(e.target);
     const recordData = Object.fromEntries(formData);
-    
+
     // Validar datos
     const validation = validateRecordData(recordData);
     if (!validation.isValid) {
         showValidationError(validation.errors);
         return;
     }
-    
+
     try {
         // Preparar datos para la API
         const historiaData = {
@@ -314,12 +314,12 @@ async function handleNewRecordSubmit(e) {
                 id: recordData.pacienteId
             }
         };
-        
+
         // Determinar si es creación o edición
         const isEdit = MedicalRecordsModule.editMode;
         const actionText = isEdit ? 'Actualizando' : 'Creando';
         const successText = isEdit ? 'actualizada' : 'creada';
-        
+
         // Mostrar loading
         Swal.fire({
             title: `${actionText} historia clínica...`,
@@ -329,7 +329,7 @@ async function handleNewRecordSubmit(e) {
                 Swal.showLoading();
             }
         });
-        
+
         let result;
         if (isEdit) {
             // Actualizar historia existente
@@ -338,14 +338,14 @@ async function handleNewRecordSubmit(e) {
             // Crear nueva historia
             result = await HistoriasAPI.createHistoria(historiaData);
         }
-        
+
         // Cerrar modal
         closeNewRecordModal();
-        
+
         // Resetear modo de edición
         MedicalRecordsModule.editMode = false;
         MedicalRecordsModule.editingRecordId = null;
-        
+
         // Mostrar éxito
         await Swal.fire({
             icon: 'success',
@@ -367,15 +367,15 @@ async function handleNewRecordSubmit(e) {
             confirmButtonText: 'Entendido',
             confirmButtonColor: '#14b8a6'
         });
-        
+
         // Recargar lista
         await loadMedicalRecords();
-        
+
     } catch (error) {
         console.error('Error al procesar historia clínica:', error);
-        
+
         const actionText = MedicalRecordsModule.editMode ? 'actualizar' : 'crear';
-        
+
         Swal.fire({
             icon: 'error',
             title: `Error al ${actionText} historia`,
@@ -390,26 +390,26 @@ async function handleNewRecordSubmit(e) {
  */
 function validateRecordData(data) {
     const errors = [];
-    
+
     // Validaciones requeridas
     if (!data.pacienteId) errors.push('Debe seleccionar un paciente');
     if (!data.motivoConsulta?.trim()) errors.push('El motivo de consulta es requerido');
     if (!data.diagnosticoPrincipal?.trim()) errors.push('El diagnóstico principal es requerido');
     if (!data.planTratamiento?.trim()) errors.push('El plan de tratamiento es requerido');
-    
+
     // Validación de campos de texto mínimos
     if (data.motivoConsulta && data.motivoConsulta.trim().length < 10) {
         errors.push('El motivo de consulta debe tener al menos 10 caracteres');
     }
-    
+
     if (data.diagnosticoPrincipal && data.diagnosticoPrincipal.trim().length < 5) {
         errors.push('El diagnóstico principal debe ser más específico');
     }
-    
+
     if (data.planTratamiento && data.planTratamiento.trim().length < 20) {
         errors.push('El plan de tratamiento debe ser más detallado (mínimo 20 caracteres)');
     }
-    
+
     return {
         isValid: errors.length === 0,
         errors
@@ -421,7 +421,7 @@ function validateRecordData(data) {
  */
 function showValidationError(errors) {
     const errorList = errors.map(error => `<li class="text-left">${error}</li>`).join('');
-    
+
     Swal.fire({
         icon: 'warning',
         title: 'Datos incompletos',
@@ -458,20 +458,20 @@ async function viewRecord(recordId) {
                 Swal.showLoading();
             }
         });
-        
+
         // Obtener datos reales de la API
         const record = await HistoriasAPI.getHistoriaById(recordId);
-        
+
         // Cerrar loading
         Swal.close();
-        
+
         // Mostrar modal de detalles
         showRecordDetailsModal(record);
-        
+
     } catch (error) {
         console.error('Error al cargar historia clínica:', error);
         Swal.close();
-        
+
         Swal.fire({
             icon: 'error',
             title: 'Error',
@@ -490,36 +490,36 @@ function showRecordDetailsModal(record) {
     document.getElementById('viewRecordPatient').textContent = record.pacienteNombre;
     document.getElementById('viewRecordNumber').textContent = record.numeroHistoria;
     document.getElementById('viewRecordDate').textContent = formatDate(record.fechaCreacion);
-    
+
     // Llenar detalles clínicos
     document.getElementById('viewMotivoConsulta').textContent = record.motivoConsulta || 'No especificado';
     document.getElementById('viewHistoriaEnfermedad').textContent = record.historiaEnfermedad || 'No especificado';
     document.getElementById('viewDiagnosticoPrincipal').textContent = record.diagnosticoPrincipal || 'No especificado';
     document.getElementById('viewDiagnosticosSecundarios').textContent = record.diagnosticosSecundarios || 'No especificados';
-    
+
     // Estados y badges
     const statusElement = document.getElementById('viewRecordStatus');
     const doctorElement = document.getElementById('viewRecordDoctor');
-    
+
     const status = MedicalRecordsModule.recordStatuses.find(s => s.id === record.estado);
     if (status) {
         statusElement.textContent = status.name;
         statusElement.className = `inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-${status.color}-100 text-${status.color}-800`;
     }
-    
+
     doctorElement.textContent = record.odontologo || 'No asignado';
-    
+
     // Actualizar avatar
     const avatar = document.getElementById('viewRecordAvatar');
     avatar.innerHTML = getPatientInitials(record.pacienteNombre);
-    
+
     // Guardar referencia de la historia actual
     MedicalRecordsModule.currentRecord = record;
-    
+
     // Mostrar modal
     const modal = document.getElementById('viewRecordModal');
     modal.classList.remove('hidden');
-    
+
     setTimeout(() => {
         modal.classList.add('show');
     }, 10);
@@ -559,20 +559,20 @@ async function editRecord(recordId) {
                 Swal.showLoading();
             }
         });
-        
+
         // Obtener datos de la historia clínica
         const record = await HistoriasAPI.getHistoriaById(recordId);
-        
+
         // Cerrar loading
         Swal.close();
-        
+
         // Abrir modal de nueva historia en modo edición
         await openNewRecordModal(record);
-        
+
     } catch (error) {
         console.error('Error al cargar historia clínica para edición:', error);
         Swal.close();
-        
+
         Swal.fire({
             icon: 'error',
             title: 'Error',
@@ -601,7 +601,7 @@ function editRecordFromModal() {
  */
 function addEntry(recordId) {
     console.log('Agregar entrada a historia clínica:', recordId);
-    
+
     Swal.fire({
         icon: 'info',
         title: 'Agregar entrada...',
@@ -631,7 +631,7 @@ function addEntryFromModal() {
  */
 function viewTreatments(recordId) {
     console.log('Ver tratamientos de historia clínica:', recordId);
-    
+
     Swal.fire({
         icon: 'info',
         title: 'Cargando tratamientos...',
@@ -651,7 +651,7 @@ function viewTreatments(recordId) {
  */
 function generateReport(recordId) {
     console.log('Generar reporte de historia clínica:', recordId);
-    
+
     Swal.fire({
         icon: 'info',
         title: 'Generando reporte...',
@@ -672,7 +672,7 @@ function generateReport(recordId) {
 async function archiveRecord(recordId) {
     // Obtener datos de la historia clínica
     const record = getSimulatedRecord(recordId);
-    
+
     const result = await Swal.fire({
         icon: 'question',
         title: '¿Archivar historia clínica?',
@@ -699,7 +699,7 @@ async function archiveRecord(recordId) {
         confirmButtonColor: '#f59e0b',
         cancelButtonColor: '#6b7280'
     });
-    
+
     if (result.isConfirmed) {
         try {
             // Mostrar progreso
@@ -710,10 +710,10 @@ async function archiveRecord(recordId) {
                     Swal.showLoading();
                 }
             });
-            
+
             // Simular archivado
             await new Promise(resolve => setTimeout(resolve, 1000));
-            
+
             // Confirmar archivado
             await Swal.fire({
                 icon: 'success',
@@ -732,13 +732,13 @@ async function archiveRecord(recordId) {
                 confirmButtonText: 'Entendido',
                 confirmButtonColor: '#10b981'
             });
-            
+
             // Recargar lista
             loadMedicalRecords();
-            
+
         } catch (error) {
             console.error('Error al archivar historia clínica:', error);
-            
+
             Swal.fire({
                 icon: 'error',
                 title: 'Error al archivar',
@@ -755,7 +755,7 @@ async function archiveRecord(recordId) {
 async function loadMedicalRecords() {
     try {
         console.log('📋 Cargando historias clínicas...');
-        
+
         // Obtener datos reales de la API
         const historias = await HistoriasAPI.getAllHistorias();
 
@@ -777,18 +777,18 @@ async function loadMedicalRecords() {
         // Actualizar tabla con datos reales
         updateRecordsTable(historiasPager.rows);
         TablePager.renderBar('historiasPager', historiasPager, 'historias');
-        
+
         // Actualizar estadísticas
         updateRecordsStats(historias);
-        
+
         console.log('✅ Historias clínicas cargadas exitosamente');
-        
+
     } catch (error) {
         console.error('❌ Error al cargar historias clínicas:', error);
-        
+
         // Mostrar tabla vacía en caso de error
         updateRecordsTable([]);
-        
+
         Swal.fire({
             icon: 'error',
             title: 'Error de conexión',
@@ -811,10 +811,10 @@ function setupFilters() {
 function toggleFilters() {
     const filtersSection = document.getElementById('filtersSection');
     const filterButton = document.querySelector('button[onclick="toggleFilters()"]');
-    
+
     if (filtersSection) {
         const isHidden = filtersSection.classList.contains('hidden');
-        
+
         if (isHidden) {
             filtersSection.classList.remove('hidden');
             filterButton?.classList.add('active');
@@ -830,22 +830,22 @@ function toggleFilters() {
  */
 function applyFilters() {
     const filtersSection = document.getElementById('filtersSection');
-    
+
     if (filtersSection) {
         const searchInput = filtersSection.querySelector('input[type="text"]');
         const estadoSelect = filtersSection.querySelectorAll('select')[0];
         const odontologoSelect = filtersSection.querySelectorAll('select')[1];
         const fechaSelect = filtersSection.querySelectorAll('select')[2];
-        
+
         MedicalRecordsModule.filters = {
             search: searchInput?.value || '',
             estado: estadoSelect?.value || '',
             odontologo: odontologoSelect?.value || '',
             fecha: fechaSelect?.value || ''
         };
-        
+
         console.log('🔍 Aplicando filtros:', MedicalRecordsModule.filters);
-        
+
         // Simular filtrado
         Swal.fire({
             icon: 'success',
@@ -854,7 +854,7 @@ function applyFilters() {
             timer: 1500,
             showConfirmButton: false
         });
-        
+
         loadMedicalRecords();
     }
 }
@@ -864,22 +864,22 @@ function applyFilters() {
  */
 function clearFilters() {
     const filtersSection = document.getElementById('filtersSection');
-    
+
     if (filtersSection) {
         const inputs = filtersSection.querySelectorAll('input, select');
         inputs.forEach(input => {
             input.value = '';
         });
-        
+
         MedicalRecordsModule.filters = {
             search: '',
             estado: '',
             odontologo: '',
             fecha: ''
         };
-        
+
         console.log('🧹 Filtros limpiados');
-        
+
         loadMedicalRecords();
     }
 }
@@ -890,7 +890,7 @@ function clearFilters() {
 function handleSearchInput(e) {
     const query = e.target.value.trim();
     console.log('🔍 Búsqueda en tiempo real:', query);
-    
+
     MedicalRecordsModule.filters.search = query;
     loadMedicalRecords();
 }
@@ -933,7 +933,7 @@ function formatDate(dateString) {
  */
 function getPatientInitials(nombre) {
     if (!nombre) return '<span class="text-teal-600 font-bold text-xl">HC</span>';
-    
+
     const parts = nombre.split(' ');
     const firstInitial = parts[0]?.charAt(0)?.toUpperCase() || '';
     const lastInitial = parts[1]?.charAt(0)?.toUpperCase() || '';
@@ -996,7 +996,7 @@ function getSimulatedRecord(recordId) {
             ultimaActualizacion: '2024-10-12T11:45:00'
         }
     };
-    
+
     return records[recordId] || records[1];
 }
 
@@ -1064,13 +1064,13 @@ function updateRecordsTable(historias) {
                 <div class="text-sm text-gray-900">${historia.observaciones || '-'}</div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button onclick="viewRecord(${historia.id})" class="text-blue-600 hover:text-blue-900 mr-3">
+                <button onclick="viewRecord(${historia.id})" class="sys-table-action sys-table-action-view" title="Ver detalles" aria-label="Ver detalles">
                     <i class="fas fa-eye"></i>
                 </button>
                 <button onclick="editRecord(${historia.id})" class="text-yellow-600 hover:text-yellow-900 mr-3">
                     <i class="fas fa-edit"></i>
                 </button>
-                <button onclick="deleteRecord(${historia.id})" class="text-red-600 hover:text-red-900">
+                <button onclick="deleteRecord(${historia.id})" class="sys-table-action sys-table-action-delete" title="Eliminar" aria-label="Eliminar">
                     <i class="fas fa-trash"></i>
                 </button>
             </td>
@@ -1120,20 +1120,20 @@ async function deleteRecord(recordId) {
     if (result.isConfirmed) {
         try {
             await HistoriasAPI.deleteHistoria(recordId);
-            
+
             await Swal.fire({
                 icon: 'success',
                 title: 'Historia clínica eliminada',
                 text: 'La historia clínica ha sido eliminada exitosamente',
                 confirmButtonColor: '#10b981'
             });
-            
+
             // Recargar lista
             await loadMedicalRecords();
-            
+
         } catch (error) {
             console.error('Error al eliminar historia clínica:', error);
-            
+
             await Swal.fire({
                 icon: 'error',
                 title: 'Error',
@@ -1151,10 +1151,10 @@ async function loadPacientesSelect() {
     try {
         const response = await fetch('/api/pacientes');
         if (!response.ok) throw new Error('Error al cargar pacientes');
-        
+
         const pacientes = await response.json();
         const select = document.getElementById('pacienteId');
-        
+
         if (select) {
             select.innerHTML = '<option value="">Seleccionar paciente...</option>';
             pacientes.forEach(paciente => {

@@ -322,7 +322,7 @@ function renderTodayAgenda() {
                     '</div>' +
                     '<div class="flex items-center gap-2 flex-shrink-0">' +
                         '<span class="px-2 py-1 text-xs font-medium rounded-full ' + meta.badge + '">' + meta.text + '</span>' +
-                        '<button class="p-2 text-blue-600 hover:bg-blue-100 rounded-full" onclick="viewAppointmentQuick(' + cita.id + ')" title="Ver detalles">' +
+                        '<button class="sys-table-action sys-table-action-view" onclick="viewAppointmentQuick(' + cita.id + ')" title="Ver detalles" aria-label="Ver detalles">' +
                             '<i class="fas fa-eye text-sm"></i>' +
                         '</button>' +
                     '</div>' +

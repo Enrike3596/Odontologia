@@ -23,11 +23,11 @@
 
   <!-- Custom CSS -->
   <link rel="stylesheet" th:href="@{/css/app.css}" />
-  
+
   <style>
     /* Layout del sidebar centralizado en /css/app.css: estatico (sticky 100vh),
        scroll interno en .sidebar-nav y footer fijo con cerrar sesion */
-    
+
     /* Prevenir overflow horizontal SIN romper el sidebar sticky:
        overflow-x:hidden en body/html creaba un scroll-container que
        desactivaba el sticky y el sidebar se partía al hacer scroll.
@@ -36,26 +36,26 @@
       overflow-x: hidden; /* fallback para navegadores antiguos */
       overflow-x: clip;
     }
-    
+
     /* Asegurar que las tablas no causen overflow */
     .overflow-x-auto {
       scrollbar-width: thin;
       scrollbar-color: #cbd5e0 #f7fafc;
     }
-    
+
     .overflow-x-auto::-webkit-scrollbar {
       height: 6px;
     }
-    
+
     .overflow-x-auto::-webkit-scrollbar-track {
       background: #f7fafc;
     }
-    
+
     .overflow-x-auto::-webkit-scrollbar-thumb {
       background: #cbd5e0;
       border-radius: 3px;
     }
-    
+
     /* Responsivo para móviles */
     @media (max-width: 768px) {
       #sidebar {
@@ -64,23 +64,23 @@
         z-index: 1000;
         transition: left 0.3s ease;
       }
-      
+
       #sidebar.show {
         left: 0;
       }
-      
+
       main {
         margin-left: 0 !important;
       }
-      
+
       /* Ajustar padding en móviles */
       main {
         padding: 1rem !important;
       }
     }
-    
+
     /* En desktop el sidebar es sticky de 100vh (ver app.css): no usar position relative */
-    
+
     /* Efectos hover para navegación */
     .nav-link:hover {
       transform: translateX(4px);
@@ -172,11 +172,11 @@
 
           <!-- Actions -->
           <div class="flex flex-wrap items-center gap-2">
-            <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" onclick="openNewAppointmentModal()">
+            <button class="sys-action-btn sys-action-primary" onclick="openNewAppointmentModal()">
               <i class="fas fa-calendar-plus mr-2"></i>
               Nueva Cita
             </button>
-            <button class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors hidden md:block" onclick="openCalendarView()">
+            <button class="sys-action-btn sys-action-secondary hidden md:flex" onclick="openCalendarView()">
               <i class="fas fa-calendar mr-1 sm:mr-2"></i>
               <span class="hidden lg:inline">Vista Calendario</span>
               <span class="lg:hidden">Calendario</span>
@@ -301,7 +301,7 @@
         <div class="p-6 border-b">
           <div class="flex items-center justify-between">
             <h3 class="sys-table-title"><i class="fas fa-calendar-alt text-emerald-500"></i>Lista de Citas <span class="sys-table-count" data-table-count="citas">0</span></h3>
-            <button class="text-gray-500 hover:text-gray-700" onclick="toggleFilters()">
+            <button class="sys-table-action sys-action-neutral" onclick="toggleFilters()" aria-label="Mostrar filtros" title="Mostrar filtros">
               <i class="fas fa-filter"></i>
             </button>
           </div>
@@ -314,7 +314,7 @@
               <label class="block text-sm font-medium text-gray-700 mb-2">Buscar paciente</label>
               <input type="text" placeholder="Nombre del paciente..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
             </div>
-            
+
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
               <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
@@ -325,7 +325,7 @@
                 <option value="CANCELADA">Cancelada</option>
               </select>
             </div>
-            
+
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Odontólogo</label>
               <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
@@ -335,7 +335,7 @@
                 <option value="3">Dr. Luis García</option>
               </select>
             </div>
-            
+
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Fecha</label>
               <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
@@ -347,9 +347,9 @@
               </select>
             </div>
           </div>
-          
+
           <div class="flex justify-end mt-4 space-x-3">
-            <button class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors" onclick="applyFilters()">
+            <button class="sys-action-btn sys-action-secondary" onclick="applyFilters()">
               <i class="fas fa-search mr-2"></i>
               Aplicar Filtros
             </button>
@@ -547,7 +547,7 @@
               <i class="fas fa-times mr-2"></i>
               Cancelar
             </button>
-            <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors">
+            <button type="submit" class="sys-action-btn sys-action-primary">
               <i class="fas fa-save mr-2"></i>
               Crear Cita
             </button>
@@ -567,7 +567,7 @@
             <i class="fas fa-times"></i>
           </button>
         </div>
-        
+
         <div class="space-y-6">
           <!-- Información básica de la cita -->
           <div class="flex items-center space-x-4 p-4 bg-emerald-50 rounded-lg">
@@ -612,7 +612,7 @@
           </div>
 
           <div class="flex justify-end space-x-3 pt-4">
-            <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors" onclick="printAppointment()">
+            <button class="sys-action-btn sys-action-secondary" onclick="printAppointment()">
               <i class="fas fa-print mr-2"></i>
               Imprimir
             </button>
@@ -634,7 +634,7 @@
     document.addEventListener('DOMContentLoaded', function() {
       const mobileMenuToggle = document.getElementById('mobileMenuToggle');
       const sidebar = document.getElementById('sidebar');
-      
+
       if (mobileMenuToggle && sidebar) {
         mobileMenuToggle.addEventListener('click', function() {
           if (window.innerWidth <= 768) {
@@ -642,7 +642,7 @@
           }
         });
       }
-      
+
       // Handle window resize
       window.addEventListener('resize', function() {
         if (window.innerWidth > 768) {
