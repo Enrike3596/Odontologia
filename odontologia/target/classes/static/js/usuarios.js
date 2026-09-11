@@ -614,9 +614,11 @@ function renderUsersTable(usuarios) {
     const fullList = Array.isArray(usuarios) ? usuarios : [];
     if (typeof renderUsersTable.currentPage !== 'number') renderUsersTable.currentPage = 1;
     renderUsersTable.lastList = fullList;
-    const pager = TablePager.paginate(fullList, renderUsersTable.currentPage, 10);
+    if (typeof renderUsersTable.pageSize !== 'number') renderUsersTable.pageSize = TablePager.DEFAULT_PAGE_SIZE;
+    const pager = TablePager.paginate(fullList, renderUsersTable.currentPage, renderUsersTable.pageSize);
     renderUsersTable.currentPage = pager.page;
-    TablePager.register('usuarios', function (page) {
+    TablePager.register('usuarios', function (page, pageSize) {
+        if (pageSize) renderUsersTable.pageSize = pageSize;
         renderUsersTable.currentPage = page;
         renderUsersTable(renderUsersTable.lastList || []);
     });

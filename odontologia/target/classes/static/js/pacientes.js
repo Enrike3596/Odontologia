@@ -114,7 +114,7 @@ const PatientsModule = {
     },
     pagination: {
         currentPage: 1,
-        itemsPerPage: 10,
+        itemsPerPage: TablePager.DEFAULT_PAGE_SIZE,
         totalItems: 0
     }
 };
@@ -737,7 +737,8 @@ async function loadPatients() {
         PatientsModule.cachedPatients = Array.isArray(patients) ? patients : [];
 
         // Paginación real del lado cliente
-        TablePager.register('pacientes', function (page) {
+        TablePager.register('pacientes', function (page, pageSize) {
+            if (pageSize) PatientsModule.pagination.itemsPerPage = pageSize;
             PatientsModule.pagination.currentPage = page;
             const pg = TablePager.paginate(PatientsModule.cachedPatients || [], page, PatientsModule.pagination.itemsPerPage);
             PatientsModule.pagination.currentPage = pg.page;

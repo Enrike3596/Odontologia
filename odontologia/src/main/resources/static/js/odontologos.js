@@ -105,7 +105,7 @@ const DentistsModule = {
     },
     pagination: {
         currentPage: 1,
-        itemsPerPage: 10,
+        itemsPerPage: TablePager.DEFAULT_PAGE_SIZE,
         totalItems: 0
     },
     specialties: [
@@ -1021,7 +1021,8 @@ async function loadDentists() {
         DentistsModule.cachedDentists = Array.isArray(odontologos) ? odontologos : [];
 
         // Paginación real del lado cliente
-        TablePager.register('odontologos', function (page) {
+        TablePager.register('odontologos', function (page, pageSize) {
+            if (pageSize) DentistsModule.pagination.itemsPerPage = pageSize;
             DentistsModule.pagination.currentPage = page;
             const pg = TablePager.paginate(DentistsModule.cachedDentists || [], page, DentistsModule.pagination.itemsPerPage);
             DentistsModule.pagination.currentPage = pg.page;

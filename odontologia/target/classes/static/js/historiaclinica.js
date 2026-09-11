@@ -105,7 +105,7 @@ const MedicalRecordsModule = {
     },
     pagination: {
         currentPage: 1,
-        itemsPerPage: 10,
+        itemsPerPage: TablePager.DEFAULT_PAGE_SIZE,
         totalItems: 0
     },
     recordStatuses: [
@@ -763,7 +763,8 @@ async function loadMedicalRecords() {
         MedicalRecordsModule.cachedRecords = Array.isArray(historias) ? historias : [];
 
         // Paginación real del lado cliente
-        TablePager.register('historias', function (page) {
+        TablePager.register('historias', function (page, pageSize) {
+            if (pageSize) MedicalRecordsModule.pagination.itemsPerPage = pageSize;
             MedicalRecordsModule.pagination.currentPage = page;
             const pg = TablePager.paginate(MedicalRecordsModule.cachedRecords || [], page, MedicalRecordsModule.pagination.itemsPerPage);
             MedicalRecordsModule.pagination.currentPage = pg.page;

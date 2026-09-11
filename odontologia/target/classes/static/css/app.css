@@ -216,6 +216,31 @@ table.sys-table {
     flex-wrap: wrap;
 }
 
+.sys-pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    flex-wrap: wrap;
+}
+
+.sys-page-size {
+    min-height: 2rem;
+    padding: 0.35rem 2rem 0.35rem 0.65rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.45rem;
+    background: #fff;
+    color: #334155;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+}
+
+.sys-page-size:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.16);
+}
+
 .sys-pagination-info {
     font-size: 0.875rem;
     color: #6b7280;
@@ -524,6 +549,15 @@ table.sys-table {
     .sys-table-action {
         width: 2rem;
         height: 2rem;
+    }
+
+    .sys-pagination {
+        align-items: stretch;
+    }
+
+    .sys-pagination-controls {
+        width: 100%;
+        justify-content: space-between;
     }
 }
 

@@ -18,7 +18,7 @@ const AppointmentsModule = {
     },
     pagination: {
         currentPage: 1,
-        itemsPerPage: 10,
+        itemsPerPage: TablePager.DEFAULT_PAGE_SIZE,
         totalItems: 0
     },
     appointmentStatuses: [
@@ -1146,7 +1146,8 @@ async function loadAppointments() {
         console.log('✅ Citas cargadas exitosamente:', citas.length, 'citas encontradas');
 
         // Paginación real del lado cliente
-        TablePager.register('citas', function (page) {
+        TablePager.register('citas', function (page, pageSize) {
+            if (pageSize) AppointmentsModule.pagination.itemsPerPage = pageSize;
             AppointmentsModule.pagination.currentPage = page;
             const pg = TablePager.paginate(AppointmentsModule.cachedCitas || [], page, AppointmentsModule.pagination.itemsPerPage);
             AppointmentsModule.pagination.currentPage = pg.page;

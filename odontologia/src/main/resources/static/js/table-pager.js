@@ -10,6 +10,8 @@ window.TablePager = (function () {
     'use strict';
 
     var handlers = {};
+    var MIN_PAGE_SIZE = 10;
+    var DEFAULT_PAGE_SIZE = 10;
 
     function toArray(list) {
         return Array.isArray(list) ? list : [];
@@ -21,7 +23,8 @@ window.TablePager = (function () {
 
     function paginate(list, page, perPage) {
         var items = toArray(list);
-        var per = perPage && perPage > 0 ? perPage : 10;
+        var requestedSize = perPage && perPage > 0 ? perPage : DEFAULT_PAGE_SIZE;
+        var per = Math.max(MIN_PAGE_SIZE, requestedSize);
         var total = items.length;
         var pages = Math.max(1, Math.ceil(total / per));
         var p = Math.min(Math.max(1, parseInt(page, 10) || 1), pages);
@@ -66,6 +69,14 @@ window.TablePager = (function () {
         var container = document.getElementById(containerId);
         if (!container) return;
 
+        var sizeSelect = container.querySelector('[data-pager-size]');
+        if (sizeSelect) {
+            sizeSelect.value = String(pager.perPage);
+            sizeSelect.onchange = function () {
+                setPageSize(id, this.value);
+            };
+        }
+
         var info = container.querySelector('[data-pager-info]');
         if (info) {
             info.textContent = pager.total === 0
@@ -105,15 +116,25 @@ window.TablePager = (function () {
         btns.innerHTML = html;
     }
 
+    function setPageSize(id, size) {
+        var requestedSize = parseInt(size, 10);
+        var pageSize = Math.max(MIN_PAGE_SIZE, requestedSize || DEFAULT_PAGE_SIZE);
+        var fn = handlers[id];
+        if (typeof fn === 'function') fn(1, pageSize);
+    }
+
     function goToPage(id, page) {
         var fn = handlers[id];
         if (typeof fn === 'function') fn(page);
     }
 
     return {
+        MIN_PAGE_SIZE: MIN_PAGE_SIZE,
+        DEFAULT_PAGE_SIZE: DEFAULT_PAGE_SIZE,
         register: register,
         paginate: paginate,
         renderBar: renderBar,
+        setPageSize: setPageSize,
         goToPage: goToPage
     };
 })();
