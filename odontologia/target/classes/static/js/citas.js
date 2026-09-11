@@ -1671,13 +1671,33 @@ function getStatusText(estado) {
 async function deleteAppointment(citaId) {
     const result = await Swal.fire({
         title: '¿Eliminar cita?',
-        text: 'Esta acción no se puede deshacer',
-        icon: 'warning',
+        html: `
+            <div class="text-center">
+                <div class="swal-delete-summary">
+                    <div class="swal-delete-icon"><i class="fas fa-calendar-times"></i></div>
+                    <p class="text-gray-700 mb-2"><strong>Eliminar esta cita</strong></p>
+                    <p class="text-sm text-gray-500">La cita seleccionada y su programación</p>
+                </div>
+                <div class="swal-delete-warning">
+                    <p class="text-red-800 text-sm">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        <strong>Advertencia:</strong> Esta acción no se puede deshacer y eliminará:
+                    </p>
+                    <ul class="text-red-700 text-sm mt-2 text-left list-disc ml-6">
+                        <li>La fecha y hora reservadas</li>
+                        <li>La asignación del paciente y odontólogo</li>
+                        <li>El consultorio y tipo de cita registrados</li>
+                        <li>Las observaciones y datos de seguimiento</li>
+                    </ul>
+                </div>
+            </div>
+        `,
         showCancelButton: true,
         confirmButtonColor: '#dc2626',
         cancelButtonColor: '#6b7280',
         confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
+        cancelButtonText: 'Cancelar',
+        customClass: { popup: 'swal-delete-modal' }
     });
 
     if (result.isConfirmed) {

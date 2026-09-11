@@ -928,14 +928,14 @@ async function deleteDentist(dentistId) {
         title: '¿Eliminar odontólogo?',
         html: `
             <div class="text-center">
-                <div class="mb-4">
-                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <div class="swal-delete-summary">
+                    <div class="swal-delete-icon">
                         <i class="fas fa-user-md text-red-600 text-xl"></i>
                     </div>
                     <p class="text-gray-700 mb-2">Dr(a). <strong>${dentist.nombres} ${dentist.apellidos}</strong></p>
                     <p class="text-sm text-gray-500">${dentist.licenciaProfesional}</p>
                 </div>
-                <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                <div class="swal-delete-warning">
                     <p class="text-red-800 text-sm">
                         <i class="fas fa-exclamation-triangle mr-2"></i>
                         <strong>Advertencia:</strong> Esta acción no se puede deshacer y eliminará:
@@ -954,7 +954,8 @@ async function deleteDentist(dentistId) {
         cancelButtonText: 'Cancelar',
         confirmButtonColor: '#dc2626',
         cancelButtonColor: '#6b7280',
-        reverseButtons: true
+        reverseButtons: true,
+        customClass: { popup: 'swal-delete-modal' }
     });
 
     if (result.isConfirmed) {
@@ -1474,13 +1475,13 @@ function getDentistProfileImage(gender, sizeClasses = 'h-full w-full') {
 async function deleteDentist(dentistId) {
     const result = await Swal.fire({
         title: '¿Eliminar odontólogo?',
-        text: 'Esta acción no se puede deshacer. Se cancelarán todas las citas pendientes.',
-        icon: 'warning',
+        html: '<div class="swal-delete-summary"><div class="swal-delete-icon"><i class="fas fa-user-md"></i></div><strong>Eliminar odontólogo</strong><div class="swal-delete-warning"><i class="fas fa-exclamation-triangle mr-2"></i>Esta acción no se puede deshacer. Se cancelarán las citas pendientes.</div></div>',
         showCancelButton: true,
         confirmButtonColor: '#dc2626',
         cancelButtonColor: '#6b7280',
         confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
+        cancelButtonText: 'Cancelar',
+        customClass: { popup: 'swal-delete-modal' }
     });
 
     if (result.isConfirmed) {

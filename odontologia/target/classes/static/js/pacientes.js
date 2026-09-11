@@ -628,15 +628,15 @@ async function deletePatient(patientId) {
             title: '¿Eliminar paciente?',
             html: `
                 <div class="text-center">
-                    <div class="mb-4">
-                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <div class="swal-delete-summary">
+                        <div class="swal-delete-icon">
                             <i class="fas fa-user-injured text-red-600 text-xl"></i>
                         </div>
                         <p class="text-gray-700 mb-2">Está a punto de eliminar el paciente:</p>
                         <p class="font-semibold text-gray-900">${patient.nombres} ${patient.apellidos}</p>
                         <p class="text-sm text-gray-500">${patient.tipoDocumento || ''} ${patient.documento || ''}</p>
                     </div>
-                    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                    <div class="swal-delete-warning">
                         <p class="text-red-800 text-sm">
                             <i class="fas fa-exclamation-triangle mr-2"></i>
                             <strong>Advertencia:</strong> Esta acción no se puede deshacer y eliminará:
@@ -655,7 +655,8 @@ async function deletePatient(patientId) {
             cancelButtonText: 'Cancelar',
             confirmButtonColor: '#dc2626',
             cancelButtonColor: '#6b7280',
-            reverseButtons: true
+            reverseButtons: true,
+            customClass: { popup: 'swal-delete-modal' }
         });
 
         if (result.isConfirmed) {

@@ -82,8 +82,7 @@ function showInfoAlert(message) {
 function confirmDeleteUserAction(userId, userName, callback) {
     Swal.fire({
         title: '¿Está seguro?',
-        text: `Esta acción eliminará al usuario "${userName}" de forma permanente del sistema odontológico.`,
-        icon: 'warning',
+        html: `<div class="text-center"><div class="swal-delete-summary"><div class="swal-delete-icon"><i class="fas fa-user-times"></i></div><p class="text-gray-700 mb-2"><strong>Eliminar usuario</strong></p><p class="text-sm text-gray-500">${userName}</p></div><div class="swal-delete-warning"><p class="text-red-800 text-sm"><i class="fas fa-exclamation-triangle mr-2"></i><strong>Advertencia:</strong> Esta acción no se puede deshacer y eliminará:</p><ul class="text-red-700 text-sm mt-2 text-left list-disc ml-6"><li>La cuenta y datos de acceso</li><li>El rol y permisos asignados</li><li>La información personal y de contacto</li><li>El acceso del usuario al sistema</li></ul></div></div>`,
         showCancelButton: true,
         confirmButtonColor: '#dc2626',
         cancelButtonColor: '#0284c7',
@@ -92,24 +91,22 @@ function confirmDeleteUserAction(userId, userName, callback) {
         reverseButtons: true,
         background: '#fff',
         animation: true,
-        customClass: {
-            popup: 'swal-odontologia'
-        }
+        customClass: { popup: 'swal-delete-modal' }
     }).then((result) => {
         if (result.isConfirmed) {
             // Segunda confirmación para acciones críticas
             Swal.fire({
                 title: 'Confirmación final',
-                text: `¿Realmente desea eliminar a "${userName}"? Esta acción no se puede deshacer.`,
-                icon: 'error',
+                html: `<div class="swal-delete-summary"><div class="swal-delete-icon"><i class="fas fa-user-times"></i></div><p class="text-gray-700">¿Realmente desea eliminar a <strong>${userName}</strong>?</p><div class="swal-delete-warning"><i class="fas fa-exclamation-triangle mr-2"></i>La eliminación será definitiva y no podrá recuperarse.</div></div>`,
                 showCancelButton: true,
                 confirmButtonColor: '#dc2626',
                 cancelButtonColor: '#6b7280',
                 confirmButtonText: 'Sí, eliminar definitivamente',
                 cancelButtonText: 'Cancelar',
                 reverseButtons: true,
-                background: '#fef2f2',
-                animation: true
+                background: '#fff',
+                animation: true,
+                customClass: { popup: 'swal-delete-modal' }
             }).then((finalResult) => {
                 if (finalResult.isConfirmed) {
                     if (callback && typeof callback === 'function') {

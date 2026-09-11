@@ -1135,13 +1135,33 @@ function updateRecordsStats(historias) {
 async function deleteRecord(recordId) {
     const result = await Swal.fire({
         title: '¿Eliminar historia clínica?',
-        text: 'Esta acción no se puede deshacer. Se eliminará toda la información médica.',
-        icon: 'warning',
+        html: `
+            <div class="text-center">
+                <div class="swal-delete-summary">
+                    <div class="swal-delete-icon"><i class="fas fa-file-medical"></i></div>
+                    <p class="text-gray-700 mb-2"><strong>Eliminar la historia clínica</strong></p>
+                    <p class="text-sm text-gray-500">Registro médico completo del paciente</p>
+                </div>
+                <div class="swal-delete-warning">
+                    <p class="text-red-800 text-sm">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        <strong>Advertencia:</strong> Esta acción no se puede deshacer y eliminará:
+                    </p>
+                    <ul class="text-red-700 text-sm mt-2 text-left list-disc ml-6">
+                        <li>Los antecedentes médicos y odontológicos</li>
+                        <li>Diagnósticos y planes de tratamiento</li>
+                        <li>Exámenes clínicos y observaciones</li>
+                        <li>El historial de evolución del paciente</li>
+                    </ul>
+                </div>
+            </div>
+        `,
         showCancelButton: true,
         confirmButtonColor: '#dc2626',
         cancelButtonColor: '#6b7280',
         confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
+        cancelButtonText: 'Cancelar',
+        customClass: { popup: 'swal-delete-modal' }
     });
 
     if (result.isConfirmed) {
