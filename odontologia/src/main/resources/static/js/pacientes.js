@@ -131,16 +131,16 @@ document.addEventListener('DOMContentLoaded', function() {
  */
 function initializePatientsModule() {
     console.log('🦷 Inicializando módulo de pacientes');
-    
+
     // Configurar eventos
     setupEventListeners();
-    
+
     // Cargar datos iniciales
     loadPatients();
-    
+
     // Configurar filtros
     setupFilters();
-    
+
     // Mostrar mensaje de bienvenida
     showWelcomeMessage();
 }
@@ -154,13 +154,13 @@ function setupEventListeners() {
     if (newPatientForm) {
         newPatientForm.addEventListener('submit', handleNewPatientSubmit);
     }
-    
+
     // Filtros en tiempo real
     const searchInput = document.querySelector('#filtersSection input[type="text"]');
     if (searchInput) {
         searchInput.addEventListener('input', debounce(handleSearchInput, 300));
     }
-    
+
     // Mobile menu toggle
     const mobileMenuToggle = document.getElementById('mobileMenuToggle');
     if (mobileMenuToggle) {
@@ -176,28 +176,28 @@ function openNewPatientModal() {
     const form = document.getElementById('newPatientForm');
     const modalTitle = modal.querySelector('h3');
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     if (modal && form) {
         // Limpiar formulario
         form.reset();
-        
+
         // Restaurar valores por defecto para nuevo paciente
         modalTitle.textContent = 'Nuevo Paciente';
         submitButton.innerHTML = '<i class="fas fa-save mr-2"></i>Registrar Paciente';
-        
+
         // Limpiar modo de edición
         delete form.dataset.editingPatientId;
         delete form.dataset.editMode;
-        
+
         // Mostrar modal
         modal.classList.remove('hidden');
-        
+
         // Focus en el primer campo
         setTimeout(() => {
             const firstInput = form.querySelector('input[type="text"]');
             if (firstInput) firstInput.focus();
         }, 100);
-        
+
         // Animación
         setTimeout(() => {
             modal.classList.add('show');
@@ -211,18 +211,18 @@ function openNewPatientModal() {
 function closeNewPatientModal() {
     const modal = document.getElementById('newPatientModal');
     const form = document.getElementById('newPatientForm');
-    
+
     if (modal) {
         modal.classList.remove('show');
         setTimeout(() => {
             modal.classList.add('hidden');
-            
+
             // Limpiar modo de edición y datos del formulario
             if (form) {
                 delete form.dataset.editingPatientId;
                 delete form.dataset.editMode;
                 form.reset();
-                
+
                 // Restaurar título y botón por defecto
                 const modalTitle = modal.querySelector('h3');
                 const submitButton = form.querySelector('button[type="submit"]');
@@ -238,22 +238,22 @@ function closeNewPatientModal() {
  */
 async function handleNewPatientSubmit(e) {
     e.preventDefault();
-    
+
     const form = e.target;
     const formData = new FormData(form);
     const patientData = Object.fromEntries(formData);
-    
+
     // Determinar si es edición o creación
     const isEditMode = form.dataset.editMode === 'true';
     const patientId = form.dataset.editingPatientId;
-    
+
     // Validar datos
     const validation = validatePatientData(patientData);
     if (!validation.isValid) {
         showValidationError(validation.errors);
         return;
     }
-    
+
     try {
         // Preparar datos para la API - manejar campos opcionales correctamente
         const pacienteData = {
@@ -281,7 +281,7 @@ async function handleNewPatientSubmit(e) {
                 filteredData[key] = value;
             }
         }
-        
+
         // Mostrar loading
         const actionText = isEditMode ? 'Actualizando' : 'Registrando';
         Swal.fire({
@@ -292,7 +292,7 @@ async function handleNewPatientSubmit(e) {
                 Swal.showLoading();
             }
         });
-        
+
         let result;
         if (isEditMode) {
             // Actualizar paciente existente
@@ -301,10 +301,10 @@ async function handleNewPatientSubmit(e) {
             // Crear nuevo paciente
             result = await PacientesAPI.createPaciente(filteredData);
         }
-        
+
         // Cerrar modal
         closeNewPatientModal();
-        
+
         // Mostrar éxito
         const successText = isEditMode ? 'actualizado' : 'registrado';
         await Swal.fire({
@@ -327,15 +327,15 @@ async function handleNewPatientSubmit(e) {
             confirmButtonText: 'Entendido',
             confirmButtonColor: '#16a34a'
         });
-        
+
         // Recargar lista
         await loadPatients();
-        
+
     } catch (error) {
         console.error('Error al procesar paciente:', error);
-        
+
         const actionText = isEditMode ? 'actualizar' : 'registrar';
-        
+
         Swal.fire({
             icon: 'error',
             title: `Error al ${actionText}`,
@@ -350,7 +350,7 @@ async function handleNewPatientSubmit(e) {
  */
 function validatePatientData(data) {
     const errors = [];
-    
+
     // Validaciones requeridas
     if (!data.nombres?.trim()) errors.push('Los nombres son requeridos');
     if (!data.apellidos?.trim()) errors.push('Los apellidos son requeridos');
@@ -359,12 +359,12 @@ function validatePatientData(data) {
     if (!data.fechaNacimiento) errors.push('La fecha de nacimiento es requerida');
     if (!data.genero) errors.push('El género es requerido');
     if (!data.telefono?.trim()) errors.push('El teléfono es requerido');
-    
+
     // Validación de email si se proporciona
     if (data.email && !isValidEmail(data.email)) {
         errors.push('El formato del email no es válido');
     }
-    
+
     // Validación de edad (no menor a 0 ni mayor a 120)
     if (data.fechaNacimiento) {
         const age = calculateAge(data.fechaNacimiento);
@@ -372,13 +372,13 @@ function validatePatientData(data) {
             errors.push('La fecha de nacimiento no es válida');
         }
     }
-    
+
     // Validación de documento (solo números para CC y TI)
-    if ((data.tipoDocumento === 'CC' || data.tipoDocumento === 'TI') && 
+    if ((data.tipoDocumento === 'CC' || data.tipoDocumento === 'TI') &&
         !/^\d+$/.test(data.documento)) {
         errors.push('El documento debe contener solo números');
     }
-    
+
     return {
         isValid: errors.length === 0,
         errors
@@ -390,7 +390,7 @@ function validatePatientData(data) {
  */
 function showValidationError(errors) {
     const errorList = errors.map(error => `<li class="text-left">${error}</li>`).join('');
-    
+
     Swal.fire({
         icon: 'warning',
         title: 'Datos incompletos',
@@ -427,22 +427,22 @@ async function viewPatient(patientId) {
                 Swal.showLoading();
             }
         });
-        
+
         // Llamada real a la API
         const response = await fetch(`/api/pacientes/${patientId}`);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const patient = await response.json();
-        
+
         // Cerrar loading
         Swal.close();
-        
+
         // Mostrar modal de detalles
         showPatientDetailsModal(patient);
-        
+
     } catch (error) {
         console.error('Error al cargar paciente:', error);
         Swal.fire({
@@ -467,22 +467,22 @@ function showPatientDetailsModal(patient) {
     document.getElementById('viewPatientGender').textContent = getGenderLabel(patient.genero);
     document.getElementById('viewPatientPhone').textContent = patient.telefono;
     document.getElementById('viewPatientAddress').textContent = patient.direccion || 'No registrada';
-    document.getElementById('viewPatientEmergencyContact').textContent = 
-        patient.contactoEmergenciaNombre ? 
-        `${patient.contactoEmergenciaNombre} (${patient.contactoEmergenciaParentesco}) - ${patient.contactoEmergenciaTelefono}` : 
+    document.getElementById('viewPatientEmergencyContact').textContent =
+        patient.contactoEmergenciaNombre ?
+        `${patient.contactoEmergenciaNombre} (${patient.contactoEmergenciaParentesco}) - ${patient.contactoEmergenciaTelefono}` :
         'No registrado';
-    
+
     // Actualizar avatar
     const avatar = document.getElementById('viewPatientAvatar');
-    avatar.innerHTML = getPatientInitials(patient.nombres, patient.apellidos);
-    
+    avatar.innerHTML = getPatientProfileImage(patient.genero);
+
     // Guardar referencia del paciente actual
     PatientsModule.currentPatient = patient;
-    
+
     // Mostrar modal
     const modal = document.getElementById('viewPatientModal');
     modal.classList.remove('hidden');
-    
+
     setTimeout(() => {
         modal.classList.add('show');
     }, 10);
@@ -525,16 +525,16 @@ async function editPatient(patientId) {
                 Swal.showLoading();
             }
         });
-        
+
         // Obtener los datos del paciente
         const patient = await PacientesAPI.getPacienteById(patientId);
-        
+
         // Cerrar loading
         Swal.close();
-        
+
         // Abrir modal de edición (reutilizar el modal de nuevo paciente)
         openEditPatientModal(patient);
-        
+
     } catch (error) {
         console.error('Error al cargar paciente para edición:', error);
         Swal.fire({
@@ -554,14 +554,14 @@ function openEditPatientModal(patient) {
     const form = document.getElementById('newPatientForm');
     const modalTitle = modal.querySelector('h3');
     const submitButton = form.querySelector('button[type="submit"]');
-    
+
     if (modal && form) {
         // Cambiar título del modal
         modalTitle.textContent = 'Editar Paciente';
-        
+
         // Cambiar texto del botón
         submitButton.innerHTML = '<i class="fas fa-save mr-2"></i>Actualizar Paciente';
-        
+
         // Llenar formulario con datos del paciente
         document.getElementById('nombres').value = patient.nombres || '';
         document.getElementById('apellidos').value = patient.apellidos || '';
@@ -578,20 +578,20 @@ function openEditPatientModal(patient) {
         document.getElementById('alergias').value = patient.alergias || '';
         document.getElementById('medicamentos').value = patient.medicamentos || '';
         document.getElementById('observaciones').value = patient.observaciones || '';
-        
+
         // Agregar el ID del paciente como data attribute
         form.dataset.editingPatientId = patient.id;
         form.dataset.editMode = 'true';
-        
+
         // Mostrar modal
         modal.classList.remove('hidden');
-        
+
         // Focus en el primer campo
         setTimeout(() => {
             const firstInput = form.querySelector('input[type="text"]');
             if (firstInput) firstInput.focus();
         }, 100);
-        
+
         // Animación
         setTimeout(() => {
             modal.classList.add('show');
@@ -622,7 +622,7 @@ async function deletePatient(patientId) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const patient = await response.json();
-        
+
         const result = await Swal.fire({
             icon: 'warning',
             title: '¿Eliminar paciente?',
@@ -657,7 +657,7 @@ async function deletePatient(patientId) {
             cancelButtonColor: '#6b7280',
             reverseButtons: true
         });
-        
+
         if (result.isConfirmed) {
             try {
                 // Mostrar progreso de eliminación
@@ -669,16 +669,16 @@ async function deletePatient(patientId) {
                         Swal.showLoading();
                     }
                 });
-                
+
                 // Llamada real a la API para eliminar
                 const deleteResponse = await fetch(`/api/pacientes/${patientId}`, {
                     method: 'DELETE'
                 });
-                
+
                 if (!deleteResponse.ok) {
                     throw new Error(`HTTP error! status: ${deleteResponse.status}`);
                 }
-                
+
                 // Confirmar eliminación
                 await Swal.fire({
                     icon: 'success',
@@ -697,13 +697,13 @@ async function deletePatient(patientId) {
                     confirmButtonText: 'Entendido',
                     confirmButtonColor: '#16a34a'
                 });
-                
+
                 // Recargar lista
                 loadPatients();
-                
+
             } catch (error) {
                 console.error('Error al eliminar paciente:', error);
-                
+
                 Swal.fire({
                     icon: 'error',
                     title: 'Error al eliminar',
@@ -729,13 +729,13 @@ async function deletePatient(patientId) {
 async function loadPatients() {
     try {
         console.log('📋 Cargando lista de pacientes...');
-        
+
         // Usar la nueva API
         const patients = await PacientesAPI.getAllPacientes();
 
         // Guardar caché para apertura instantánea de ver/editar (sin loader)
         PatientsModule.cachedPatients = Array.isArray(patients) ? patients : [];
-        
+
         // Paginación real del lado cliente
         TablePager.register('pacientes', function (page) {
             PatientsModule.pagination.currentPage = page;
@@ -751,18 +751,18 @@ async function loadPatients() {
         // Actualizar la tabla con los datos reales
         renderPatientsTable(pacientesPager.rows);
         TablePager.renderBar('pacientesPager', pacientesPager, 'pacientes');
-        
+
         // Actualizar estadísticas
         updatePatientsStats(patients);
-        
+
         console.log('✅ Pacientes cargados exitosamente:', patients.length);
-        
+
     } catch (error) {
         console.error('❌ Error al cargar pacientes:', error);
-        
+
         // Mostrar tabla vacía en caso de error
         renderPatientsTable([]);
-        
+
         Swal.fire({
             icon: 'error',
             title: 'Error de conexión',
@@ -781,7 +781,7 @@ function renderPatientsTable(patients) {
         console.warn('No se encontró el tbody de la tabla');
         return;
     }
-    
+
     if (!patients || patients.length === 0) {
         tbody.innerHTML = `
             <tr>
@@ -794,7 +794,7 @@ function renderPatientsTable(patients) {
         `;
         return;
     }
-    
+
     tbody.innerHTML = patients.map(patient => `
         <tr class="hover:bg-gray-50">
             <td class="px-4 py-4 whitespace-nowrap">
@@ -802,7 +802,7 @@ function renderPatientsTable(patients) {
                     <div class="flex-shrink-0 h-10 w-10">
                         <div class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
                             <span class="text-sm font-medium text-indigo-700">
-                                ${getPatientInitials(patient.nombres, patient.apellidos)}
+                                ${getPatientProfileImage(patient.genero)}
                             </span>
                         </div>
                     </div>
@@ -897,10 +897,10 @@ function setupFilters() {
 function toggleFilters() {
     const filtersSection = document.getElementById('filtersSection');
     const filterButton = document.querySelector('button[onclick="toggleFilters()"]');
-    
+
     if (filtersSection) {
         const isHidden = filtersSection.classList.contains('hidden');
-        
+
         if (isHidden) {
             filtersSection.classList.remove('hidden');
             filterButton?.classList.add('active');
@@ -916,22 +916,22 @@ function toggleFilters() {
  */
 function applyFilters() {
     const filtersSection = document.getElementById('filtersSection');
-    
+
     if (filtersSection) {
         const searchInput = filtersSection.querySelector('input[type="text"]');
         const estadoSelect = filtersSection.querySelectorAll('select')[0];
         const generoSelect = filtersSection.querySelectorAll('select')[1];
         const edadSelect = filtersSection.querySelectorAll('select')[2];
-        
+
         PatientsModule.filters = {
             search: searchInput?.value || '',
             estado: estadoSelect?.value || '',
             genero: generoSelect?.value || '',
             edad: edadSelect?.value || ''
         };
-        
+
         console.log('🔍 Aplicando filtros:', PatientsModule.filters);
-        
+
         // Simular filtrado
         Swal.fire({
             icon: 'success',
@@ -940,7 +940,7 @@ function applyFilters() {
             timer: 1500,
             showConfirmButton: false
         });
-        
+
         loadPatients();
     }
 }
@@ -950,22 +950,22 @@ function applyFilters() {
  */
 function clearFilters() {
     const filtersSection = document.getElementById('filtersSection');
-    
+
     if (filtersSection) {
         const inputs = filtersSection.querySelectorAll('input, select');
         inputs.forEach(input => {
             input.value = '';
         });
-        
+
         PatientsModule.filters = {
             search: '',
             estado: '',
             genero: '',
             edad: ''
         };
-        
+
         console.log('🧹 Filtros limpiados');
-        
+
         loadPatients();
     }
 }
@@ -976,7 +976,7 @@ function clearFilters() {
 function handleSearchInput(e) {
     const query = e.target.value.trim();
     console.log('🔍 Búsqueda en tiempo real:', query);
-    
+
     PatientsModule.filters.search = query;
     loadPatients();
 }
@@ -1018,11 +1018,11 @@ function calculateAge(birthDate) {
     const birth = new Date(birthDate);
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
-    
+
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
         age--;
     }
-    
+
     return age;
 }
 
@@ -1051,12 +1051,15 @@ function getGenderLabel(gender) {
 }
 
 /**
- * Obtener iniciales del paciente para el avatar
+ * Obtener imagen de perfil según el género del paciente
  */
-function getPatientInitials(nombres, apellidos) {
-    const firstInitial = nombres?.charAt(0)?.toUpperCase() || '';
-    const lastInitial = apellidos?.charAt(0)?.toUpperCase() || '';
-    return `<span class="text-green-600 font-bold text-xl">${firstInitial}${lastInitial}</span>`;
+function getPatientProfileImage(gender) {
+    const normalizedGender = String(gender || '').trim().toUpperCase();
+    const imagePath = normalizedGender.startsWith('F')
+        ? '/Imagenes/perfil_dama.png'
+        : '/Imagenes/perfil_hombre.png';
+
+    return `<img src="${imagePath}" alt="Perfil del paciente" class="h-full w-full rounded-full object-cover">`;
 }
 
 /**
@@ -1107,7 +1110,7 @@ function getSimulatedPatient(patientId) {
             ultimaCita: '2024-10-10'
         }
     };
-    
+
     return patients[patientId] || patients[1];
 }
 
