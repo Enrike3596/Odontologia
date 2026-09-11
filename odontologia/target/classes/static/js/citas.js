@@ -60,13 +60,13 @@ const CitasAPI = {
         try {
             console.log(`Obteniendo cita con ID: ${id}`);
             const response = await fetch(`${AppointmentsModule.apiBaseUrl}/citas/${id}`);
-            
+
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error(`Error HTTP ${response.status}:`, errorText);
                 throw new Error(`Error ${response.status}: ${response.statusText}`);
             }
-            
+
             const data = await response.json();
             console.log('Datos de cita obtenidos:', data);
             return data;
@@ -80,7 +80,7 @@ const CitasAPI = {
     async createCita(citaData) {
         try {
             console.log('Enviando datos de cita:', citaData);
-            
+
             const response = await fetch(`${AppointmentsModule.apiBaseUrl}/citas`, {
                 method: 'POST',
                 headers: {
@@ -88,15 +88,15 @@ const CitasAPI = {
                 },
                 body: JSON.stringify(citaData)
             });
-            
+
             console.log('Respuesta del servidor:', response.status, response.statusText);
-            
+
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('Error del servidor:', errorText);
                 throw new Error(`Error ${response.status}: ${response.statusText}. ${errorText}`);
             }
-            
+
             const result = await response.json();
             console.log('Cita creada exitosamente:', result);
             return result;
@@ -117,13 +117,13 @@ const CitasAPI = {
                 },
                 body: JSON.stringify(citaData)
             });
-            
+
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error(`Error HTTP ${response.status}:`, errorText);
                 throw new Error(`Error ${response.status}: ${response.statusText}`);
             }
-            
+
             const result = await response.json();
             console.log('Cita actualizada exitosamente:', result);
             return result;
@@ -160,19 +160,19 @@ document.addEventListener('DOMContentLoaded', function() {
  */
 function initializeAppointmentsModule() {
     console.log('📅🦷 Inicializando módulo de citas médicas');
-    
+
     // Configurar eventos
     setupEventListeners();
-    
+
     // Cargar datos iniciales
     loadAppointments();
-    
+
     // Configurar filtros
     setupFilters();
-    
+
     // Actualizar fecha actual
     updateCurrentDate();
-    
+
     // Mostrar mensaje de bienvenida
     showWelcomeMessage();
 }
@@ -186,13 +186,13 @@ function setupEventListeners() {
     if (newAppointmentForm) {
         newAppointmentForm.addEventListener('submit', handleNewAppointmentSubmit);
     }
-    
+
     // Filtros en tiempo real
     const searchInput = document.querySelector('#filtersSection input[type="text"]');
     if (searchInput) {
         searchInput.addEventListener('input', debounce(handleSearchInput, 300));
     }
-    
+
     // Mobile menu toggle
     const mobileMenuToggle = document.getElementById('mobileMenuToggle');
     if (mobileMenuToggle) {
@@ -206,30 +206,30 @@ function setupEventListeners() {
 async function openNewAppointmentModal(editData = null) {
     const modal = document.getElementById('newAppointmentModal');
     const form = document.getElementById('newAppointmentForm');
-    
+
     if (modal && form) {
         // Limpiar formulario
         form.reset();
-        
+
         // Configurar modo (crear o editar)
         const isEditMode = editData !== null;
         AppointmentsModule.editMode = isEditMode;
         AppointmentsModule.editingAppointmentId = isEditMode ? editData.id : null;
-        
+
         console.log('Modo edición:', isEditMode, 'Datos:', editData);
-        
+
         // Cambiar título del modal
         const modalTitle = modal.querySelector('h3');
         if (modalTitle) {
             modalTitle.textContent = isEditMode ? 'Editar Cita' : 'Nueva Cita';
         }
-        
+
         // Cambiar texto del botón
         const submitButton = form.querySelector('button[type="submit"]');
         if (submitButton) {
             submitButton.textContent = isEditMode ? 'Actualizar Cita' : 'Agendar Cita';
         }
-        
+
         // Establecer fecha mínima (hoy para nuevas citas, sin restricción para editar)
         const fechaInput = document.getElementById('fechaCita');
         if (!isEditMode) {
@@ -238,7 +238,7 @@ async function openNewAppointmentModal(editData = null) {
         } else {
             fechaInput.removeAttribute('min');
         }
-        
+
         try {
             // Cargar selects primero (siempre necesario)
             await Promise.all([
@@ -246,11 +246,11 @@ async function openNewAppointmentModal(editData = null) {
                 loadOdontologosSelect(),
                 loadTiposCitaSelect()
             ]);
-            
+
             // Si es modo edición, llenar formulario con datos de la cita
             if (isEditMode && editData) {
                 console.log('Llenando formulario con datos de edición:', editData);
-                
+
                 // Verificar que los elementos del formulario existen
                 const pacienteSelect = document.getElementById('pacienteId');
                 const odontologoSelect = document.getElementById('odontologoId');
@@ -258,15 +258,15 @@ async function openNewAppointmentModal(editData = null) {
                 const fechaInput = document.getElementById('fechaCita');
                 const horaInput = document.getElementById('horaCita');
                 const observacionesInput = document.getElementById('observaciones');
-                
+
                 if (!pacienteSelect || !odontologoSelect || !tipoCitaSelect || !fechaInput || !horaInput) {
                     throw new Error('No se encontraron todos los elementos del formulario');
                 }
-                
+
                 // Llenar campos - manejar diferentes estructuras de datos
                 try {
                     console.log('Estructura completa de editData:', JSON.stringify(editData, null, 2));
-                    
+
                     // Paciente
                     const pacienteId = editData.paciente?.id || editData.pacienteId;
                     if (pacienteId) {
@@ -275,7 +275,7 @@ async function openNewAppointmentModal(editData = null) {
                     } else {
                         console.warn('No se encontró ID del paciente en los datos');
                     }
-                    
+
                     // Odontólogo
                     const odontologoId = editData.odontologo?.id || editData.odontologoId;
                     if (odontologoId) {
@@ -284,7 +284,7 @@ async function openNewAppointmentModal(editData = null) {
                     } else {
                         console.warn('No se encontró ID del odontólogo en los datos');
                     }
-                    
+
                     // Tipo de cita
                     const tipoCitaId = editData.tipoCita?.id || editData.tipoCitaId;
                     if (tipoCitaId) {
@@ -293,26 +293,26 @@ async function openNewAppointmentModal(editData = null) {
                     } else {
                         console.warn('No se encontró ID del tipo de cita en los datos');
                     }
-                    
+
                     // Fecha y hora
                     const fecha = editData.fecha || editData.fechaCita;
                     const horaOriginal = editData.hora || editData.horaCita;
-                    
+
                     console.log('Fecha original:', fecha);
                     console.log('Hora original:', horaOriginal);
-                    
+
                     if (fecha) {
                         fechaInput.value = fecha;
                         console.log('Fecha asignada al input:', fecha);
                     }
-                    
+
                     if (horaOriginal) {
                         // Usar la función helper para formatear la hora
                         const horaFormateada = formatTimeForSelect(horaOriginal);
                         console.log('Hora formateada:', horaFormateada);
-                        
+
                         horaInput.value = horaFormateada;
-                        
+
                         // Verificar si la hora existe en el select después de un breve delay
                         setTimeout(() => {
                             const horaOption = Array.from(horaInput.options).find(option => option.value === horaFormateada);
@@ -329,27 +329,27 @@ async function openNewAppointmentModal(editData = null) {
                             console.log('Valor final del select de hora:', horaInput.value);
                         }, 100);
                     }
-                    
+
                     // Observaciones
                     if (observacionesInput) {
                         observacionesInput.value = editData.observaciones || '';
                     }
-                    
+
                     // Estado
                     const estadoSelect = document.getElementById('estado');
                     if (estadoSelect && editData.estado) {
                         estadoSelect.value = editData.estado;
                         console.log('Estado asignado:', editData.estado);
                     }
-                    
+
                     console.log('Formulario llenado exitosamente');
-                    
+
                 } catch (fillError) {
                     console.error('Error al llenar campos del formulario:', fillError);
                     throw new Error('Error al llenar los datos en el formulario');
                 }
             }
-            
+
         } catch (error) {
             console.error('Error al cargar datos para el modal:', error);
             Swal.fire({
@@ -360,16 +360,16 @@ async function openNewAppointmentModal(editData = null) {
             });
             return;
         }
-        
+
         // Mostrar modal
         modal.classList.remove('hidden');
-        
+
         // Focus en el primer campo
         setTimeout(() => {
             const firstSelect = form.querySelector('select');
             if (firstSelect) firstSelect.focus();
         }, 100);
-        
+
         // Animación
         setTimeout(() => {
             modal.classList.add('show');
@@ -396,7 +396,7 @@ function closeNewAppointmentModal() {
             modal.classList.add('hidden');
         }, 300);
     }
-    
+
     // Resetear modo de edición
     AppointmentsModule.editMode = false;
     AppointmentsModule.editingAppointmentId = null;
@@ -407,23 +407,23 @@ function closeNewAppointmentModal() {
  */
 async function handleNewAppointmentSubmit(e) {
     e.preventDefault();
-    
+
     const formData = new FormData(e.target);
     const appointmentData = Object.fromEntries(formData);
-    
+
     // Validar datos
     const validation = validateAppointmentData(appointmentData);
     if (!validation.isValid) {
         showValidationError(validation.errors);
         return;
     }
-    
+
     console.log('Datos del formulario validados:', appointmentData);
-    
+
     try {
         // Determinar si es creación o edición
         const isEdit = AppointmentsModule.editMode;
-        
+
         // Preparar datos para la API (el backend espera objetos, no IDs)
         const citaData = {
             paciente: { id: parseInt(appointmentData.pacienteId) },
@@ -443,9 +443,9 @@ async function handleNewAppointmentSubmit(e) {
         console.log('Datos preparados para enviar:', citaData);
         const actionText = isEdit ? 'Actualizando' : 'Programando';
         const successText = isEdit ? 'actualizada' : 'programada';
-        
+
         console.log('Modo edición:', isEdit, 'ID cita:', AppointmentsModule.editingAppointmentId);
-        
+
         // Mostrar loading
         Swal.fire({
             title: `${actionText} cita...`,
@@ -455,7 +455,7 @@ async function handleNewAppointmentSubmit(e) {
                 Swal.showLoading();
             }
         });
-        
+
         let result;
         if (isEdit) {
             // Verificar que tenemos el ID para actualizar
@@ -468,14 +468,14 @@ async function handleNewAppointmentSubmit(e) {
             // Crear nueva cita
             result = await CitasAPI.createCita(citaData);
         }
-        
+
         // Cerrar modal
         closeNewAppointmentModal();
-        
+
         // Resetear modo de edición
         AppointmentsModule.editMode = false;
         AppointmentsModule.editingAppointmentId = null;
-        
+
         // Mostrar éxito
         await Swal.fire({
             icon: 'success',
@@ -501,13 +501,13 @@ async function handleNewAppointmentSubmit(e) {
             confirmButtonText: 'Entendido',
             confirmButtonColor: '#10b981'
         });
-        
+
         // Recargar lista
         await loadAppointments();
-        
+
     } catch (error) {
         console.error('Error al procesar cita:', error);
-        
+
         // Log más detallado para debugging
         console.error('Error details:', {
             message: error.message,
@@ -515,16 +515,16 @@ async function handleNewAppointmentSubmit(e) {
             response: error.response,
             stack: error.stack
         });
-        
+
         const actionText = AppointmentsModule.editMode ? 'actualizar' : 'programar';
-        
+
         // Mostrar error más específico si está disponible
         let errorMessage = `No se pudo ${actionText} la cita médica. Por favor intente nuevamente.`;
-        
+
         if (error.message) {
             errorMessage += `\n\nDetalle: ${error.message}`;
         }
-        
+
         Swal.fire({
             icon: 'error',
             title: `Error al ${actionText} cita`,
@@ -539,35 +539,35 @@ async function handleNewAppointmentSubmit(e) {
  */
 function validateAppointmentData(data) {
     const errors = [];
-    
+
     // Validaciones requeridas
     if (!data.pacienteId) errors.push('Debe seleccionar un paciente');
     if (!data.tipoCitaId) errors.push('Debe seleccionar el tipo de cita');
     if (!data.fechaCita) errors.push('Debe seleccionar una fecha');
     if (!data.horaCita) errors.push('Debe seleccionar una hora');
     if (!data.odontologoId) errors.push('Debe asignar un odontólogo');
-    
+
     // Validación de fecha
     if (data.fechaCita) {
         // Crear fecha sin problemas de zona horaria
         const [year, month, day] = data.fechaCita.split('-');
         const selectedDate = new Date(year, month - 1, day); // month - 1 porque los meses van de 0-11
         const today = new Date();
-        
+
         // Normalizar fechas para comparar solo días (sin horas)
         const selectedDateOnly = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
         const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        
+
         if (selectedDateOnly < todayOnly) {
             errors.push('No se pueden programar citas en fechas pasadas');
         }
-        
+
         // Validar que no sea domingo
         if (selectedDate.getDay() === 0) {
             errors.push('La clínica no atiende los domingos');
         }
     }
-    
+
     // Validación de hora
     if (data.horaCita) {
         const hour = parseInt(data.horaCita.split(':')[0]);
@@ -575,7 +575,7 @@ function validateAppointmentData(data) {
             errors.push('Las citas solo se pueden programar entre 8:00 AM y 6:00 PM');
         }
     }
-    
+
     return {
         isValid: errors.length === 0,
         errors
@@ -587,7 +587,7 @@ function validateAppointmentData(data) {
  */
 function showValidationError(errors) {
     const errorList = errors.map(error => `<li class="text-left">${error}</li>`).join('');
-    
+
     Swal.fire({
         icon: 'warning',
         title: 'Datos incompletos',
@@ -624,20 +624,20 @@ async function viewAppointment(appointmentId) {
                 Swal.showLoading();
             }
         });
-        
+
         // Obtener datos reales de la API
         const appointment = await CitasAPI.getCitaById(appointmentId);
-        
+
         // Cerrar loading
         Swal.close();
-        
+
         // Mostrar modal de detalles
         showAppointmentDetailsModal(appointment);
-        
+
     } catch (error) {
         console.error('Error al cargar cita:', error);
         Swal.close();
-        
+
         Swal.fire({
             icon: 'error',
             title: 'Error',
@@ -656,7 +656,7 @@ function showAppointmentDetailsModal(appointment) {
     document.getElementById('viewAppointmentPatient').textContent = `${appointment.paciente.nombres} ${appointment.paciente.apellidos}`;
     document.getElementById('viewAppointmentType').textContent = appointment.tipoCita.nombre;
     document.getElementById('viewAppointmentDateTime').textContent = `${formatDate(appointment.fecha)} a las ${appointment.hora}`;
-    
+
     // Llenar detalles
     document.getElementById('viewPatientDocument').textContent = appointment.paciente.documento || 'No especificado';
     document.getElementById('viewPatientPhone').textContent = appointment.paciente.telefono || 'No especificado';
@@ -665,23 +665,23 @@ function showAppointmentDetailsModal(appointment) {
     document.getElementById('viewAppointmentDoctor').textContent = `Dr. ${appointment.odontologo.nombre} ${appointment.odontologo.apellido}`;
     document.getElementById('viewDoctorSpecialty').textContent = appointment.odontologo.especialidad || 'Odontología General';
     document.getElementById('viewAppointmentReason').textContent = appointment.observaciones || 'No especificado';
-    
+
     // Estado
     const statusElement = document.getElementById('viewAppointmentStatus');
     statusElement.textContent = getStatusText(appointment.estado);
     statusElement.className = `px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(appointment.estado)}`;
-    
+
     // Actualizar avatar
     const avatar = document.getElementById('viewAppointmentAvatar');
-    avatar.innerHTML = getPatientInitials(`${appointment.paciente.nombres} ${appointment.paciente.apellidos}`);
-    
+    avatar.innerHTML = getPatientProfileImage(appointment.paciente.genero);
+
     // Guardar referencia de la cita actual
     AppointmentsModule.currentAppointment = appointment;
-    
+
     // Mostrar modal
     const modal = document.getElementById('viewAppointmentModal');
     modal.classList.remove('hidden');
-    
+
     setTimeout(() => {
         modal.classList.add('show');
     }, 10);
@@ -721,33 +721,33 @@ async function editAppointment(appointmentId) {
                 Swal.showLoading();
             }
         });
-        
+
         // Obtener datos de la cita
         const appointment = await CitasAPI.getCitaById(appointmentId);
-        
+
         // Verificar que los datos se cargaron correctamente
         console.log('Datos de la cita obtenidos:', appointment);
-        
+
         if (!appointment) {
             throw new Error('No se pudieron obtener los datos de la cita');
         }
-        
+
         // Verificar que los datos tengan la estructura esperada
         if (!appointment.id) {
             console.error('Los datos de la cita no tienen ID:', appointment);
             throw new Error('Datos de cita inválidos');
         }
-        
+
         // Cerrar loading
         Swal.close();
-        
+
         // Abrir modal de nueva cita en modo edición
         await openNewAppointmentModal(appointment);
-        
+
     } catch (error) {
         console.error('Error al cargar cita para edición:', error);
         Swal.close();
-        
+
         Swal.fire({
             icon: 'error',
             title: 'Error',
@@ -1034,10 +1034,10 @@ function updateCurrentDate() {
  */
 async function updateTodayTimeline() {
     console.log('📅 Actualizando timeline del día:', AppointmentsModule.currentDate);
-    
+
     const timelineContainer = document.getElementById('todayTimeline');
     if (!timelineContainer) return;
-    
+
     try {
         // Mostrar loading
         timelineContainer.innerHTML = `
@@ -1046,24 +1046,24 @@ async function updateTodayTimeline() {
                 <p>Cargando citas del día...</p>
             </div>
         `;
-        
+
         // Obtener todas las citas
         const allCitas = await CitasAPI.getAllCitas();
-        
+
         // Filtrar citas del día actual
         const today = AppointmentsModule.currentDate.toISOString().split('T')[0]; // YYYY-MM-DD
         const citasDelDia = allCitas.filter(cita => {
             const citaFecha = new Date(cita.fecha).toISOString().split('T')[0];
             return citaFecha === today;
         });
-        
+
         // Ordenar por hora
         citasDelDia.sort((a, b) => {
             const horaA = a.hora || '00:00';
             const horaB = b.hora || '00:00';
             return horaA.localeCompare(horaB);
         });
-        
+
         if (citasDelDia.length === 0) {
             timelineContainer.innerHTML = `
                 <div class="text-center py-8 text-gray-500">
@@ -1077,14 +1077,14 @@ async function updateTodayTimeline() {
             `;
             return;
         }
-        
+
         // Generar HTML para las citas
         const citasHTML = citasDelDia.map(cita => {
             const statusColor = getStatusColor(cita.estado);
             const statusText = getStatusText(cita.estado);
             const hora = formatTime(cita.hora);
             const tipoCitaIcon = getTipoCitaIcon(cita.tipoCita?.nombre || '');
-            
+
             return `
                 <div class="flex items-center p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
                     <div class="flex-shrink-0 text-center mr-4">
@@ -1112,9 +1112,9 @@ async function updateTodayTimeline() {
                 </div>
             `;
         }).join('');
-        
+
         timelineContainer.innerHTML = citasHTML;
-        
+
     } catch (error) {
         console.error('Error al cargar timeline del día:', error);
         timelineContainer.innerHTML = `
@@ -1136,15 +1136,15 @@ async function updateTodayTimeline() {
 async function loadAppointments() {
     try {
         console.log('📅 Cargando citas desde el servidor...');
-        
+
         // Cargar citas usando la API
         const citas = await CitasAPI.getAllCitas();
 
         // Guardar caché para apertura instantánea de ver/editar (sin loader)
         AppointmentsModule.cachedCitas = Array.isArray(citas) ? citas : [];
-        
+
         console.log('✅ Citas cargadas exitosamente:', citas.length, 'citas encontradas');
-        
+
         // Paginación real del lado cliente
         TablePager.register('citas', function (page) {
             AppointmentsModule.pagination.currentPage = page;
@@ -1160,25 +1160,25 @@ async function loadAppointments() {
         // Actualizar la tabla de citas
         updateAppointmentsTable(citasPager.rows);
         TablePager.renderBar('citasPager', citasPager, 'citas');
-        
+
         // Actualizar estadísticas
         updateAppointmentStats(citas);
-        
+
         // Actualizar timeline del día
         await updateTodayTimeline();
-        
+
         return citas;
-        
+
     } catch (error) {
         console.error('❌ Error al cargar citas:', error);
-        
+
         Swal.fire({
             icon: 'error',
             title: 'Error de conexión',
             text: 'No se pudo cargar la lista de citas. Por favor, verifique su conexión e intente nuevamente.',
             confirmButtonColor: '#dc2626'
         });
-        
+
         // Devolver array vacío en caso de error
         return [];
     }
@@ -1197,10 +1197,10 @@ function setupFilters() {
 function toggleFilters() {
     const filtersSection = document.getElementById('filtersSection');
     const filterButton = document.querySelector('button[onclick="toggleFilters()"]');
-    
+
     if (filtersSection) {
         const isHidden = filtersSection.classList.contains('hidden');
-        
+
         if (isHidden) {
             filtersSection.classList.remove('hidden');
             filterButton?.classList.add('active');
@@ -1216,22 +1216,22 @@ function toggleFilters() {
  */
 function applyFilters() {
     const filtersSection = document.getElementById('filtersSection');
-    
+
     if (filtersSection) {
         const searchInput = filtersSection.querySelector('input[type="text"]');
         const estadoSelect = filtersSection.querySelectorAll('select')[0];
         const odontologoSelect = filtersSection.querySelectorAll('select')[1];
         const fechaSelect = filtersSection.querySelectorAll('select')[2];
-        
+
         AppointmentsModule.filters = {
             search: searchInput?.value || '',
             estado: estadoSelect?.value || '',
             odontologo: odontologoSelect?.value || '',
             fecha: fechaSelect?.value || ''
         };
-        
+
         console.log('🔍 Aplicando filtros:', AppointmentsModule.filters);
-        
+
         // Simular filtrado
         Swal.fire({
             icon: 'success',
@@ -1240,7 +1240,7 @@ function applyFilters() {
             timer: 1500,
             showConfirmButton: false
         });
-        
+
         loadAppointments();
     }
 }
@@ -1250,22 +1250,22 @@ function applyFilters() {
  */
 function clearFilters() {
     const filtersSection = document.getElementById('filtersSection');
-    
+
     if (filtersSection) {
         const inputs = filtersSection.querySelectorAll('input, select');
         inputs.forEach(input => {
             input.value = '';
         });
-        
+
         AppointmentsModule.filters = {
             search: '',
             estado: '',
             odontologo: '',
             fecha: ''
         };
-        
+
         console.log('🧹 Filtros limpiados');
-        
+
         loadAppointments();
     }
 }
@@ -1276,7 +1276,7 @@ function clearFilters() {
 function handleSearchInput(e) {
     const query = e.target.value.trim();
     console.log('🔍 Búsqueda en tiempo real:', query);
-    
+
     AppointmentsModule.filters.search = query;
     loadAppointments();
 }
@@ -1316,7 +1316,7 @@ function formatDate(dateString) {
             day: 'numeric'
         });
     }
-    
+
     // Para otros formatos, usar el comportamiento normal
     const date = new Date(dateString);
     return date.toLocaleDateString('es-CO', {
@@ -1342,12 +1342,12 @@ function formatDateLong(date) {
  */
 function formatTime(timeString) {
     if (!timeString) return { time: '00:00', period: 'AM' };
-    
+
     const [hours, minutes] = timeString.split(':');
     const hour = parseInt(hours);
     const period = hour >= 12 ? 'PM' : 'AM';
     const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-    
+
     return {
         time: `${displayHour.toString().padStart(2, '0')}:${minutes}`,
         period: period
@@ -1368,7 +1368,7 @@ function getTipoCitaIcon(tipoCitaNombre) {
         'Odontología Estética': 'fas fa-star',
         'Urgencia': 'fas fa-exclamation-triangle'
     };
-    
+
     return iconMap[tipoCitaNombre] || 'fas fa-calendar-check';
 }
 
@@ -1380,15 +1380,15 @@ function getTipoCitaIcon(tipoCitaNombre) {
 // Ahora se usan las APIs reales (`CitasAPI`) para obtener datos de pacientes, odontólogos y citas.
 
 /**
- * Obtener iniciales del paciente para el avatar
+ * Obtener imagen de perfil según el género del paciente
  */
-function getPatientInitials(nombre) {
-    if (!nombre) return '<span class="text-emerald-600 font-bold text-xl">CT</span>';
-    
-    const parts = nombre.split(' ');
-    const firstInitial = parts[0]?.charAt(0)?.toUpperCase() || '';
-    const lastInitial = parts[1]?.charAt(0)?.toUpperCase() || '';
-    return `<span class="text-emerald-600 font-bold text-xl">${firstInitial}${lastInitial}</span>`;
+function getPatientProfileImage(gender, sizeClasses = 'h-full w-full') {
+    const normalizedGender = String(gender || '').trim().toUpperCase();
+    const imagePath = normalizedGender.startsWith('F')
+        ? '/Imagenes/perfil_dama.png'
+        : '/Imagenes/perfil_hombre.png';
+
+    return `<img src="${imagePath}" alt="Perfil del paciente" class="${sizeClasses} rounded-full object-cover">`;
 }
 
 /**
@@ -1428,9 +1428,9 @@ function normalizeAppointmentForDialogs(appointment) {
  */
 function formatTimeForSelect(timeValue) {
     if (!timeValue) return '';
-    
+
     console.log('Formateando hora:', timeValue, 'Tipo:', typeof timeValue);
-    
+
     // Si es un string, procesarlo
     if (typeof timeValue === 'string') {
         // Si viene en formato ISO o con segundos (HH:mm:ss), extraer solo HH:mm
@@ -1444,14 +1444,14 @@ function formatTimeForSelect(timeValue) {
         }
         return timeValue;
     }
-    
+
     // Si es un objeto LocalTime u otro formato, convertir a string
     if (typeof timeValue === 'object' && timeValue.hour !== undefined && timeValue.minute !== undefined) {
         const formattedTime = `${timeValue.hour.toString().padStart(2, '0')}:${timeValue.minute.toString().padStart(2, '0')}`;
         console.log('Hora desde objeto:', formattedTime);
         return formattedTime;
     }
-    
+
     console.log('Hora sin procesar:', timeValue);
     return timeValue.toString();
 }
@@ -1495,9 +1495,7 @@ function updateAppointmentsTable(citas) {
             <td class="px-4 py-4 whitespace-nowrap">
                 <div class="flex items-center">
                     <div class="flex-shrink-0 h-10 w-10">
-                        <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                            <i class="fas fa-user-injured text-blue-600"></i>
-                        </div>
+                        ${getPatientProfileImage(cita.paciente.genero, 'h-10 w-10')}
                     </div>
                     <div class="ml-4">
                         <div class="text-sm font-medium text-gray-900">
@@ -1614,20 +1612,20 @@ async function deleteAppointment(citaId) {
     if (result.isConfirmed) {
         try {
             await CitasAPI.deleteCita(citaId);
-            
+
             await Swal.fire({
                 icon: 'success',
                 title: 'Cita eliminada',
                 text: 'La cita ha sido eliminada exitosamente',
                 confirmButtonColor: '#10b981'
             });
-            
+
             // Recargar lista
             await loadAppointments();
-            
+
         } catch (error) {
             console.error('Error al eliminar cita:', error);
-            
+
             await Swal.fire({
                 icon: 'error',
                 title: 'Error',
@@ -1645,10 +1643,10 @@ async function loadPacientesSelect() {
     try {
         const response = await fetch('/api/pacientes');
         if (!response.ok) throw new Error('Error al cargar pacientes');
-        
+
         const pacientes = await response.json();
         const select = document.getElementById('pacienteId');
-        
+
         if (select) {
             select.innerHTML = '<option value="">Seleccionar paciente...</option>';
             pacientes.forEach(paciente => {
@@ -1675,10 +1673,10 @@ async function loadOdontologosSelect() {
     try {
         const response = await fetch('/api/odontologos');
         if (!response.ok) throw new Error('Error al cargar odontólogos');
-        
+
         const odontologos = await response.json();
         const select = document.getElementById('odontologoId');
-        
+
         if (select) {
             select.innerHTML = '<option value="">Seleccionar odontólogo...</option>';
             odontologos.forEach(odontologo => {
@@ -1706,12 +1704,12 @@ async function loadTiposCitaSelect() {
         console.log('Cargando tipos de cita...');
         const response = await fetch('/api/tipos-cita');
         if (!response.ok) throw new Error('Error al cargar tipos de cita');
-        
+
         const tiposCita = await response.json();
         console.log('Tipos de cita cargados:', tiposCita);
-        
+
         const select = document.getElementById('tipoCitaId');
-        
+
         if (select) {
             select.innerHTML = '<option value="">Seleccionar tipo de cita...</option>';
 
