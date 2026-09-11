@@ -1139,3 +1139,37 @@ window.deletePatient = deletePatient;
 window.toggleFilters = toggleFilters;
 window.applyFilters = applyFilters;
 window.clearFilters = clearFilters;
+
+/* Cierre de modales de acción con clic fuera o tecla Escape */
+(function () {
+    var ACTION_MODALS = [
+        { id: 'newPatientModal', close: closeNewPatientModal },
+        { id: 'viewPatientModal', close: closeViewPatientModal }
+    ];
+
+    function modalIsOpen(modal) {
+        if (!modal) return false;
+        if (modal.classList.contains('show')) return true;
+        return !modal.classList.contains('hidden') && modal.style.display !== 'none';
+    }
+
+    function closeEntry(entry) {
+        try { entry.close(); } catch (e) { /* noop */ }
+    }
+
+    document.addEventListener('click', function (event) {
+        const t = event.target;
+        if (!t || !t.classList || !t.classList.contains('fixed') || !t.classList.contains('inset-0') || !t.id) return;
+        const entry = ACTION_MODALS.find(function (e) { return e.id === t.id; });
+        if (entry && modalIsOpen(t)) closeEntry(entry);
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape') return;
+        if (window.Swal && typeof window.Swal.isVisible === 'function' && window.Swal.isVisible()) return;
+        ACTION_MODALS.forEach(function (entry) {
+            const modal = document.getElementById(entry.id);
+            if (modalIsOpen(modal)) closeEntry(entry);
+        });
+    });
+})();
