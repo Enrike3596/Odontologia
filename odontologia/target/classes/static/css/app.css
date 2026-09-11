@@ -80,6 +80,167 @@ body {
     }
 }
 
+/* ============================================================================
+   MODALES DE CREACION - formularios profesionales y consistentes
+   ============================================================================ */
+.sys-form-modal {
+    padding: 1rem;
+    background: rgba(15, 23, 42, 0.58);
+    backdrop-filter: blur(4px);
+}
+
+.sys-form-dialog {
+    top: 2rem;
+    width: min(100%, 72rem);
+    max-width: 72rem;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 1rem;
+    background: #fff;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+}
+
+.sys-form-content {
+    margin-top: 0;
+    max-height: min(88vh, 54rem);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+.sys-form-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.sys-form-topbar h3 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.sys-form-topbar h3 i {
+    margin-right: 0.55rem;
+    color: #0284c7;
+}
+
+.sys-form-close {
+    width: 2.25rem;
+    height: 2.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.65rem;
+    color: #64748b;
+    background: #fff;
+    cursor: pointer;
+    transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.sys-form-close:hover {
+    color: #0f172a;
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.sys-form-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 1.5rem;
+}
+
+.sys-form-body > div:not(.sys-form-footer) {
+    margin: 0;
+    padding: 1.1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.8rem;
+    background: #fff;
+}
+
+.sys-form-body h4 {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 0 0 1rem;
+    padding-bottom: 0.7rem;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.sys-form-body h4 i {
+    color: #0284c7;
+}
+
+.sys-form-body label {
+    color: #475569;
+    font-weight: 600;
+}
+
+.sys-form-body input:not([type="checkbox"]):not([type="radio"]),
+.sys-form-body select,
+.sys-form-body textarea {
+    border-color: #cbd5e1;
+    border-radius: 0.55rem;
+    background-color: #fff;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+
+.sys-form-body input:not([type="checkbox"]):not([type="radio"]):focus,
+.sys-form-body select:focus,
+.sys-form-body textarea:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.14);
+}
+
+.sys-form-body input[readonly] {
+    color: #64748b;
+    background: #f8fafc;
+}
+
+.sys-form-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    margin-top: 0.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+@media (max-width: 640px) {
+    .sys-form-modal {
+        padding: 0.5rem;
+    }
+
+    .sys-form-dialog {
+        top: 0.5rem;
+        max-height: calc(100vh - 1rem);
+    }
+
+    .sys-form-topbar,
+    .sys-form-body {
+        padding: 1rem;
+    }
+
+    .sys-form-footer > button {
+        flex: 1 1 9rem;
+    }
+}
+
 /* Modales: nunca más anchos que la pantalla (ej. w-96 en teléfonos pequeños) */
 .fixed.inset-0 > div[class*="mx-auto"] {
     max-width: calc(100vw - 2rem);

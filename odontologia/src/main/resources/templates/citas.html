@@ -402,19 +402,19 @@
   </div>
 
   <!-- Modal de Nueva Cita -->
-  <div id="newAppointmentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
-      <div class="mt-3">
-        <div class="flex items-center justify-between mb-4">
+  <div id="newAppointmentModal" class="sys-form-modal fixed inset-0 overflow-y-auto h-full w-full hidden z-50">
+    <div class="sys-form-dialog relative mx-auto">
+      <div class="sys-form-content">
+        <div class="sys-form-topbar">
           <h3 class="text-lg font-medium text-gray-900">
             <i class="fas fa-calendar-plus mr-2 text-emerald-500"></i>
             Nueva Cita Médica
           </h3>
-          <button onclick="closeNewAppointmentModal()" class="text-gray-400 hover:text-gray-600">
+          <button onclick="closeNewAppointmentModal()" class="sys-form-close" aria-label="Cerrar formulario">
             <i class="fas fa-times"></i>
           </button>
         </div>
-        <form id="newAppointmentForm" class="space-y-6">
+        <form id="newAppointmentForm" class="sys-form-body">
           <!-- Información del paciente -->
           <div>
             <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
@@ -551,7 +551,7 @@
             </div>
           </div>
 
-          <div class="flex justify-end space-x-3 pt-4">
+          <div class="sys-form-footer">
             <button type="button" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors" onclick="closeNewAppointmentModal()">
               <i class="fas fa-times mr-2"></i>
               Cancelar
