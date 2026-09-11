@@ -132,16 +132,16 @@ document.addEventListener('DOMContentLoaded', function() {
  */
 function initializeDentistsModule() {
     console.log('🦷👨‍⚕️ Inicializando módulo de odontólogos');
-    
+
     // Configurar eventos
     setupEventListeners();
-    
+
     // Cargar datos iniciales
     loadDentists();
-    
+
     // Configurar filtros
     setupFilters();
-    
+
     // Mostrar mensaje de bienvenida
     showWelcomeMessage();
 }
@@ -155,13 +155,13 @@ function setupEventListeners() {
     if (newDentistForm) {
         newDentistForm.addEventListener('submit', handleNewDentistSubmit);
     }
-    
+
     // Filtros en tiempo real
     const searchInput = document.querySelector('#filtersSection input[type="text"]');
     if (searchInput) {
         searchInput.addEventListener('input', debounce(handleSearchInput, 300));
     }
-    
+
     // Mobile menu toggle
     const mobileMenuToggle = document.getElementById('mobileMenuToggle');
     if (mobileMenuToggle) {
@@ -175,28 +175,28 @@ function setupEventListeners() {
 async function openNewDentistModal(editData = null) {
     const modal = document.getElementById('newDentistModal');
     const form = document.getElementById('newDentistForm');
-    
+
     if (modal && form) {
         // Limpiar formulario
         form.reset();
-        
+
         // Configurar modo (crear o editar)
         const isEditMode = editData !== null;
         DentistsModule.editMode = isEditMode;
         DentistsModule.editingDentistId = isEditMode ? editData.id : null;
-        
+
         // Cambiar título del modal
         const modalTitle = modal.querySelector('h3');
         if (modalTitle) {
             modalTitle.textContent = isEditMode ? 'Editar Odontólogo' : 'Nuevo Odontólogo';
         }
-        
+
         // Cambiar texto del botón
         const submitButton = form.querySelector('button[type="submit"]');
         if (submitButton) {
             submitButton.textContent = isEditMode ? 'Actualizar Odontólogo' : 'Registrar Odontólogo';
         }
-        
+
         // Si es modo edición, cargar datos
         if (isEditMode) {
             try {
@@ -214,7 +214,7 @@ async function openNewDentistModal(editData = null) {
                 document.getElementById('universidad').value = editData.universidad || '';
                 document.getElementById('anoGraduacion').value = editData.anoGraduacion || '';
                 document.getElementById('experiencia').value = editData.experiencia || '';
-                
+
                 // Cargar especialidades como checkboxes
                 if (editData.especialidades) {
                     const especialidadesArray = editData.especialidades.split(', ');
@@ -222,11 +222,11 @@ async function openNewDentistModal(editData = null) {
                         checkbox.checked = especialidadesArray.includes(checkbox.value);
                     });
                 }
-                
+
                 document.getElementById('contactoEmergenciaNombre').value = editData.contactoEmergenciaNombre || '';
                 document.getElementById('contactoEmergenciaParentesco').value = editData.contactoEmergenciaParentesco || '';
                 document.getElementById('contactoEmergenciaTelefono').value = editData.contactoEmergenciaTelefono || '';
-                
+
                 // Cargar días de trabajo como checkboxes
                 if (editData.diasTrabajo) {
                     const diasArray = editData.diasTrabajo.split(', ');
@@ -234,11 +234,11 @@ async function openNewDentistModal(editData = null) {
                         checkbox.checked = diasArray.includes(checkbox.value);
                     });
                 }
-                
+
                 document.getElementById('horaInicio').value = editData.horaInicio || '';
                 document.getElementById('horaFin').value = editData.horaFin || '';
                 document.getElementById('observaciones').value = editData.observaciones || '';
-                
+
             } catch (error) {
                 console.error('Error al cargar datos para edición:', error);
                 Swal.fire({
@@ -255,7 +255,7 @@ async function openNewDentistModal(editData = null) {
             const horaFin = document.getElementById('horaFin');
             if (horaInicio) horaInicio.value = '08:00';
             if (horaFin) horaFin.value = '17:00';
-            
+
             // Marcar días laborales por defecto (lunes a viernes)
             const defaultDays = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
             defaultDays.forEach(day => {
@@ -263,16 +263,16 @@ async function openNewDentistModal(editData = null) {
                 if (checkbox) checkbox.checked = true;
             });
         }
-        
+
         // Mostrar modal
         modal.classList.remove('hidden');
-        
+
         // Focus en el primer campo
         setTimeout(() => {
             const firstInput = form.querySelector('input[type="text"]');
             if (firstInput) firstInput.focus();
         }, 100);
-        
+
         // Animación
         setTimeout(() => {
             modal.classList.add('show');
@@ -301,10 +301,10 @@ function closeNewDentistModal() {
  */
 async function handleNewDentistSubmit(e) {
     e.preventDefault();
-    
+
     const form = e.target;
     const formData = new FormData(form);
-    
+
     // Procesar campos de texto normales
     const dentistData = {};
     for (let [key, value] of formData.entries()) {
@@ -312,7 +312,7 @@ async function handleNewDentistSubmit(e) {
             dentistData[key] = value;
         }
     }
-    
+
     // Procesar especialidades seleccionadas
     const especialidadesSeleccionadas = [];
     const especialidadesCheckboxes = form.querySelectorAll('input[name="especialidades"]:checked');
@@ -320,7 +320,7 @@ async function handleNewDentistSubmit(e) {
         especialidadesSeleccionadas.push(checkbox.value);
     });
     dentistData.especialidades = especialidadesSeleccionadas.join(', ');
-    
+
     // Procesar días de trabajo seleccionados
     const diasSeleccionados = [];
     const diasCheckboxes = form.querySelectorAll('input[name="diasTrabajo"]:checked');
@@ -328,14 +328,14 @@ async function handleNewDentistSubmit(e) {
         diasSeleccionados.push(checkbox.value);
     });
     dentistData.diasTrabajo = diasSeleccionados.join(', ');
-    
+
     // Validar datos completos
     const validation = validateCompleteDentistData(dentistData);
     if (!validation.isValid) {
         showValidationError(validation.errors);
         return;
     }
-    
+
     try {
         // Preparar datos para la API
         const odontologoData = {
@@ -361,12 +361,12 @@ async function handleNewDentistSubmit(e) {
             horaFin: dentistData.horaFin || null,
             observaciones: dentistData.observaciones?.trim() || null
         };
-        
+
         // Determinar si es creación o edición
         const isEdit = DentistsModule.editMode;
         const actionText = isEdit ? 'Actualizando' : 'Registrando';
         const successText = isEdit ? 'actualizado' : 'registrado';
-        
+
         // Mostrar loading
         Swal.fire({
             title: `${actionText} odontólogo...`,
@@ -376,7 +376,7 @@ async function handleNewDentistSubmit(e) {
                 Swal.showLoading();
             }
         });
-        
+
         let result;
         if (isEdit) {
             // Actualizar odontólogo existente
@@ -385,14 +385,14 @@ async function handleNewDentistSubmit(e) {
             // Crear nuevo odontólogo
             result = await OdontologosAPI.createOdontologo(odontologoData);
         }
-        
+
         // Cerrar modal
         closeNewDentistModal();
-        
+
         // Resetear modo de edición
         DentistsModule.editMode = false;
         DentistsModule.editingDentistId = null;
-        
+
         // Mostrar éxito
         await Swal.fire({
             icon: 'success',
@@ -414,15 +414,15 @@ async function handleNewDentistSubmit(e) {
             confirmButtonText: 'Entendido',
             confirmButtonColor: '#10b981'
         });
-        
+
         // Recargar lista
         await loadDentists();
-        
+
     } catch (error) {
         console.error('Error al procesar odontólogo:', error);
-        
+
         const actionText = DentistsModule.editMode ? 'actualizar' : 'registrar';
-        
+
         Swal.fire({
             icon: 'error',
             title: `Error al ${actionText}`,
@@ -437,17 +437,17 @@ async function handleNewDentistSubmit(e) {
  */
 function validateBasicDentistData(data) {
     const errors = [];
-    
+
     // Validaciones requeridas
     if (!data.nombre?.trim()) errors.push('El nombre es requerido');
     if (!data.apellido?.trim()) errors.push('El apellido es requerido');
     if (!data.matricula?.trim()) errors.push('La matrícula profesional es requerida');
-    
+
     // Validación de matrícula profesional (formato MP-XXXXX)
     if (data.matricula && !/^MP-\d{4,6}$/.test(data.matricula)) {
         errors.push('La matrícula debe tener el formato MP-XXXXX (4-6 dígitos)');
     }
-    
+
     return {
         isValid: errors.length === 0,
         errors
@@ -459,7 +459,7 @@ function validateBasicDentistData(data) {
  */
 function validateCompleteDentistData(data) {
     const errors = [];
-    
+
     // Validaciones requeridas
     if (!data.nombre?.trim()) errors.push('El nombre es requerido');
     if (!data.apellido?.trim()) errors.push('El apellido es requerido');
@@ -472,27 +472,27 @@ function validateCompleteDentistData(data) {
     if (!data.anoGraduacion) errors.push('El año de graduación es requerido');
     if (!data.experiencia) errors.push('Los años de experiencia son requeridos');
     if (!data.telefono?.trim()) errors.push('El teléfono es requerido');
-    
+
     // Validación de matrícula profesional (formato MP-XXXXX)
     if (data.matricula && !/^MP-\d{4,6}$/.test(data.matricula)) {
         errors.push('La matrícula debe tener el formato MP-XXXXX (4-6 dígitos)');
     }
-    
+
     // Validación de email si se proporciona
     if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
         errors.push('El formato del email no es válido');
     }
-    
+
     // Validaciones de rango para números
     const currentYear = new Date().getFullYear();
     if (data.anoGraduacion && (data.anoGraduacion < 1950 || data.anoGraduacion > currentYear)) {
         errors.push(`El año de graduación debe estar entre 1950 y ${currentYear}`);
     }
-    
+
     if (data.experiencia && (data.experiencia < 0 || data.experiencia > 50)) {
         errors.push('Los años de experiencia deben estar entre 0 y 50');
     }
-    
+
     // Validación de fecha de nacimiento (debe ser mayor de edad)
     if (data.fechaNacimiento) {
         const birthDate = new Date(data.fechaNacimiento);
@@ -502,7 +502,7 @@ function validateCompleteDentistData(data) {
             errors.push('El odontólogo debe ser mayor de edad');
         }
     }
-    
+
     return {
         isValid: errors.length === 0,
         errors
@@ -514,7 +514,7 @@ function validateCompleteDentistData(data) {
  */
 function validateDentistData(data) {
     const errors = [];
-    
+
     // Validaciones requeridas
     if (!data.nombres?.trim()) errors.push('Los nombres son requeridos');
     if (!data.apellidos?.trim()) errors.push('Los apellidos son requeridos');
@@ -528,22 +528,22 @@ function validateDentistData(data) {
     if (!data.experiencia) errors.push('Los años de experiencia son requeridos');
     if (!data.email?.trim()) errors.push('El email es requerido');
     if (!data.telefono?.trim()) errors.push('El teléfono es requerido');
-    
+
     // Validación de especialidades
     if (!data.especialidades || data.especialidades.length === 0) {
         errors.push('Debe seleccionar al menos una especialidad');
     }
-    
+
     // Validación de días de trabajo
     if (!data.diasTrabajo || data.diasTrabajo.length === 0) {
         errors.push('Debe seleccionar al menos un día de trabajo');
     }
-    
+
     // Validación de email
     if (data.email && !isValidEmail(data.email)) {
         errors.push('El formato del email no es válido');
     }
-    
+
     // Validación de edad (debe ser mayor de 22 años para ser odontólogo)
     if (data.fechaNacimiento) {
         const age = calculateAge(data.fechaNacimiento);
@@ -554,23 +554,23 @@ function validateDentistData(data) {
             errors.push('La fecha de nacimiento no es válida');
         }
     }
-    
+
     // Validación de año de graduación
     const currentYear = new Date().getFullYear();
     if (data.anoGraduacion && (data.anoGraduacion < 1950 || data.anoGraduacion > currentYear)) {
         errors.push('El año de graduación no es válido');
     }
-    
+
     // Validación de experiencia
     if (data.experiencia && (data.experiencia < 0 || data.experiencia > 50)) {
         errors.push('Los años de experiencia deben estar entre 0 y 50');
     }
-    
+
     // Validación de licencia profesional (formato MP-XXXXX)
     if (data.licenciaProfesional && !/^MP-\d{4,6}$/.test(data.licenciaProfesional)) {
         errors.push('La licencia debe tener el formato MP-XXXXX (ej: MP-12345)');
     }
-    
+
     return {
         isValid: errors.length === 0,
         errors
@@ -582,7 +582,7 @@ function validateDentistData(data) {
  */
 function showValidationError(errors) {
     const errorList = errors.map(error => `<li class="text-left">${error}</li>`).join('');
-    
+
     Swal.fire({
         icon: 'warning',
         title: 'Datos incompletos',
@@ -619,20 +619,20 @@ async function viewDentist(dentistId) {
                 Swal.showLoading();
             }
         });
-        
+
         // Obtener datos reales de la API
         const dentist = await OdontologosAPI.getOdontologoById(dentistId);
-        
+
         // Cerrar loading
         Swal.close();
-        
+
         // Mostrar modal de detalles
         showDentistDetailsModal(dentist);
-        
+
     } catch (error) {
         console.error('Error al cargar odontólogo:', error);
         Swal.close();
-        
+
         Swal.fire({
             icon: 'error',
             title: 'Error',
@@ -658,7 +658,7 @@ function showDentistDetailsModal(dentist) {
     document.getElementById('viewDentistUniversity').textContent = dentist.universidad || 'No especificado';
     document.getElementById('viewDentistGradYear').textContent = dentist.anoGraduacion || 'No especificado';
     document.getElementById('viewDentistExperience').textContent = `${dentist.experiencia || 0} años`;
-    
+
     // Mostrar especialidades como badges
     const specialtiesContainer = document.getElementById('viewDentistSpecialties');
     if (dentist.especialidades) {
@@ -670,7 +670,7 @@ function showDentistDetailsModal(dentist) {
     } else {
         specialtiesContainer.textContent = 'No especificadas';
     }
-    
+
     // Mostrar días de trabajo como badges
     const workDaysContainer = document.getElementById('viewDentistWorkDays');
     if (dentist.diasTrabajo) {
@@ -682,7 +682,7 @@ function showDentistDetailsModal(dentist) {
     } else {
         workDaysContainer.textContent = 'No especificados';
     }
-    
+
     // Mostrar horario
     const scheduleElement = document.getElementById('viewDentistSchedule');
     if (dentist.horaInicio && dentist.horaFin) {
@@ -690,18 +690,18 @@ function showDentistDetailsModal(dentist) {
     } else {
         scheduleElement.textContent = 'No especificado';
     }
-    
+
     // Actualizar avatar
     const avatar = document.getElementById('viewDentistAvatar');
-    avatar.innerHTML = getDentistInitials(dentist.nombre, dentist.apellido);
-    
+    avatar.innerHTML = getDentistProfileImage(dentist.genero);
+
     // Guardar referencia del odontólogo actual
     DentistsModule.currentDentist = dentist;
-    
+
     // Mostrar modal
     const modal = document.getElementById('viewDentistModal');
     modal.classList.remove('hidden');
-    
+
     setTimeout(() => {
         modal.classList.add('show');
     }, 10);
@@ -741,20 +741,20 @@ async function editDentist(dentistId) {
                 Swal.showLoading();
             }
         });
-        
+
         // Obtener datos del odontólogo
         const dentist = await OdontologosAPI.getOdontologoById(dentistId);
-        
+
         // Cerrar loading
         Swal.close();
-        
+
         // Abrir modal de nuevo odontólogo en modo edición
         await openNewDentistModal(dentist);
-        
+
     } catch (error) {
         console.error('Error al cargar odontólogo para edición:', error);
         Swal.close();
-        
+
         Swal.fire({
             icon: 'error',
             title: 'Error',
@@ -783,7 +783,7 @@ function editDentistFromModal() {
  */
 function viewSchedule(dentistId) {
     console.log('Ver horarios del odontólogo:', dentistId);
-    
+
     Swal.fire({
         icon: 'info',
         title: 'Abriendo horarios...',
@@ -813,7 +813,7 @@ function viewScheduleFromModal() {
  */
 function viewPatients(dentistId) {
     console.log('Ver pacientes del odontólogo:', dentistId);
-    
+
     Swal.fire({
         icon: 'info',
         title: 'Cargando pacientes...',
@@ -837,7 +837,7 @@ async function toggleDentistStatus(dentistId) {
     const isActive = dentist.estado === 'activo';
     const newStatus = isActive ? 'inactivo' : 'activo';
     const action = isActive ? 'desactivar' : 'activar';
-    
+
     const result = await Swal.fire({
         icon: 'question',
         title: `¿${action.charAt(0).toUpperCase() + action.slice(1)} odontólogo?`,
@@ -853,8 +853,8 @@ async function toggleDentistStatus(dentistId) {
                 <div class="bg-${isActive ? 'yellow' : 'blue'}-50 border border-${isActive ? 'yellow' : 'blue'}-200 rounded-lg p-4">
                     <p class="text-${isActive ? 'yellow' : 'blue'}-800 text-sm">
                         <i class="fas fa-info-circle mr-2"></i>
-                        ${isActive 
-                            ? 'Al desactivar al odontólogo, no podrá recibir nuevas citas pero mantendrá las existentes.' 
+                        ${isActive
+                            ? 'Al desactivar al odontólogo, no podrá recibir nuevas citas pero mantendrá las existentes.'
                             : 'Al activar al odontólogo, podrá recibir nuevas citas según su disponibilidad.'}
                     </p>
                 </div>
@@ -866,7 +866,7 @@ async function toggleDentistStatus(dentistId) {
         confirmButtonColor: isActive ? '#f59e0b' : '#10b981',
         cancelButtonColor: '#6b7280'
     });
-    
+
     if (result.isConfirmed) {
         try {
             // Mostrar progreso
@@ -877,10 +877,10 @@ async function toggleDentistStatus(dentistId) {
                     Swal.showLoading();
                 }
             });
-            
+
             // Simular actualización
             await new Promise(resolve => setTimeout(resolve, 1000));
-            
+
             // Confirmar cambio
             await Swal.fire({
                 icon: 'success',
@@ -899,13 +899,13 @@ async function toggleDentistStatus(dentistId) {
                 confirmButtonText: 'Entendido',
                 confirmButtonColor: '#10b981'
             });
-            
+
             // Recargar lista
             loadDentists();
-            
+
         } catch (error) {
             console.error('Error al cambiar estado:', error);
-            
+
             Swal.fire({
                 icon: 'error',
                 title: 'Error al cambiar estado',
@@ -922,7 +922,7 @@ async function toggleDentistStatus(dentistId) {
 async function deleteDentist(dentistId) {
     // Obtener datos del odontólogo
     const dentist = getSimulatedDentist(dentistId);
-    
+
     const result = await Swal.fire({
         icon: 'warning',
         title: '¿Eliminar odontólogo?',
@@ -956,7 +956,7 @@ async function deleteDentist(dentistId) {
         cancelButtonColor: '#6b7280',
         reverseButtons: true
     });
-    
+
     if (result.isConfirmed) {
         try {
             // Mostrar progreso de eliminación
@@ -968,10 +968,10 @@ async function deleteDentist(dentistId) {
                     Swal.showLoading();
                 }
             });
-            
+
             // Simular eliminación
             await new Promise(resolve => setTimeout(resolve, 2500));
-            
+
             // Confirmar eliminación
             await Swal.fire({
                 icon: 'success',
@@ -990,13 +990,13 @@ async function deleteDentist(dentistId) {
                 confirmButtonText: 'Entendido',
                 confirmButtonColor: '#10b981'
             });
-            
+
             // Recargar lista
             loadDentists();
-            
+
         } catch (error) {
             console.error('Error al eliminar odontólogo:', error);
-            
+
             Swal.fire({
                 icon: 'error',
                 title: 'Error al eliminar',
@@ -1013,7 +1013,7 @@ async function deleteDentist(dentistId) {
 async function loadDentists() {
     try {
         console.log('👨‍⚕️ Cargando lista de odontólogos...');
-        
+
         // Obtener datos reales de la API
         const odontologos = await OdontologosAPI.getAllOdontologos();
 
@@ -1035,18 +1035,18 @@ async function loadDentists() {
         // Actualizar tabla con datos reales
         updateDentistsTable(odontologosPager.rows);
         TablePager.renderBar('odontologosPager', odontologosPager, 'odontologos');
-        
+
         // Actualizar estadísticas
         updateDentistsStats(odontologos);
-        
+
         console.log('✅ Odontólogos cargados exitosamente');
-        
+
     } catch (error) {
         console.error('❌ Error al cargar odontólogos:', error);
-        
+
         // Mostrar tabla vacía en caso de error
         updateDentistsTable([]);
-        
+
         Swal.fire({
             icon: 'error',
             title: 'Error de conexión',
@@ -1069,10 +1069,10 @@ function setupFilters() {
 function toggleFilters() {
     const filtersSection = document.getElementById('filtersSection');
     const filterButton = document.querySelector('button[onclick="toggleFilters()"]');
-    
+
     if (filtersSection) {
         const isHidden = filtersSection.classList.contains('hidden');
-        
+
         if (isHidden) {
             filtersSection.classList.remove('hidden');
             filterButton?.classList.add('active');
@@ -1088,22 +1088,22 @@ function toggleFilters() {
  */
 function applyFilters() {
     const filtersSection = document.getElementById('filtersSection');
-    
+
     if (filtersSection) {
         const searchInput = filtersSection.querySelector('input[type="text"]');
         const especialidadSelect = filtersSection.querySelectorAll('select')[0];
         const estadoSelect = filtersSection.querySelectorAll('select')[1];
         const disponibilidadSelect = filtersSection.querySelectorAll('select')[2];
-        
+
         DentistsModule.filters = {
             search: searchInput?.value || '',
             especialidad: especialidadSelect?.value || '',
             estado: estadoSelect?.value || '',
             disponibilidad: disponibilidadSelect?.value || ''
         };
-        
+
         console.log('🔍 Aplicando filtros:', DentistsModule.filters);
-        
+
         // Simular filtrado
         Swal.fire({
             icon: 'success',
@@ -1112,7 +1112,7 @@ function applyFilters() {
             timer: 1500,
             showConfirmButton: false
         });
-        
+
         loadDentists();
     }
 }
@@ -1122,22 +1122,22 @@ function applyFilters() {
  */
 function clearFilters() {
     const filtersSection = document.getElementById('filtersSection');
-    
+
     if (filtersSection) {
         const inputs = filtersSection.querySelectorAll('input, select');
         inputs.forEach(input => {
             input.value = '';
         });
-        
+
         DentistsModule.filters = {
             search: '',
             especialidad: '',
             estado: '',
             disponibilidad: ''
         };
-        
+
         console.log('🧹 Filtros limpiados');
-        
+
         loadDentists();
     }
 }
@@ -1148,7 +1148,7 @@ function clearFilters() {
 function handleSearchInput(e) {
     const query = e.target.value.trim();
     console.log('🔍 Búsqueda en tiempo real:', query);
-    
+
     DentistsModule.filters.search = query;
     loadDentists();
 }
@@ -1190,11 +1190,11 @@ function calculateAge(birthDate) {
     const birth = new Date(birthDate);
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
-    
+
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
         age--;
     }
-    
+
     return age;
 }
 
@@ -1283,7 +1283,7 @@ function getSimulatedDentist(dentistId) {
             fechaRegistro: '2024-02-01T14:15:00'
         }
     };
-    
+
     return dentists[dentistId] || dentists[1];
 }
 
@@ -1326,9 +1326,7 @@ function updateDentistsTable(odontologos) {
             <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
                     <div class="flex-shrink-0 h-10 w-10">
-                        <div class="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
-                            <i class="fas fa-user-md text-purple-600"></i>
-                        </div>
+                        ${getDentistProfileImage(odontologo.genero, 'h-10 w-10')}
                     </div>
                     <div class="ml-4">
                         <div class="text-sm font-medium text-gray-900">
@@ -1369,15 +1367,18 @@ function updateDentistsTable(odontologos) {
  */
 function updateDentistsStats(odontologos) {
     const list = Array.isArray(odontologos) ? odontologos : [];
-    const norm = function (s) {
-        return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    };
+    const normalize = value => String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
 
     // Disponibles hoy: su campo diasTrabajo incluye el día actual
     const dias = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
     const hoy = dias[new Date().getDay()];
     const disponibles = list.filter(function (o) {
-        return norm(o.diasTrabajo).split(',').map(function (d) { return norm(d).trim(); }).includes(hoy);
+        const diasTrabajo = Array.isArray(o.diasTrabajo) ? o.diasTrabajo : String(o.diasTrabajo || '').split(',');
+        return diasTrabajo.map(normalize).includes(hoy);
     }).length;
 
     // Especialidades distintas reales en el sistema
@@ -1411,6 +1412,18 @@ function updateDentistsStats(odontologos) {
 }
 
 /**
+ * Obtener imagen de perfil según el género del odontólogo
+ */
+function getDentistProfileImage(gender, sizeClasses = 'h-full w-full') {
+    const normalizedGender = String(gender || '').trim().toUpperCase();
+    const imagePath = normalizedGender.startsWith('F')
+        ? '/Imagenes/odontologa.png'
+        : '/Imagenes/odontologo.png';
+
+    return `<img src="${imagePath}" alt="Perfil del odontólogo" class="${sizeClasses} rounded-full object-cover">`;
+}
+
+/**
  * Elimina un odontólogo
  */
 async function deleteDentist(dentistId) {
@@ -1428,20 +1441,20 @@ async function deleteDentist(dentistId) {
     if (result.isConfirmed) {
         try {
             await OdontologosAPI.deleteOdontologo(dentistId);
-            
+
             await Swal.fire({
                 icon: 'success',
                 title: 'Odontólogo eliminado',
                 text: 'El odontólogo ha sido eliminado exitosamente',
                 confirmButtonColor: '#10b981'
             });
-            
+
             // Recargar lista
             await loadDentists();
-            
+
         } catch (error) {
             console.error('Error al eliminar odontólogo:', error);
-            
+
             await Swal.fire({
                 icon: 'error',
                 title: 'Error',
@@ -1463,7 +1476,7 @@ function closeNewDentistModal() {
             modal.classList.add('hidden');
         }, 300);
     }
-    
+
     // Resetear modo de edición
     DentistsModule.editMode = false;
     DentistsModule.editingDentistId = null;
