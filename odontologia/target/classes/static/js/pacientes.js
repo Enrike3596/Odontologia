@@ -351,16 +351,24 @@ async function handleNewPatientSubmit(e) {
 function validatePatientData(data) {
     const errors = [];
 
-    // Validaciones requeridas
+    // Validaciones requeridas (todos los campos del formulario son obligatorios)
     if (!data.nombres?.trim()) errors.push('Los nombres son requeridos');
     if (!data.apellidos?.trim()) errors.push('Los apellidos son requeridos');
     if (!data.tipoDocumento) errors.push('El tipo de documento es requerido');
     if (!data.documento?.trim()) errors.push('El número de documento es requerido');
     if (!data.fechaNacimiento) errors.push('La fecha de nacimiento es requerida');
     if (!data.genero) errors.push('El género es requerido');
+    if (!data.email?.trim()) errors.push('El email es requerido');
     if (!data.telefono?.trim()) errors.push('El teléfono es requerido');
+    if (!data.direccion?.trim()) errors.push('La dirección es requerida');
+    if (!data.contactoEmergenciaNombre?.trim()) errors.push('El nombre del contacto de emergencia es requerido');
+    if (!data.contactoEmergenciaParentesco?.trim()) errors.push('El parentesco del contacto de emergencia es requerido');
+    if (!data.contactoEmergenciaTelefono?.trim()) errors.push('El teléfono del contacto de emergencia es requerido');
+    if (!data.alergias?.trim()) errors.push('Las alergias son requeridas (indique "Ninguna" si no aplica)');
+    if (!data.medicamentos?.trim()) errors.push('Los medicamentos actuales son requeridos (indique "Ninguno" si no aplica)');
+    if (!data.observaciones?.trim()) errors.push('Las observaciones médicas son requeridas');
 
-    // Validación de email si se proporciona
+    // Validación de email
     if (data.email && !isValidEmail(data.email)) {
         errors.push('El formato del email no es válido');
     }

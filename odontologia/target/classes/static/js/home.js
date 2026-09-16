@@ -750,6 +750,7 @@ async function handleQuickAppointmentSubmit(e) {
     if (!tipoId) missing.push('el tipo de cita');
     if (!fecha) missing.push('la fecha');
     if (!hora) missing.push('la hora');
+    if (!motivo) missing.push('el motivo de consulta');
 
     if (missing.length > 0) {
         Swal.fire({

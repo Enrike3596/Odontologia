@@ -391,11 +391,22 @@ async function handleNewRecordSubmit(e) {
 function validateRecordData(data) {
     const errors = [];
 
-    // Validaciones requeridas
+    // Validaciones requeridas (todos los campos del formulario son obligatorios)
     if (!data.pacienteId) errors.push('Debe seleccionar un paciente');
     if (!data.motivoConsulta?.trim()) errors.push('El motivo de consulta es requerido');
+    if (!data.historiaEnfermedad?.trim()) errors.push('La historia de la enfermedad actual es requerida');
+    if (!data.antecedentesMedicos?.trim()) errors.push('Los antecedentes médicos son requeridos');
+    if (!data.antecedentesOdontologicos?.trim()) errors.push('Los antecedentes odontológicos son requeridos');
+    if (!data.alergiasMedicamentos?.trim()) errors.push('Las alergias y medicamentos son requeridos');
+    if (!data.antecedentesFamiliares?.trim()) errors.push('Los antecedentes familiares son requeridos');
+    if (!data.examenExtraoral?.trim()) errors.push('El examen extraoral es requerido');
+    if (!data.examenIntraoral?.trim()) errors.push('El examen intraoral es requerido');
+    if (!data.estadoPeriodontal?.trim()) errors.push('El estado periodontal es requerido');
+    if (!data.oclusion?.trim()) errors.push('La oclusión es requerida');
     if (!data.diagnosticoPrincipal?.trim()) errors.push('El diagnóstico principal es requerido');
+    if (!data.diagnosticosSecundarios?.trim()) errors.push('Los diagnósticos secundarios son requeridos');
     if (!data.planTratamiento?.trim()) errors.push('El plan de tratamiento es requerido');
+    if (!data.pronostico) errors.push('El pronóstico es requerido');
 
     // Validación de campos de texto mínimos
     if (data.motivoConsulta && data.motivoConsulta.trim().length < 10) {

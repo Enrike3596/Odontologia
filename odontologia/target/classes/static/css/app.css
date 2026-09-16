@@ -2873,3 +2873,21 @@ html.sidebar-collapsed #sidebar .sidebar-footer [data-su="email"] {
         width: 18rem;
     }
 }
+
+/* ============================================================================
+   CAMPOS OBLIGATORIOS - asterisco rojo uniforme en todos los módulos
+   ============================================================================ */
+/* Todo campo de formulario obligatorio lleva un * rojo junto a su etiqueta.
+   Usar: <span class="required-asterisk" aria-hidden="true">*</span> */
+.required-asterisk {
+    color: #dc2626 !important;
+    font-weight: 700;
+    margin-left: 0.15rem;
+}
+
+/* Compatibilidad: cualquier * marcado antes con text-red-500 se mantiene rojo */
+.sys-form-body label .text-red-500,
+form label .text-red-500 {
+    color: #dc2626 !important;
+    font-weight: 700;
+}

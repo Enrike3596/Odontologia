@@ -147,7 +147,7 @@
           <div class="flex flex-col">
             <label class="text-[13px] leading-[18px] tracking-[0.015em] font-semibold text-on-surface mb-1.5 px-1 flex justify-between items-center"
                    for="input-identifier">
-              <span>Correo Electrónico o N° Identificación</span>
+              <span>Correo Electrónico o N° Identificación <span class="required-asterisk" aria-hidden="true" style="color:#dc2626;font-weight:700;">*</span></span>
               <span class="text-[11px] leading-[14px] tracking-[0.03em] font-semibold text-on-surface-variant">ID Dental</span>
             </label>
             <div class="relative flex items-center">
@@ -160,7 +160,7 @@
           <!-- Campo 2: Contraseña -->
           <div class="flex flex-col">
             <div class="flex items-center justify-between mb-1.5 px-1">
-              <label class="text-[13px] leading-[18px] tracking-[0.015em] font-semibold text-on-surface" for="input-password">Contraseña Clínica</label>
+              <label class="text-[13px] leading-[18px] tracking-[0.015em] font-semibold text-on-surface" for="input-password">Contraseña Clínica <span class="required-asterisk" aria-hidden="true" style="color:#dc2626;font-weight:700;">*</span></label>
               <button class="text-[11px] leading-[14px] tracking-[0.03em] font-semibold text-primary hover:underline" onclick="switchAuthView('recovery')" type="button">
                 ¿Olvidaste tu contraseña?
               </button>
@@ -227,12 +227,12 @@
         <div class="space-y-4">
           <div class="flex flex-col">
             <label class="text-[13px] leading-[18px] tracking-[0.015em] font-semibold text-on-surface mb-1.5 px-1" for="recovery-input">
-              Correo Electrónico o Documento Registrado
+              Correo Electrónico o Documento Registrado <span class="required-asterisk" aria-hidden="true" style="color:#dc2626;font-weight:700;">*</span>
             </label>
             <div class="relative flex items-center">
               <span class="absolute left-4 material-symbols-outlined text-outline text-[20px] pointer-events-none">contact_mail</span>
               <input class="w-full h-[52px] pl-11 pr-4 rounded-xl bg-surface-container-lowest text-on-surface text-[14px] leading-[22px] placeholder:text-outline/70 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                     id="recovery-input" placeholder="ej. paciente@clinicadental.com o DNI" type="text" />
+                     id="recovery-input" placeholder="ej. paciente@clinicadental.com o DNI" type="text" required />
             </div>
           </div>
 

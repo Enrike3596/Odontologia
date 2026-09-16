@@ -460,18 +460,28 @@ function validateBasicDentistData(data) {
 function validateCompleteDentistData(data) {
     const errors = [];
 
-    // Validaciones requeridas
+    // Validaciones requeridas (todos los campos del formulario son obligatorios)
     if (!data.nombre?.trim()) errors.push('El nombre es requerido');
     if (!data.apellido?.trim()) errors.push('El apellido es requerido');
     if (!data.tipoDocumento) errors.push('El tipo de documento es requerido');
     if (!data.documento?.trim()) errors.push('El número de documento es requerido');
     if (!data.fechaNacimiento) errors.push('La fecha de nacimiento es requerida');
     if (!data.genero) errors.push('El género es requerido');
+    if (!data.email?.trim()) errors.push('El email es requerido');
     if (!data.matricula?.trim()) errors.push('La matrícula profesional es requerida');
     if (!data.universidad?.trim()) errors.push('La universidad es requerida');
     if (!data.anoGraduacion) errors.push('El año de graduación es requerido');
-    if (!data.experiencia) errors.push('Los años de experiencia son requeridos');
+    if (!data.experiencia && data.experiencia !== 0) errors.push('Los años de experiencia son requeridos');
     if (!data.telefono?.trim()) errors.push('El teléfono es requerido');
+    if (!data.direccion?.trim()) errors.push('La dirección es requerida');
+    if (!data.contactoEmergenciaNombre?.trim()) errors.push('El nombre del contacto de emergencia es requerido');
+    if (!data.contactoEmergenciaParentesco?.trim()) errors.push('El parentesco del contacto de emergencia es requerido');
+    if (!data.contactoEmergenciaTelefono?.trim()) errors.push('El teléfono del contacto de emergencia es requerido');
+    if (!data.horaInicio) errors.push('La hora de inicio es requerida');
+    if (!data.horaFin) errors.push('La hora de fin es requerida');
+    if (!data.observaciones?.trim()) errors.push('Las observaciones son requeridas');
+    if (!data.especialidades?.trim()) errors.push('Debe seleccionar al menos una especialidad');
+    if (!data.diasTrabajo?.trim()) errors.push('Debe seleccionar al menos un día de trabajo');
 
     // Validación de matrícula profesional (formato MP-XXXXX)
     if (data.matricula && !/^MP-\d{4,6}$/.test(data.matricula)) {

@@ -846,9 +846,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 rol: usuarioData.rol
             });
 
-            // Validar campos requeridos
-            if (!usuarioData.nombres || !usuarioData.apellidos || !usuarioData.email) {
-                showWarningAlert('Por favor complete todos los campos requeridos');
+            // Validar campos requeridos (todos los campos del formulario son obligatorios)
+            const missingFields = [];
+            if (!usuarioData.nombres?.trim()) missingFields.push('los nombres');
+            if (!usuarioData.apellidos?.trim()) missingFields.push('los apellidos');
+            if (!formData.get('role')) missingFields.push('el rol');
+            if (!usuarioData.tipoDocumento) missingFields.push('el tipo de documento');
+            if (!usuarioData.documento?.trim()) missingFields.push('el número de documento');
+            if (!usuarioData.fechaNacimiento) missingFields.push('la fecha de nacimiento');
+            if (!usuarioData.genero) missingFields.push('el género');
+            if (!usuarioData.email?.trim()) missingFields.push('el email');
+            if (!usuarioData.telefono?.trim()) missingFields.push('el teléfono');
+            if (!usuarioData.direccion?.trim()) missingFields.push('la dirección');
+            if (!usuarioData.password) missingFields.push('la contraseña');
+            if (!formData.get('confirmPassword')) missingFields.push('la confirmación de la contraseña');
+            if (missingFields.length > 0) {
+                showWarningAlert('Por favor complete todos los campos requeridos: ' + missingFields.join(', '));
                 return;
             }
 
@@ -889,9 +902,20 @@ document.addEventListener('DOMContentLoaded', function() {
             const formData = new FormData(editForm);
             const usuarioData = Object.fromEntries(formData);
 
-            // Validar campos requeridos
-            if (!usuarioData.firstName || !usuarioData.lastName || !usuarioData.email) {
-                showWarningAlert('Por favor complete todos los campos requeridos');
+            // Validar campos requeridos (todos los campos son obligatorios; la contraseña es opcional solo en edición)
+            const missingEditFields = [];
+            if (!usuarioData.firstName?.trim()) missingEditFields.push('los nombres');
+            if (!usuarioData.lastName?.trim()) missingEditFields.push('los apellidos');
+            if (!usuarioData.role) missingEditFields.push('el rol');
+            if (!usuarioData.idType) missingEditFields.push('el tipo de documento');
+            if (!usuarioData.idNumber?.trim()) missingEditFields.push('el número de documento');
+            if (!usuarioData.birthDate) missingEditFields.push('la fecha de nacimiento');
+            if (!usuarioData.gender) missingEditFields.push('el género');
+            if (!usuarioData.email?.trim()) missingEditFields.push('el email');
+            if (!usuarioData.phone?.trim()) missingEditFields.push('el teléfono');
+            if (!usuarioData.address?.trim()) missingEditFields.push('la dirección');
+            if (missingEditFields.length > 0) {
+                showWarningAlert('Por favor complete todos los campos requeridos: ' + missingEditFields.join(', '));
                 return;
             }
 

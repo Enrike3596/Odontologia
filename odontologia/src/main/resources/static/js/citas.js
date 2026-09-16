@@ -431,7 +431,7 @@ async function handleNewAppointmentSubmit(e) {
             tipoCita: { id: parseInt(appointmentData.tipoCitaId) },
             fecha: appointmentData.fechaCita,
             hora: appointmentData.horaCita,
-            observaciones: appointmentData.observaciones || '',
+            observaciones: appointmentData.motivoConsulta || appointmentData.observaciones || '',
             estado: appointmentData.estado || 'PENDIENTE'
         };
 
@@ -540,12 +540,17 @@ async function handleNewAppointmentSubmit(e) {
 function validateAppointmentData(data) {
     const errors = [];
 
-    // Validaciones requeridas
+    // Validaciones requeridas (todos los campos del formulario son obligatorios)
     if (!data.pacienteId) errors.push('Debe seleccionar un paciente');
     if (!data.tipoCitaId) errors.push('Debe seleccionar el tipo de cita');
     if (!data.fechaCita) errors.push('Debe seleccionar una fecha');
     if (!data.horaCita) errors.push('Debe seleccionar una hora');
+    if (!data.duracion) errors.push('Debe seleccionar la duración');
     if (!data.odontologoId) errors.push('Debe asignar un odontólogo');
+    if (!data.consultorio) errors.push('Debe seleccionar el consultorio');
+    if (!data.motivoConsulta?.trim()) errors.push('El motivo de la consulta es requerido');
+    if (!data.estado) errors.push('Debe seleccionar el estado inicial');
+    if (!data.prioridad) errors.push('Debe seleccionar la prioridad');
 
     // Validación de fecha
     if (data.fechaCita) {
