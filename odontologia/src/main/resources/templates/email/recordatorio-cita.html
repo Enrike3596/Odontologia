@@ -1,25 +1,24 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<body>
-<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
-  <div style="background:#0284c7;color:#fff;padding:20px 24px;">
-    <h2 style="margin:0;">Clínica Odontología</h2>
-    <p style="margin:4px 0 0;">Recordatorio de cita odontológica</p>
-  </div>
-  <div style="padding:24px;color:#0f172a;">
-    <p>Le recordamos la siguiente cita asignada:</p>
-    <table style="width:100%;border-collapse:collapse;margin:16px 0;">
-      <tr><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#64748b;">Folio</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;"><strong th:text="${folio}">CITA-—</strong></td></tr>
-      <tr><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#64748b;">Paciente</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;" th:text="${paciente}">—</td></tr>
-      <tr><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#64748b;">Fecha</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;" th:text="${fecha}">—</td></tr>
-      <tr><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#64748b;">Hora</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;" th:text="${hora}">—</td></tr>
-      <tr><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#64748b;">Tipo de cita</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;" th:text="${tipoCita}">—</td></tr>
-      <tr><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#64748b;">Odontólogo</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;" th:text="${odontologo}">—</td></tr>
-      <tr><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#64748b;">Motivo</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;" th:text="${motivo}">—</td></tr>
-    </table>
-    <p>No olvide su cita. Llegue 15 minutos antes.</p>
-    <p style="color:#64748b;font-size:12px;">Este es un mensaje automático, por favor no responda a este correo.</p>
-  </div>
-</div>
+<body style="margin:0;padding:0;background:#eef5fb;font-family:Arial,Helvetica,sans-serif;color:#17324a;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#eef5fb;padding:28px 12px;"><tr><td align="center">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;background:#ffffff;border:1px solid #cfe0ef;border-radius:14px;overflow:hidden;">
+    <tr><td style="padding:28px 32px;background:#1267a4;color:#ffffff;"><div style="font-size:21px;font-weight:bold;">Clínica Odontología</div><div style="margin-top:5px;font-size:13px;color:#dceeff;">Recordatorio de cita odontológica</div></td></tr>
+    <tr><td style="padding:32px;">
+      <p style="margin:0 0 8px;font-size:16px;">Hola <strong th:text="${paciente}">Paciente</strong>,</p>
+      <p style="margin:0 0 22px;line-height:1.55;color:#5d7181;">Tu cita se aproxima. Estos son los datos importantes:</p>
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:22px;background:#eff7fd;border:1px solid #d5e8f6;border-radius:10px;"><tr><td style="padding:16px 18px 4px;font-size:12px;color:#5a829d;text-transform:uppercase;letter-spacing:.6px;">Fecha y hora</td></tr><tr><td style="padding:0 18px 16px;font-size:20px;font-weight:bold;color:#1267a4;"><span th:text="${fecha}">—</span> · <span th:text="${hora}">—</span></td></tr></table>
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;font-size:14px;">
+        <tr><td style="padding:11px 0;border-bottom:1px solid #e8eff5;color:#718493;">Folio</td><td align="right" style="padding:11px 0;border-bottom:1px solid #e8eff5;font-weight:bold;" th:text="${folio}">CITA-—</td></tr>
+        <tr><td style="padding:11px 0;border-bottom:1px solid #e8eff5;color:#718493;">Tipo de cita</td><td align="right" style="padding:11px 0;border-bottom:1px solid #e8eff5;" th:text="${tipoCita}">—</td></tr>
+        <tr><td style="padding:11px 0;border-bottom:1px solid #e8eff5;color:#718493;">Odontólogo</td><td align="right" style="padding:11px 0;border-bottom:1px solid #e8eff5;" th:text="${odontologo}">—</td></tr>
+        <tr><td style="padding:11px 0;color:#718493;">Motivo</td><td align="right" style="padding:11px 0;" th:text="${motivo}">—</td></tr>
+      </table>
+      <div style="margin-top:24px;padding:14px 16px;border-left:4px solid #2388c6;background:#f7fbfe;color:#5d7181;font-size:13px;line-height:1.5;">No olvides tu cita y llega 15 minutos antes.</div>
+      <p style="margin:26px 0 0;color:#8999a5;font-size:11px;line-height:1.5;">Este es un mensaje automático. Por favor no respondas a este correo.</p>
+    </td></tr>
+    <tr><td style="padding:16px 32px;background:#f7fbfe;color:#7b94a5;text-align:center;font-size:11px;">Estamos preparados para recibirte.</td></tr>
+  </table>
+</td></tr></table>
 </body>
 </html>

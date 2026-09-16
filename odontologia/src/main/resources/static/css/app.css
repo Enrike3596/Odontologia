@@ -2901,14 +2901,13 @@ form label .text-red-500 {
 }
 
 .comp-sheet {
-    max-width: 720px;
+    max-width: 760px;
     margin: 0 auto;
-    padding: 2rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 0.75rem;
-    color: #0f172a;
+    padding: 2.5rem;
+    border: 1px solid #1f2937;
+    color: #111827;
     background: #fff;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
 }
 
 .comp-head {
@@ -2916,19 +2915,33 @@ form label .text-red-500 {
     justify-content: space-between;
     align-items: flex-start;
     gap: 1rem;
-    padding-bottom: 1rem;
-    border-bottom: 2px solid #0ea5e9;
+    padding-bottom: 1.25rem;
+    border-bottom: 2px solid #111827;
+}
+
+.comp-kicker,
+.comp-folio-label,
+.comp-section-title {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.comp-kicker {
+    margin: 0 0 0.35rem;
+    color: #4b5563;
 }
 
 .comp-head h1 {
     margin: 0;
-    font-size: 1.4rem;
-    color: #0369a1;
+    font-size: 1.55rem;
+    letter-spacing: 0.01em;
 }
 
 .comp-head p {
     margin: 0.2rem 0 0;
-    color: #475569;
+    color: #4b5563;
 }
 
 .comp-folio {
@@ -2936,25 +2949,64 @@ form label .text-red-500 {
     font-weight: 700;
 }
 
+.comp-folio-label {
+    color: #4b5563;
+}
+
+.comp-folio > p:not(.comp-emision) {
+    margin: 0.35rem 0 0;
+    font-size: 1.05rem;
+}
+
 .comp-emision {
     font-weight: 400;
     font-size: 0.78rem;
-    color: #64748b;
+    color: #4b5563;
+}
+
+.comp-section-title {
+    margin: 1.5rem 0 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #9ca3af;
 }
 
 .comp-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0.5rem 1.5rem;
-    margin: 1.25rem 0;
+    gap: 0;
+    margin: 0 0 1.25rem;
+    border-top: 1px solid #d1d5db;
+    border-left: 1px solid #d1d5db;
+}
+
+.comp-grid > div {
+    min-height: 3.4rem;
+    padding: 0.7rem 0.85rem;
+    border-right: 1px solid #d1d5db;
+    border-bottom: 1px solid #d1d5db;
+}
+
+.comp-grid strong {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #4b5563;
 }
 
 .comp-motivo {
     margin: 0 0 1.5rem;
-    padding: 0.9rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.5rem;
-    background: #f8fafc;
+    min-height: 4.5rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid #9ca3af;
+    background: #f9fafb;
+}
+
+.comp-motivo strong {
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
 .comp-motivo p {
@@ -2965,16 +3017,27 @@ form label .text-red-500 {
     display: flex;
     justify-content: space-between;
     gap: 2rem;
-    margin-top: 3rem;
+    margin-top: 3.5rem;
     text-align: center;
     font-size: 0.8rem;
-    color: #475569;
+    color: #374151;
+}
+
+.comp-firmas > div {
+    width: 42%;
+}
+
+.comp-firmas span {
+    display: block;
+    border-top: 1px solid #111827;
+    color: transparent;
+    line-height: 0;
 }
 
 .comp-nota {
     margin-top: 1.5rem;
     font-size: 0.78rem;
-    color: #64748b;
+    color: #4b5563;
     text-align: center;
 }
 
@@ -2994,7 +3057,25 @@ form label .text-red-500 {
 
     .comp-sheet {
         border: none;
-        border-radius: 0;
         max-width: 100%;
+        padding: 0;
+        color: #000;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
+
+    .comp-grid > div,
+    .comp-motivo { border-color: #777; }
+
+    .comp-head,
+    .comp-section-title { border-color: #000; }
+}
+
+@media (max-width: 640px) {
+    .comp-sheet { padding: 1.25rem; }
+    .comp-head { flex-direction: column; }
+    .comp-folio { text-align: left; }
+    .comp-grid { grid-template-columns: 1fr; }
+    .comp-firmas { gap: 1rem; }
+    .comp-firmas > div { width: 50%; }
 }
