@@ -7,5 +7,6 @@ import com.odontologia.odontologia.Entity.Odontologo;
 
 @Repository
 public interface OdontologoRepository extends JpaRepository<Odontologo, Long> {
-    // Puedes agregar métodos personalizados de consulta aquí si es necesario
+    // Odontólogos cuya cadena de especialidades contiene el texto (para filtrar por especialidad/tipo de cita)
+    java.util.List<Odontologo> findByEspecialidadesContainingIgnoreCase(String especialidad);
 }

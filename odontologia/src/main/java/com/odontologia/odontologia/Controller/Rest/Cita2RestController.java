@@ -51,5 +51,11 @@ public class Cita2RestController {
     public void eliminarCita(@PathVariable Long id) {
         cita2Service.eliminarCita(id);
     }
+
+    // Confirmar cita (solo un día antes): confirma y envía el recordatorio automáticamente
+    @PostMapping("/citas/{id}/confirmar")
+    public Cita2Dto confirmarCita(@PathVariable Long id) {
+        return cita2Service.confirmarCita(id);
+    }
     
 }

@@ -7,5 +7,6 @@ import com.odontologia.odontologia.Entity.Paciente2;
 
 @Repository
 public interface Paciente2Repository extends JpaRepository<Paciente2, Long> {
-    // Puedes agregar métodos personalizados de consulta aquí si es necesario
+    // Búsqueda por cédula/documento para el módulo de agendar citas
+    java.util.Optional<Paciente2> findByDocumento(String documento);
 }

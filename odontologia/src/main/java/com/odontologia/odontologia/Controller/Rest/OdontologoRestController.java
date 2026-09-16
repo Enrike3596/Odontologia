@@ -35,6 +35,13 @@ public class OdontologoRestController {
         return odontologoService.obtenerOdontologoPorId(id);
     }
 
+    // Odontólogos por especialidad (tipo de cita = especialidad del odontólogo)
+    @GetMapping("/odontologos/por-especialidad")
+    public List<OdontologoDto> listarPorEspecialidad(
+            @org.springframework.web.bind.annotation.RequestParam("especialidad") String especialidad) {
+        return odontologoService.listarPorEspecialidad(especialidad);
+    }
+
     // Crear nuevo odontólogo
     @PostMapping("/odontologos")
     public OdontologoDto crearOdontologo(@RequestBody OdontologoDto odontologoDto) {

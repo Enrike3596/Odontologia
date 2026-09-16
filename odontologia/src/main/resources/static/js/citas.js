@@ -8,6 +8,9 @@ const AppointmentsModule = {
     currentAppointment: null,
     // Caché de la lista para abrir ver/editar al instante (sin loader)
     cachedCitas: [],
+    // Caché de odontólogos y tipos para el filtrado por especialidad
+    cachedOdontologos: [],
+    cachedTiposCita: [],
     editMode: false,
     editingAppointmentId: null,
     filters: {
@@ -145,6 +148,35 @@ const CitasAPI = {
             console.error('Error en deleteCita:', error);
             throw error;
         }
+    },
+
+    // Confirmar cita (solo un día antes): confirma y envía el recordatorio automáticamente
+    async confirmarCita(id) {
+        const response = await fetch(`${AppointmentsModule.apiBaseUrl}/citas/${id}/confirmar`, {
+            method: 'POST'
+        });
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || 'No se pudo confirmar la cita');
+        }
+        return await response.json();
+    },
+
+    // Buscar paciente por cédula/documento
+    async getPacientePorDocumento(documento) {
+        const response = await fetch(`${AppointmentsModule.apiBaseUrl}/pacientes/documento/${encodeURIComponent(documento)}`);
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || 'Paciente no encontrado');
+        }
+        return await response.json();
+    },
+
+    // Odontólogos por especialidad (tipo de cita = especialidad)
+    async getOdontologosPorEspecialidad(especialidad) {
+        const response = await fetch(`${AppointmentsModule.apiBaseUrl}/odontologos/por-especialidad?especialidad=${encodeURIComponent(especialidad)}`);
+        if (!response.ok) throw new Error('Error al filtrar odontólogos por especialidad');
+        return await response.json();
     }
 };
 
@@ -193,6 +225,18 @@ function setupEventListeners() {
         searchInput.addEventListener('input', debounce(handleSearchInput, 300));
     }
 
+    // Búsqueda de paciente por cédula con Enter
+    const cedulaInput = document.getElementById('cedulaPaciente');
+    if (cedulaInput && !cedulaInput.dataset.bound) {
+        cedulaInput.dataset.bound = '1';
+        cedulaInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                buscarPacientePorCedula();
+            }
+        });
+    }
+
     // Mobile menu toggle
     const mobileMenuToggle = document.getElementById('mobileMenuToggle');
     if (mobileMenuToggle) {
@@ -210,6 +254,9 @@ async function openNewAppointmentModal(editData = null) {
     if (modal && form) {
         // Limpiar formulario
         form.reset();
+        const cedulaInputReset = document.getElementById('cedulaPaciente');
+        if (cedulaInputReset) cedulaInputReset.value = '';
+        mostrarPacientePreview(null);
 
         // Configurar modo (crear o editar)
         const isEditMode = editData !== null;
@@ -240,12 +287,14 @@ async function openNewAppointmentModal(editData = null) {
         }
 
         try {
-            // Cargar selects primero (siempre necesario)
+            // Cargar selects primero (siempre necesario).
+            // En creación se precarga la cédula vacía; el paciente se trae por cédula.
             await Promise.all([
                 loadPacientesSelect(),
-                loadOdontologosSelect(),
                 loadTiposCitaSelect()
             ]);
+            // Precargar caché de odontólogos para el filtrado por especialidad
+            await loadOdontologosSelect(null, null, true);
 
             // Si es modo edición, llenar formulario con datos de la cita
             if (isEditMode && editData) {
@@ -267,31 +316,44 @@ async function openNewAppointmentModal(editData = null) {
                 try {
                     console.log('Estructura completa de editData:', JSON.stringify(editData, null, 2));
 
-                    // Paciente
+                    // Paciente (también se refleja en el campo de cédula)
                     const pacienteId = editData.paciente?.id || editData.pacienteId;
+                    const pacienteDoc = editData.paciente?.documento || editData.documento || '';
+                    const cedulaInputEdit = document.getElementById('cedulaPaciente');
                     if (pacienteId) {
+                        // Asegurar que el paciente esté en el select (por si se cargó por cédula antes)
+                        await ensurePacienteOption(pacienteId, editData.paciente);
                         pacienteSelect.value = pacienteId;
                         console.log('Paciente ID asignado:', pacienteId);
                     } else {
                         console.warn('No se encontró ID del paciente en los datos');
                     }
-
-                    // Odontólogo
-                    const odontologoId = editData.odontologo?.id || editData.odontologoId;
-                    if (odontologoId) {
-                        odontologoSelect.value = odontologoId;
-                        console.log('Odontólogo ID asignado:', odontologoId);
-                    } else {
-                        console.warn('No se encontró ID del odontólogo en los datos');
+                    if (cedulaInputEdit) {
+                        cedulaInputEdit.value = pacienteDoc || '';
                     }
+                    mostrarPacientePreview(editData.paciente);
 
-                    // Tipo de cita
+                    // Tipo de cita (especialidad): primero se fija y luego se filtran odontólogos
                     const tipoCitaId = editData.tipoCita?.id || editData.tipoCitaId;
                     if (tipoCitaId) {
                         tipoCitaSelect.value = tipoCitaId;
                         console.log('Tipo de cita ID asignado:', tipoCitaId);
                     } else {
                         console.warn('No se encontró ID del tipo de cita en los datos');
+                    }
+
+                    // Odontólogo: filtrar por la especialidad elegida y luego fijar el valor
+                    const odontologoId = editData.odontologo?.id || editData.odontologoId;
+                    const tipoNombre = tipoCitaSelect.selectedOptions?.[0]?.textContent || '';
+                    await filtrarOdontologosPorEspecialidad(tipoNombre, true);
+                    if (odontologoId) {
+                        if (!Array.from(odontologoSelect.options).some(o => String(o.value) === String(odontologoId))) {
+                            await ensureOdontologoOption(odontologoId, editData.odontologo);
+                        }
+                        odontologoSelect.value = odontologoId;
+                        console.log('Odontólogo ID asignado:', odontologoId);
+                    } else {
+                        console.warn('No se encontró ID del odontólogo en los datos');
                     }
 
                     // Fecha y hora
@@ -334,6 +396,10 @@ async function openNewAppointmentModal(editData = null) {
                     if (observacionesInput) {
                         observacionesInput.value = editData.observaciones || '';
                     }
+                    const motivoInput = document.getElementById('motivoConsulta');
+                    if (motivoInput) {
+                        motivoInput.value = editData.observaciones || '';
+                    }
 
                     // Estado
                     const estadoSelect = document.getElementById('estado');
@@ -364,10 +430,14 @@ async function openNewAppointmentModal(editData = null) {
         // Mostrar modal
         modal.classList.remove('hidden');
 
-        // Focus en el primer campo
+        // Focus en la cédula (nuevo flujo: primero se digita la cédula)
         setTimeout(() => {
-            const firstSelect = form.querySelector('select');
-            if (firstSelect) firstSelect.focus();
+            const cedulaInput = document.getElementById('cedulaPaciente');
+            if (cedulaInput) cedulaInput.focus();
+            else {
+                const firstSelect = form.querySelector('select');
+                if (firstSelect) firstSelect.focus();
+            }
         }, 100);
 
         // Animación
@@ -704,6 +774,24 @@ function showAppointmentDetailsModal(appointment) {
     // Guardar referencia de la cita actual
     AppointmentsModule.currentAppointment = appointment;
 
+    // Botón de confirmación: bloqueado por defecto, solo se habilita un día antes
+    const btnConfirmar = document.getElementById('btnConfirmarDetalle');
+    const hintConfirmar = document.getElementById('confirmarDetalleHint');
+    if (btnConfirmar) {
+        const habilitado = puedeConfirmarCita(appointment);
+        btnConfirmar.disabled = !habilitado;
+        btnConfirmar.classList.toggle('opacity-50', !habilitado);
+        btnConfirmar.classList.toggle('cursor-not-allowed', !habilitado);
+        btnConfirmar.title = habilitado
+            ? 'Confirmar la cita y enviar el recordatorio automáticamente'
+            : 'La confirmación se habilita únicamente un día antes de la cita';
+        if (hintConfirmar) {
+            hintConfirmar.textContent = habilitado
+                ? 'Puede confirmar ahora: al hacerlo se enviará automáticamente el recordatorio.'
+                : 'La confirmación se habilita únicamente un día antes de la cita y envía el recordatorio automáticamente.';
+        }
+    }
+
     // Mostrar modal
     const modal = document.getElementById('viewAppointmentModal');
     modal.classList.remove('hidden');
@@ -784,7 +872,8 @@ async function editAppointment(appointmentId) {
 }
 
 /**
- * Confirmar cita
+ * Confirmar cita: botón bloqueado por defecto, solo se habilita un día antes.
+ * Al confirmar se envía automáticamente el recordatorio de la cita asignada.
  */
 async function confirmAppointment(appointmentId) {
     // Obtener datos reales de la cita desde la API
@@ -801,6 +890,28 @@ async function confirmAppointment(appointmentId) {
     }
 
     const info = normalizeAppointmentForDialogs(appointment);
+
+    // Regla de negocio: solo un día antes (la fecha de la cita debe ser mañana)
+    if (!puedeConfirmarCita(appointment)) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Confirmación no disponible',
+            html: `
+                <div class="text-center">
+                    <p class="text-gray-600">La cita de <strong>${info.pacienteNombre}</strong> solo puede confirmarse <strong>un día antes</strong>.</p>
+                    <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                        <p class="text-sm text-blue-700">
+                            <i class="fas fa-calendar-day mr-1"></i>
+                            Fecha de la cita: ${formatDate(info.fechaCita)} — el botón se habilitará el día anterior.
+                        </p>
+                    </div>
+                </div>
+            `,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#3b82f6'
+        });
+        return;
+    }
 
     const result = await Swal.fire({
         icon: 'question',
@@ -840,9 +951,8 @@ async function confirmAppointment(appointmentId) {
                 }
             });
 
-            // Llamada real para confirmar: actualizar estado en backend
-            // Intentamos usar la API para actualizar el estado a CONFIRMADA
-            await CitasAPI.updateCita(appointmentId, { estado: 'CONFIRMADA' });
+            // Confirmación + envío automático del recordatorio (POST /api/citas/{id}/confirmar)
+            await CitasAPI.confirmarCita(appointmentId);
 
             // Confirmar éxito
             await Swal.fire({
@@ -854,7 +964,7 @@ async function confirmAppointment(appointmentId) {
                         <div class="mt-4 p-3 bg-green-50 rounded-lg">
                             <p class="text-sm text-green-700">
                                 <i class="fas fa-bell mr-1"></i>
-                                Se ha enviado una notificación al paciente
+                                Se envió automáticamente el recordatorio de la cita al paciente
                             </p>
                         </div>
                     </div>
@@ -873,11 +983,26 @@ async function confirmAppointment(appointmentId) {
             Swal.fire({
                 icon: 'error',
                 title: 'Error al confirmar',
-                text: 'No se pudo confirmar la cita.',
+                text: (error && error.message) ? String(error.message).slice(0, 400) : 'No se pudo confirmar la cita.',
                 confirmButtonColor: '#dc2626'
             });
         }
     }
+}
+
+/** Confirmar desde el modal de detalle (usa la cita actual). */
+async function confirmAppointmentFromModal() {
+    const cita = AppointmentsModule.currentAppointment;
+    if (!cita || !cita.id) {
+        Swal.fire({ icon: 'warning', title: 'Sin cita seleccionada', confirmButtonColor: '#f59e0b' });
+        return;
+    }
+    await confirmAppointment(cita.id);
+    // Refrescar el detalle si sigue abierto
+    try {
+        const actualizada = await CitasAPI.getCitaById(cita.id);
+        showAppointmentDetailsModal(actualizada);
+    } catch (e) { /* el listado ya se recargó */ }
 }
 
 /**
@@ -1687,6 +1812,7 @@ function updateAppointmentsTable(citas) {
                     <button onclick="editAppointment(${cita.id})" class="sys-table-action sys-table-action-edit" title="Editar" aria-label="Editar">
                         <i class="fas fa-edit text-sm"></i>
                     </button>
+                    ${(() => { const ok = puedeConfirmarCita(cita); return `<button ${ok ? `onclick="confirmAppointment(${cita.id})"` : 'disabled'} class="sys-table-action ${ok ? 'sys-table-action-confirm' : 'opacity-40 cursor-not-allowed'}" title="${ok ? 'Confirmar cita y enviar recordatorio' : 'La confirmación se habilita un día antes de la cita'}" aria-label="Confirmar cita"><i class="fas fa-check-circle text-sm ${ok ? 'text-emerald-600' : 'text-gray-300'}"></i></button>`; })()}
                     <button onclick="deleteAppointment(${cita.id})" class="sys-table-action sys-table-action-delete" title="Eliminar" aria-label="Eliminar">
                         <i class="fas fa-trash text-sm"></i>
                     </button>
@@ -1823,52 +1949,228 @@ async function loadPacientesSelect() {
         const select = document.getElementById('pacienteId');
 
         if (select) {
-            select.innerHTML = '<option value="">Seleccionar paciente...</option>';
+            const current = select.value;
+            select.innerHTML = '<option value="">Ingrese la cédula para buscar...</option>';
             pacientes.forEach(paciente => {
                 const option = document.createElement('option');
                 option.value = paciente.id;
-                option.textContent = `${paciente.nombres} ${paciente.apellidos}`;
+                option.textContent = `${paciente.nombres} ${paciente.apellidos} · CC ${paciente.documento || ''}`;
+                option.dataset.documento = paciente.documento || '';
                 select.appendChild(option);
             });
+            if (current) select.value = current;
         }
     } catch (error) {
         console.error('Error al cargar pacientes:', error);
         // Si falla, mostrar opción por defecto
         const select = document.getElementById('pacienteId');
         if (select) {
-            select.innerHTML = '<option value="">Error al cargar pacientes</option>';
+            select.innerHTML = '<option value="">Ingrese la cédula para buscar...</option>';
         }
     }
 }
 
+/** Normaliza texto (minúsculas, sin tildes) para comparar especialidades. */
+function normTxtCitas(s) {
+    return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+}
+
+/** Etiqueta legible del odontólogo con su especialidad. */
+function etiquetaOdontologo(o) {
+    const nombre = `Dr. ${(o.nombre || '').trim()} ${(o.apellido || '').trim()}`.trim();
+    const esp = (o.especialidades || '').trim();
+    return esp ? `${nombre} — ${esp}` : nombre;
+}
+
+/** Pinta el select de odontólogos con una lista dada. */
+function pintarOdontologos(lista, selectedId) {
+    const select = document.getElementById('odontologoId');
+    if (!select) return;
+    if (!Array.isArray(lista) || lista.length === 0) {
+        select.innerHTML = '<option value="">Sin odontólogos para esta especialidad</option>';
+        return;
+    }
+    select.innerHTML = '<option value="">Seleccionar odontólogo...</option>';
+    lista.forEach(o => {
+        const option = document.createElement('option');
+        option.value = o.id;
+        option.textContent = etiquetaOdontologo(o);
+        select.appendChild(option);
+    });
+    if (selectedId) select.value = selectedId;
+}
+
 /**
- * Carga la lista de odontólogos en el select
+ * Carga la lista de odontólogos en el select.
+ * Si se indica especialidadNombre, filtra por esa especialidad (tipo de cita).
  */
-async function loadOdontologosSelect() {
+async function loadOdontologosSelect(especialidadNombre, selectedId, soloCache) {
     try {
-        const response = await fetch('/api/odontologos');
-        if (!response.ok) throw new Error('Error al cargar odontólogos');
-
-        const odontologos = await response.json();
-        const select = document.getElementById('odontologoId');
-
-        if (select) {
-            select.innerHTML = '<option value="">Seleccionar odontólogo...</option>';
-            odontologos.forEach(odontologo => {
-                const option = document.createElement('option');
-                option.value = odontologo.id;
-                option.textContent = `Dr. ${odontologo.nombre} ${odontologo.apellido}`;
-                select.appendChild(option);
-            });
+        let odontologos = AppointmentsModule.cachedOdontologos || [];
+        if (odontologos.length === 0) {
+            const response = await fetch('/api/odontologos');
+            if (!response.ok) throw new Error('Error al cargar odontólogos');
+            odontologos = await response.json();
+            AppointmentsModule.cachedOdontologos = Array.isArray(odontologos) ? odontologos : [];
         }
+        if (soloCache) return AppointmentsModule.cachedOdontologos;
+        if (especialidadNombre) {
+            await filtrarOdontologosPorEspecialidad(especialidadNombre, false, selectedId);
+        } else {
+            pintarOdontologos(AppointmentsModule.cachedOdontologos, selectedId);
+        }
+        return AppointmentsModule.cachedOdontologos;
     } catch (error) {
         console.error('Error al cargar odontólogos:', error);
-        // Si falla, mostrar opción por defecto
         const select = document.getElementById('odontologoId');
         if (select) {
             select.innerHTML = '<option value="">Error al cargar odontólogos</option>';
         }
+        return [];
     }
+}
+
+/**
+ * Filtra los odontólogos por la especialidad elegida en Tipo de Cita.
+ * Usa el endpoint /api/odontologos/por-especialidad con respaldo local.
+ */
+async function filtrarOdontologosPorEspecialidad(especialidadNombre, silencioso, selectedId) {
+    const select = document.getElementById('odontologoId');
+    const hint = document.getElementById('odontologoFiltroHint');
+    const esp = String(especialidadNombre || '').trim();
+    if (!esp || /^seleccionar/i.test(esp)) {
+        if (select) select.innerHTML = '<option value="">Seleccione primero la especialidad...</option>';
+        if (hint) hint.textContent = 'Se muestran solo los odontólogos de la especialidad elegida.';
+        return [];
+    }
+    try {
+        const filtrados = await CitasAPI.getOdontologosPorEspecialidad(esp);
+        pintarOdontologos(filtrados, selectedId);
+        if (hint) hint.textContent = filtrados.length > 0
+            ? `${filtrados.length} odontólogo(s) con especialidad en ${esp}.`
+            : `No hay odontólogos registrados con especialidad en ${esp}.`;
+        return filtrados;
+    } catch (e) {
+        // Respaldo local insensible a tildes
+        const normEsp = normTxtCitas(esp);
+        const locales = (AppointmentsModule.cachedOdontologos || []).filter(o => normTxtCitas(o.especialidades).includes(normEsp));
+        pintarOdontologos(locales, selectedId);
+        if (!silencioso && locales.length === 0) console.warn('Sin odontólogos locales para:', esp);
+        return locales;
+    }
+}
+
+/** Al cambiar el Tipo de Cita (especialidad) se recargan los odontólogos asociados. */
+async function onTipoCitaChange() {
+    const tipoSelect = document.getElementById('tipoCitaId');
+    const nombre = tipoSelect?.selectedOptions?.[0]?.textContent || '';
+    await filtrarOdontologosPorEspecialidad(nombre, false);
+}
+
+/** Asegura que un paciente exista como opción del select (edición). */
+async function ensurePacienteOption(pacienteId, paciente) {
+    const select = document.getElementById('pacienteId');
+    if (!select) return;
+    if (Array.from(select.options).some(o => String(o.value) === String(pacienteId))) return;
+    if (paciente && paciente.nombres) {
+        const option = document.createElement('option');
+        option.value = pacienteId;
+        option.textContent = `${paciente.nombres} ${paciente.apellidos || ''} · CC ${paciente.documento || ''}`;
+        select.appendChild(option);
+        return;
+    }
+    try {
+        const p = await (await fetch(`/api/pacientes/${pacienteId}`)).json();
+        const option = document.createElement('option');
+        option.value = p.id;
+        option.textContent = `${p.nombres} ${p.apellidos} · CC ${p.documento || ''}`;
+        select.appendChild(option);
+    } catch (e) { /* noop */ }
+}
+
+/** Asegura que un odontólogo exista como opción del select (edición). */
+async function ensureOdontologoOption(odontologoId, odontologo) {
+    const select = document.getElementById('odontologoId');
+    if (!select) return;
+    const nombre = odontologo && (odontologo.nombre || odontologo.nombres)
+        ? etiquetaOdontologo({ nombre: odontologo.nombre || odontologo.nombres, apellido: odontologo.apellido || odontologo.apellidos, especialidades: odontologo.especialidades || '' })
+        : `Odontólogo #${odontologoId}`;
+    const option = document.createElement('option');
+    option.value = odontologoId;
+    option.textContent = nombre;
+    select.appendChild(option);
+}
+
+/** Muestra el nombre del paciente traído por cédula. */
+function mostrarPacientePreview(paciente) {
+    const el = document.getElementById('pacienteNombrePreview');
+    if (!el) return;
+    if (paciente && (paciente.nombres || paciente.apellidos)) {
+        el.textContent = `Paciente: ${paciente.nombres || ''} ${paciente.apellidos || ''} · CC ${paciente.documento || ''}`.trim();
+        el.classList.remove('hidden');
+    } else {
+        el.textContent = '';
+        el.classList.add('hidden');
+    }
+}
+
+/**
+ * Busca el paciente por la cédula digitada y lo deja seleccionado.
+ */
+async function buscarPacientePorCedula() {
+    const cedulaInput = document.getElementById('cedulaPaciente');
+    const select = document.getElementById('pacienteId');
+    const cedula = String(cedulaInput?.value || '').trim();
+    if (!cedula) {
+        Swal.fire({ icon: 'warning', title: 'Ingrese la cédula', text: 'Digite la cédula del paciente para buscarlo.', confirmButtonColor: '#f59e0b' });
+        cedulaInput?.focus();
+        return;
+    }
+    try {
+        Swal.fire({ title: 'Buscando paciente...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        const paciente = await CitasAPI.getPacientePorDocumento(cedula);
+        Swal.close();
+        await ensurePacienteOption(paciente.id, paciente);
+        if (select) select.value = paciente.id;
+        if (cedulaInput) cedulaInput.value = paciente.documento || cedula;
+        mostrarPacientePreview(paciente);
+        Swal.fire({
+            icon: 'success',
+            title: 'Paciente encontrado',
+            text: `${paciente.nombres} ${paciente.apellidos}`,
+            timer: 1600,
+            showConfirmButton: false
+        });
+    } catch (error) {
+        console.error('Paciente no encontrado por cédula:', error);
+        Swal.close();
+        mostrarPacientePreview(null);
+        Swal.fire({
+            icon: 'error',
+            title: 'Paciente no encontrado',
+            text: `No existe un paciente con cédula ${cedula}. Verifíquela o regístrelo en el módulo de Pacientes.`,
+            confirmButtonColor: '#dc2626'
+        });
+    }
+}
+
+/** Clave local YYYY-MM-DD de una fecha. */
+function claveFechaLocal(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+/**
+ * Regla del botón de confirmación: bloqueado por defecto,
+ * se habilita únicamente un día antes de la cita (fecha == mañana) y en estado PENDIENTE.
+ */
+function puedeConfirmarCita(cita) {
+    if (!cita) return false;
+    if (String(cita.estado || '').toUpperCase() !== 'PENDIENTE') return false;
+    const fechaStr = String(cita.fecha || cita.fechaCita || '').slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) return false;
+    const manana = new Date();
+    manana.setDate(manana.getDate() + 1);
+    return fechaStr === claveFechaLocal(manana);
 }
 
 /**
@@ -1901,6 +2203,7 @@ async function loadTiposCitaSelect() {
                 option.textContent = tipo.nombre || tipo.name || tipo.descripcion || tipo.id;
                 select.appendChild(option);
             });
+            AppointmentsModule.cachedTiposCita = source;
         }
     } catch (error) {
         console.error('Error al cargar tipos de cita:', error);
@@ -1929,6 +2232,11 @@ window.closeViewAppointmentModal = closeViewAppointmentModal;
 window.editAppointment = editAppointment;
 window.deleteAppointment = deleteAppointment;
 window.confirmAppointment = confirmAppointment;
+window.confirmAppointmentFromModal = confirmAppointmentFromModal;
+window.puedeConfirmarCita = puedeConfirmarCita;
+window.buscarPacientePorCedula = buscarPacientePorCedula;
+window.onTipoCitaChange = onTipoCitaChange;
+window.filtrarOdontologosPorEspecialidad = filtrarOdontologosPorEspecialidad;
 window.cancelAppointment = cancelAppointment;
 window.openCalendarView = openCalendarView;
 window.printAppointment = printAppointment;

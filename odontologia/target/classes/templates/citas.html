@@ -418,7 +418,7 @@
           </button>
         </div>
         <form id="newAppointmentForm" class="sys-form-body">
-          <!-- Información del paciente -->
+          <!-- 1. Información del paciente: se ingresa la cédula y se trae el paciente -->
           <div>
             <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
               <i class="fas fa-user-injured mr-2 text-emerald-500"></i>
@@ -426,21 +426,60 @@
             </h4>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Paciente <span class="required-asterisk" aria-hidden="true">*</span></label>
-                <select id="pacienteId" name="pacienteId" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
-                  <option value="">Cargando pacientes...</option>
-                </select>
+                <label class="block text-sm font-medium text-gray-700 mb-2" for="cedulaPaciente">Cédula del paciente <span class="required-asterisk" aria-hidden="true">*</span></label>
+                <div class="flex gap-2">
+                  <input type="text" id="cedulaPaciente" name="cedulaPaciente" inputmode="numeric" placeholder="Ingrese la cédula..." class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500" />
+                  <button type="button" class="sys-action-btn sys-action-secondary whitespace-nowrap" onclick="buscarPacientePorCedula()" title="Buscar paciente por cédula">
+                    <i class="fas fa-search mr-1"></i>Buscar
+                  </button>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Digite la cédula y pulse Buscar para traer el paciente.</p>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Cita <span class="required-asterisk" aria-hidden="true">*</span></label>
-                <select id="tipoCitaId" name="tipoCitaId" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Paciente <span class="required-asterisk" aria-hidden="true">*</span></label>
+                <select id="pacienteId" name="pacienteId" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+                  <option value="">Ingrese la cédula para buscar...</option>
+                </select>
+                <p class="text-xs text-emerald-700 mt-1 hidden" id="pacienteNombrePreview"></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Asignación de profesional: tipo de cita = especialidad, filtra el odontólogo -->
+          <div>
+            <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
+              <i class="fas fa-user-md mr-2 text-emerald-500"></i>
+              Asignación de Profesional
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Cita (Especialidad) <span class="required-asterisk" aria-hidden="true">*</span></label>
+                <select id="tipoCitaId" name="tipoCitaId" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500" onchange="onTipoCitaChange()">
                   <option value="">Cargando tipos de cita...</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-1">Corresponde a las especialidades de los odontólogos.</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Odontólogo <span class="required-asterisk" aria-hidden="true">*</span></label>
+                <select id="odontologoId" name="odontologoId" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+                  <option value="">Seleccione primero la especialidad...</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-1" id="odontologoFiltroHint">Se muestran solo los odontólogos de la especialidad elegida.</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Consultorio <span class="required-asterisk" aria-hidden="true">*</span></label>
+                <select id="consultorio" name="consultorio" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+                  <option value="">Asignar automáticamente</option>
+                  <option value="1">Consultorio 1</option>
+                  <option value="2">Consultorio 2</option>
+                  <option value="3">Consultorio 3</option>
+                  <option value="4">Consultorio 4</option>
                 </select>
               </div>
             </div>
           </div>
 
-          <!-- Información de la cita -->
+          <!-- 3. Programación de la cita -->
           <div>
             <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
               <i class="fas fa-calendar-alt mr-2 text-emerald-500"></i>
@@ -480,36 +519,6 @@
                   <option value="60">1 hora</option>
                   <option value="90">1.5 horas</option>
                   <option value="120">2 horas</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- Información del odontólogo -->
-          <div>
-            <h4 class="text-md font-medium text-gray-900 mb-3 flex items-center">
-              <i class="fas fa-user-md mr-2 text-emerald-500"></i>
-              Asignación de Profesional
-            </h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Odontólogo <span class="required-asterisk" aria-hidden="true">*</span></label>
-                <select id="odontologoId" name="odontologoId" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
-                  <option value="">Seleccionar odontólogo...</option>
-                  <option value="1">Dr. Roberto Martínez - Odontología General</option>
-                  <option value="2">Dra. María López - Endodoncia</option>
-                  <option value="3">Dr. Luis García - Ortodoncia</option>
-                  <option value="4">Dra. Carmen Silva - Periodoncia</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Consultorio <span class="required-asterisk" aria-hidden="true">*</span></label>
-                <select id="consultorio" name="consultorio" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
-                  <option value="">Asignar automáticamente</option>
-                  <option value="1">Consultorio 1</option>
-                  <option value="2">Consultorio 2</option>
-                  <option value="3">Consultorio 3</option>
-                  <option value="4">Consultorio 4</option>
                 </select>
               </div>
             </div>
@@ -624,6 +633,11 @@
           </div>
 
           <div class="sys-detail-footer">
+            <button id="btnConfirmarDetalle" class="sys-action-btn sys-action-primary" onclick="confirmAppointmentFromModal()" disabled title="La confirmación se habilita un día antes de la cita">
+              <i class="fas fa-check-circle mr-2"></i>
+              Confirmar cita
+            </button>
+            <p class="text-xs text-gray-500 w-full mt-2" id="confirmarDetalleHint">La confirmación se habilita únicamente un día antes de la cita y envía el recordatorio automáticamente.</p>
             <button class="sys-action-btn sys-action-secondary" onclick="printAppointment()">
               <i class="fas fa-print mr-2"></i>
               Imprimir

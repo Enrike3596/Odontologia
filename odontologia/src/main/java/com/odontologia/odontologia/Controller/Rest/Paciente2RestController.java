@@ -35,6 +35,12 @@ public class Paciente2RestController {
         return paciente2Service.obtenerPacientePorId(id);
     }
 
+    // Buscar paciente por cédula/documento (módulo agendar citas)
+    @GetMapping("/pacientes/documento/{documento}")
+    public Paciente2Dto obtenerPacientePorDocumento(@PathVariable String documento) {
+        return paciente2Service.obtenerPacientePorDocumento(documento);
+    }
+
     // Crear nuevo paciente
     @PostMapping("/pacientes")
     public Paciente2Dto crearPaciente2(@RequestBody Paciente2Dto paciente2Dto) {

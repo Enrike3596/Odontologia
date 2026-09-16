@@ -34,6 +34,17 @@ public class Paciente2ServiceImpl  implements Paciente2Service {
 	}
 
 	@Override
+	public Paciente2Dto obtenerPacientePorDocumento(String documento) {
+		String doc = documento == null ? "" : documento.trim();
+		if (doc.isEmpty()) {
+			throw new RuntimeException("Debe ingresar la cédula del paciente");
+		}
+		Paciente2 p = paciente2Repository.findByDocumento(doc)
+				.orElseThrow(() -> new RuntimeException("Paciente no encontrado con documento: " + doc));
+		return convertirEntityADto(p);
+	}
+
+	@Override
 	public Paciente2Dto crearPaciente(Paciente2Dto pacienteDto) {
 		try {
 			Paciente2 p = convertirDtoAEntity(pacienteDto);

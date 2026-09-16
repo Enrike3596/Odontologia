@@ -144,6 +144,41 @@ public class Cita2ServiceImpl implements Cita2Service{
 		citaRepository.deleteById(id);
 	}
 
+	@Override
+	@org.springframework.transaction.annotation.Transactional
+	public Cita2Dto confirmarCita(Long id) {
+		Cita2 cita = citaRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Cita no encontrada con ID: " + id));
+		if (cita.getEstado() == com.odontologia.odontologia.Entity.EstadoCitaEnum.CANCELADA
+				|| cita.getEstado() == com.odontologia.odontologia.Entity.EstadoCitaEnum.COMPLETADA) {
+			throw new RuntimeException("Solo se pueden confirmar citas pendientes");
+		}
+		if (cita.getEstado() != com.odontologia.odontologia.Entity.EstadoCitaEnum.CONFIRMADA) {
+			java.time.LocalDate manana = java.time.LocalDate.now().plusDays(1);
+			if (cita.getFecha() == null || !cita.getFecha().equals(manana)) {
+				throw new RuntimeException("La cita solo puede confirmarse un día antes (mañana: " + manana + ")");
+			}
+			cita.setEstado(com.odontologia.odontologia.Entity.EstadoCitaEnum.CONFIRMADA);
+			cita = citaRepository.save(cita);
+		}
+		Cita2Dto resultado = convertirEntityADto(cita);
+		// Envío automático del recordatorio de la cita asignada
+		try {
+			if (emailService != null) {
+				emailService.enviarRecordatorio(resultado);
+			}
+		} catch (Exception e) {
+			System.err.println("[Citas] Confirmada pero falló el recordatorio de la cita " + id + ": " + e.getMessage());
+		}
+		try {
+			cita.setRecordatorioEnviado(true);
+			citaRepository.save(cita);
+		} catch (Exception e) {
+			System.err.println("[Citas] No se pudo marcar recordatorio_enviado en cita " + id + ": " + e.getMessage());
+		}
+		return resultado;
+	}
+
 	// Conversión Entity -> DTO
 	private Cita2Dto convertirEntityADto(Cita2 cita) {
 		Cita2Dto dto = new Cita2Dto();
@@ -159,6 +194,7 @@ public class Cita2ServiceImpl implements Cita2Service{
 			pdto.setId(p.getId());
 			pdto.setNombres(p.getNombres());
 			pdto.setApellidos(p.getApellidos());
+			pdto.setDocumento(p.getDocumento());
 			pdto.setGenero(p.getGenero());
 			pdto.setEmail(p.getEmail());
 			pdto.setTelefono(p.getTelefono());
@@ -172,6 +208,7 @@ public class Cita2ServiceImpl implements Cita2Service{
 			odto.setNombre(o.getNombre());
 			odto.setApellido(o.getApellido());
 			odto.setMatricula(o.getMatricula());
+			odto.setEspecialidades(o.getEspecialidades());
 			dto.setOdontologo(odto);
 		}
 

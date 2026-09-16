@@ -34,6 +34,45 @@ public class OdontologoServiceImpl implements OdontologoService {
 	}
 
 	@Override
+	public java.util.List<OdontologoDto> listarPorEspecialidad(String especialidad) {
+		String esp = especialidad == null ? "" : especialidad.trim();
+		if (esp.isEmpty()) {
+			return listarOdontologos();
+		}
+		java.util.List<Odontologo> directos;
+		try {
+			directos = odontologoRepository.findByEspecialidadesContainingIgnoreCase(esp);
+		} catch (Exception e) {
+			directos = java.util.Collections.emptyList();
+		}
+		String normEsp = normalizar(esp);
+		java.util.List<Odontologo> todos = odontologoRepository.findAll();
+		java.util.Set<Long> vistos = new java.util.HashSet<>();
+		java.util.List<OdontologoDto> resultado = new java.util.ArrayList<>();
+		for (Odontologo o : directos) {
+			if (vistos.add(o.getId())) {
+				resultado.add(convertirEntityADto(o));
+			}
+		}
+		// Respaldo insensible a tildes: compara normalizando ambos lados
+		for (Odontologo o : todos) {
+			if (o.getId() != null && vistos.contains(o.getId())) {
+				continue;
+			}
+			if (o.getEspecialidades() != null && normalizar(o.getEspecialidades()).contains(normEsp)) {
+				vistos.add(o.getId());
+				resultado.add(convertirEntityADto(o));
+			}
+		}
+		return resultado;
+	}
+
+	private static String normalizar(String s) {
+		String n = java.text.Normalizer.normalize(s == null ? "" : s, java.text.Normalizer.Form.NFD);
+		return n.replaceAll("\\p{M}", "").toLowerCase();
+	}
+
+	@Override
 	public OdontologoDto crearOdontologo(OdontologoDto odontologoDto) {
 		Odontologo o = convertirDtoAEntity(odontologoDto);
 		Odontologo guardado = odontologoRepository.save(o);
