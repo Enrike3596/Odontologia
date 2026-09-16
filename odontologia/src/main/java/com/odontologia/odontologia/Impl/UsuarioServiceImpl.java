@@ -8,7 +8,9 @@ import org.springframework.stereotype.Service;
 
 import com.odontologia.odontologia.Dto.RolDto;
 import com.odontologia.odontologia.Dto.UsuarioDto;
+import com.odontologia.odontologia.Entity.Genero;
 import com.odontologia.odontologia.Entity.Rol;
+import com.odontologia.odontologia.Entity.TipoDocumento;
 import com.odontologia.odontologia.Entity.Usuario;
 import com.odontologia.odontologia.Repository.RolRepository;
 import com.odontologia.odontologia.Repository.UsuarioRepository;
@@ -57,10 +59,10 @@ public class UsuarioServiceImpl implements UsuarioService {
 			Usuario u = new Usuario();
 			u.setNombres(usuarioDto.getNombres());
 			u.setApellidos(usuarioDto.getApellidos());
-			u.setTipoDocumento(usuarioDto.getTipoDocumento());
+			u.setTipoDocumento(TipoDocumento.desde(usuarioDto.getTipoDocumento()).getCodigo());
 			u.setDocumento(usuarioDto.getDocumento());
 			u.setFechaNacimiento(usuarioDto.getFechaNacimiento());
-			u.setGenero(usuarioDto.getGenero());
+			u.setGenero(Genero.desde(usuarioDto.getGenero()).getCodigo());
 			u.setEmail(usuarioDto.getEmail());
 			u.setTelefono(usuarioDto.getTelefono());
 			u.setDireccion(usuarioDto.getDireccion());
@@ -112,10 +114,10 @@ public class UsuarioServiceImpl implements UsuarioService {
 
 		existente.setNombres(usuarioDto.getNombres());
 		existente.setApellidos(usuarioDto.getApellidos());
-		existente.setTipoDocumento(usuarioDto.getTipoDocumento());
+		existente.setTipoDocumento(TipoDocumento.desde(usuarioDto.getTipoDocumento()).getCodigo());
 		existente.setDocumento(usuarioDto.getDocumento());
 		existente.setFechaNacimiento(usuarioDto.getFechaNacimiento());
-		existente.setGenero(usuarioDto.getGenero());
+		existente.setGenero(Genero.desde(usuarioDto.getGenero()).getCodigo());
 		existente.setEmail(usuarioDto.getEmail());
 		existente.setTelefono(usuarioDto.getTelefono());
 		existente.setDireccion(usuarioDto.getDireccion());

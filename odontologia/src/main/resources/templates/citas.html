@@ -113,6 +113,9 @@
           <li><a href="/citas" class="nav-link block px-4 py-2 rounded-lg hover:bg-emerald-50 text-emerald-600 font-medium bg-emerald-50" data-view="citas">
             <i class="fas fa-calendar-alt mr-3 text-emerald-500"></i>Citas Médicas
           </a></li>
+          <li data-require-admin="true"><a href="/agenda" class="nav-link block px-4 py-2 rounded-lg hover:bg-teal-50" data-view="agenda">
+            <i class="fas fa-calendar-days mr-3 text-gray-500"></i>Agenda Médica
+          </a></li>
           <li><a href="/pacientes" class="nav-link block px-4 py-2 rounded-lg hover:bg-blue-50" data-view="pacientes">
             <i class="fas fa-user-injured mr-3 text-gray-500"></i>Pacientes
           </a></li>
@@ -543,9 +546,9 @@
                 </div>
               </div>
               <div class="flex items-center">
-                <input type="checkbox" id="enviarRecordatorio" name="enviarRecordatorio" class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded">
+                <input type="checkbox" id="enviarRecordatorio" name="enviarRecordatorio" checked class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded">
                 <label for="enviarRecordatorio" class="ml-2 block text-sm text-gray-700">
-                  Enviar recordatorio al paciente (SMS/Email)
+                  Enviar confirmación y recordatorio al paciente (Email)
                 </label>
               </div>
             </div>
@@ -631,11 +634,48 @@
     </div>
   </div>
 
+  <!-- Comprobante de cita (punto 3): solo visible al imprimir -->
+  <section id="comprobanteCita" class="print-only" aria-hidden="true">
+    <div class="comp-sheet">
+      <div class="comp-head">
+        <div>
+          <h1>Clínica Odontología</h1>
+          <p>Comprobante de cita odontológica</p>
+        </div>
+        <div class="comp-folio">
+          <p id="compFolio">Folio CITA-—</p>
+          <p class="comp-emision">Emitido: <span id="compFechaEmision">—</span></p>
+        </div>
+      </div>
+      <div class="comp-grid">
+        <div><strong>Paciente:</strong> <span id="compPaciente">—</span></div>
+        <div><strong>Documento:</strong> <span id="compDocumento">—</span></div>
+        <div><strong>Teléfono:</strong> <span id="compTelefono">—</span></div>
+        <div><strong>Fecha:</strong> <span id="compFecha">—</span></div>
+        <div><strong>Hora:</strong> <span id="compHora">—</span></div>
+        <div><strong>Tipo de cita:</strong> <span id="compTipo">—</span></div>
+        <div><strong>Odontólogo:</strong> <span id="compOdontologo">—</span></div>
+        <div><strong>Consultorio:</strong> <span id="compConsultorio">—</span></div>
+        <div><strong>Estado:</strong> <span id="compEstado">—</span></div>
+      </div>
+      <div class="comp-motivo">
+        <strong>Motivo de la consulta:</strong>
+        <p id="compMotivo">—</p>
+      </div>
+      <div class="comp-firmas">
+        <div><span>___________________________</span><p>Firma del paciente</p></div>
+        <div><span>___________________________</span><p>Sello y firma de la clínica</p></div>
+      </div>
+      <p class="comp-nota">Por favor llegue 15 minutos antes. Si no puede asistir, cancele con anticipación.</p>
+    </div>
+  </section>
+
   <!-- Scripts -->
   <!-- Guardia de sesion: debe cargarse antes que los scripts de la pagina -->
   <script th:src="@{/js/auth-guard.js}"></script>
   <script th:src="@{/js/sidebar.js}"></script>
   <script th:src="@{/js/user-session.js}"></script>
+  <script th:src="@{/js/catalogos.js}"></script>
   <script th:src="@{/js/table-pager.js}"></script>
   <script th:src="@{/js/citas.js}"></script>
   <script>

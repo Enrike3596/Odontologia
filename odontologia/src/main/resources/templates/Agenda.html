@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <script>
+    /* Estado del sidebar antes del primer pintado: evita el parpadeo al navegar con el sidebar colapsado */
+    try { if (localStorage.getItem('clinica.sidebar.collapsed') === '1' && window.innerWidth > 768) { document.documentElement.classList.add('sidebar-collapsed'); } } catch (e) {}
+  </script>
+  <title>Odontología · Agenda del Odontólogo</title>
+
+  <!-- Tailwind CDN (para desarrollo/prototipo) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Alpine.js para interactividad ligera -->
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" th:href="@{/css/app.css}" />
+
+  <style>
+    body {
+      overflow-x: hidden; /* fallback para navegadores antiguos */
+      overflow-x: clip;
+    }
+
+    /* Calendario mensual de agenda */
+    .agenda-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 0.5rem;
+    }
+
+    .agenda-day {
+      min-height: 6.5rem;
+      padding: 0.5rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.65rem;
+      background: #fff;
+      cursor: pointer;
+      transition: box-shadow 0.15s ease, transform 0.15s ease;
+    }
+
+    .agenda-day:hover {
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.10);
+      transform: translateY(-1px);
+    }
+
+    .agenda-day-num {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #0f172a;
+    }
+
+    .agenda-day-off {
+      background: #f8fafc;
+      cursor: default;
+    }
+
+    .agenda-day-off:hover {
+      box-shadow: none;
+      transform: none;
+    }
+
+    .agenda-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      margin-top: 0.3rem;
+      padding: 0.1rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .agenda-libre { background: #dcfce7; color: #166534; }
+    .agenda-ocupado { background: #dbeafe; color: #1e40af; }
+    .agenda-bloqueado { background: #fee2e2; color: #991b1b; }
+    .agenda-nolab { background: #f1f5f9; color: #64748b; }
+
+    .agenda-dow {
+      text-align: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+      padding-bottom: 0.25rem;
+    }
+
+    @media (max-width: 768px) {
+      #sidebar {
+        position: fixed;
+        left: -288px;
+        z-index: 1000;
+        transition: left 0.3s ease;
+      }
+
+      #sidebar.show {
+        left: 0;
+      }
+
+      main {
+        margin-left: 0 !important;
+        padding: 1rem !important;
+      }
+
+      .agenda-day {
+        min-height: 4.5rem;
+      }
+    }
+
+    .nav-link:hover {
+      transform: translateX(4px);
+      transition: all 0.2s ease;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased" data-page="agenda" data-require-auth="true" data-require-admin="true">
+
+  <!-- Layout: Sidebar + Main -->
+  <div class="min-h-screen flex layout-shell items-start">
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="w-72 bg-white border-r flex flex-col">
+      <button type="button" class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" aria-label="Colapsar menú" title="Colapsar menú">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <div class="p-6 flex items-center justify-between sidebar-header">
+        <div>
+          <h1 class="text-2xl font-semibold text-indigo-700">Clínica <span class="text-indigo-500">Odontología</span></h1>
+          <p class="text-sm text-gray-500 mt-1">Panel de administración</p>
+        </div>
+      </div>
+
+      <nav class="mt-4 px-2 flex-1 sidebar-nav custom-scrollbar" aria-label="Main navigation">
+        <ul class="space-y-1">
+          <li><a href="/dashboard" class="nav-link block px-4 py-2 rounded-lg hover:bg-indigo-50" data-view="dashboard">
+            <i class="fas fa-chart-line mr-3 text-gray-500"></i>Dashboard
+          </a></li>
+          <li><a href="/citas" class="nav-link block px-4 py-2 rounded-lg hover:bg-emerald-50" data-view="citas">
+            <i class="fas fa-calendar-alt mr-3 text-gray-500"></i>Citas Médicas
+          </a></li>
+          <li data-require-admin="true"><a href="/agenda" class="nav-link block px-4 py-2 rounded-lg hover:bg-teal-50 text-teal-600 font-medium bg-teal-50" data-view="agenda">
+            <i class="fas fa-calendar-days mr-3 text-teal-500"></i>Agenda Médica
+          </a></li>
+          <li><a href="/pacientes" class="nav-link block px-4 py-2 rounded-lg hover:bg-blue-50" data-view="pacientes">
+            <i class="fas fa-user-injured mr-3 text-gray-500"></i>Pacientes
+          </a></li>
+          <li><a href="/odontologos" class="nav-link block px-4 py-2 rounded-lg hover:bg-purple-50" data-view="odontologos">
+            <i class="fas fa-user-md mr-3 text-gray-500"></i>Odontólogos
+          </a></li>
+          <li><a href="/historias-clinicas" class="nav-link block px-4 py-2 rounded-lg hover:bg-teal-50" data-view="historia">
+            <i class="fas fa-file-medical mr-3 text-gray-500"></i>Historia Clínica
+          </a></li>
+          <li><a href="/usuarios" class="nav-link block px-4 py-2 rounded-lg hover:bg-orange-50" data-view="usuarios">
+            <i class="fas fa-users mr-3 text-gray-500"></i>Usuarios
+          </a></li>
+          <li><a href="/configuracion" class="nav-link block px-4 py-2 rounded-lg hover:bg-gray-50" data-view="configuracion">
+            <i class="fas fa-cog mr-3 text-gray-500"></i>Configuración
+          </a></li>
+        </ul>
+      </nav>
+      <div class="p-4 border-t bg-white sidebar-footer">
+        <div class="flex items-center gap-3 mt-2">
+          <img src="https://i.pravatar.cc/40?img=5" alt="avatar" class="w-9 h-9 rounded-full" />
+          <div class="text-sm min-w-0">
+            <div class="font-medium truncate" data-su="name">Cargando...</div>
+            <div class="mt-0.5">
+              <span class="sidebar-role-badge" data-su="role">...</span>
+            </div>
+          </div>
+        </div>
+        <div class="text-xs text-gray-400 truncate mt-1" data-su="email"></div>
+        <div class="mt-3">
+          <button type="button" class="sidebar-logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i>
+            Cerrar Sesión
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="flex-1 min-w-0 p-4 md:p-6">
+      <!-- Topbar -->
+      <header class="topbar-module">
+        <div class="topbar-module-title">
+          <h2 class="text-xl font-semibold text-teal-700">
+            <i class="fas fa-calendar-days mr-2 text-teal-500"></i>
+            Agenda del Odontólogo
+          </h2>
+          <p class="text-sm text-gray-500">Vista mensual por médico. Solo el Administrador puede abrir o cerrar agenda.</p>
+        </div>
+
+        <div class="topbar-module-actions">
+          <button id="mobileMenuToggle" class="topbar-module-btn md:hidden" aria-label="Abrir menú">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <button class="sys-action-btn sys-action-primary" onclick="openMovimientoModal()">
+              <i class="fas fa-lock-open mr-2"></i>
+              Apertura / Cierre
+            </button>
+          </div>
+
+          <div class="topbar-user">
+            <button type="button" class="topbar-avatar-btn" onclick="toggleUserMenu(event)" aria-label="Abrir menú de usuario" aria-haspopup="true" aria-expanded="false">
+              <img src="https://i.pravatar.cc/40?img=5" alt="avatar" class="w-9 h-9 rounded-full" />
+            </button>
+            <div class="topbar-user-menu" role="menu">
+              <div class="topbar-user-head">
+                <p class="topbar-user-name" data-su="name">Cargando...</p>
+                <p class="topbar-user-email" data-su="email"></p>
+                <p class="topbar-user-role" data-su="role"></p>
+              </div>
+              <button type="button" class="topbar-menu-logout" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                Cerrar Sesión
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Controles -->
+      <div class="bg-white rounded-lg shadow-sm border p-4 md:p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <div class="md:col-span-2">
+            <label for="agendaOdontologo" class="block text-sm font-medium text-gray-700 mb-2">Odontólogo <span class="required-asterisk" aria-hidden="true">*</span></label>
+            <select id="agendaOdontologo" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500">
+              <option value="">Cargando odontólogos...</option>
+            </select>
+          </div>
+          <div>
+            <label for="agendaMes" class="block text-sm font-medium text-gray-700 mb-2">Mes <span class="required-asterisk" aria-hidden="true">*</span></label>
+            <input type="month" id="agendaMes" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500" />
+          </div>
+          <div class="flex gap-2">
+            <button class="sys-action-btn sys-action-secondary" onclick="agendaMesAnterior()" title="Mes anterior" aria-label="Mes anterior">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="sys-action-btn sys-action-secondary" onclick="agendaMesActual()">Hoy</button>
+            <button class="sys-action-btn sys-action-secondary" onclick="agendaMesSiguiente()" title="Mes siguiente" aria-label="Mes siguiente">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-3 mt-4 text-xs font-medium">
+          <span class="agenda-pill agenda-libre"><i class="fas fa-circle"></i> Libre</span>
+          <span class="agenda-pill agenda-ocupado"><i class="fas fa-circle"></i> Ocupado</span>
+          <span class="agenda-pill agenda-bloqueado"><i class="fas fa-circle"></i> Bloqueado / Cerrado</span>
+          <span class="agenda-pill agenda-nolab"><i class="fas fa-circle"></i> No laborable</span>
+        </div>
+      </div>
+
+      <!-- Resumen -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="agendaResumen">
+        <div class="sys-stat-card"><div class="sys-stat-card-inner"><p class="sys-stat-value" id="resTurnos">0</p><p class="sys-stat-label">Turnos del mes</p></div></div>
+        <div class="sys-stat-card"><div class="sys-stat-card-inner"><p class="sys-stat-value" id="resLibres">0</p><p class="sys-stat-label">Libres</p></div></div>
+        <div class="sys-stat-card"><div class="sys-stat-card-inner"><p class="sys-stat-value" id="resOcupados">0</p><p class="sys-stat-label">Ocupados</p></div></div>
+        <div class="sys-stat-card"><div class="sys-stat-card-inner"><p class="sys-stat-value" id="resBloqueados">0</p><p class="sys-stat-label">Bloqueados</p></div></div>
+      </div>
+
+      <!-- Calendario -->
+      <div class="bg-white rounded-lg shadow-sm border p-4 md:p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4" id="agendaTitulo">Agenda</h3>
+        <div class="agenda-grid mb-1" aria-hidden="true">
+          <div class="agenda-dow">Lun</div><div class="agenda-dow">Mar</div><div class="agenda-dow">Mié</div>
+          <div class="agenda-dow">Jue</div><div class="agenda-dow">Vie</div><div class="agenda-dow">Sáb</div>
+          <div class="agenda-dow">Dom</div>
+        </div>
+        <div class="agenda-grid" id="agendaGrid">
+          <div class="col-span-7 text-center py-8 text-gray-500">
+            <i class="fas fa-calendar-days text-3xl mb-3"></i>
+            <p>Seleccione un odontólogo para ver su agenda del mes.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Movimientos del mes -->
+      <div class="sys-table-card mt-6">
+        <div class="sys-table-header">
+          <div class="sys-table-heading">
+            <h3 class="sys-table-title"><i class="fas fa-lock text-teal-500"></i>Aperturas y cierres del mes</h3>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full sys-table">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horario</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Motivo</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="movimientosBody" class="bg-white divide-y divide-gray-200">
+              <tr><td colspan="5" class="text-center py-6 text-gray-500">Sin movimientos registrados.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal Apertura / Cierre -->
+  <div id="movimientoModal" class="sys-form-modal fixed inset-0 overflow-y-auto h-full w-full hidden z-50">
+    <div class="sys-form-dialog relative mx-auto" style="max-width: 36rem;">
+      <div class="sys-form-content">
+        <div class="sys-form-topbar">
+          <h3 class="text-lg font-medium text-gray-900">
+            <i class="fas fa-lock-open mr-2 text-teal-500"></i>
+            Apertura / Cierre de Agenda
+          </h3>
+          <button onclick="closeMovimientoModal()" class="sys-form-close" aria-label="Cerrar formulario">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form id="movimientoForm" class="sys-form-body">
+          <div>
+            <h4 class="text-md font-medium text-gray-900 mb-3">Movimiento</h4>
+            <div class="grid grid-cols-1 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Fecha <span class="required-asterisk" aria-hidden="true">*</span></label>
+                <input type="date" id="movFecha" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tipo <span class="required-asterisk" aria-hidden="true">*</span></label>
+                <select id="movTipo" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500">
+                  <option value="BLOQUEO">Cierre (bloquear)</option>
+                  <option value="APERTURA_EXTRA">Apertura extra (habilitar)</option>
+                </select>
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Hora inicio</label>
+                  <input type="time" id="movHoraInicio" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500" />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Hora fin</label>
+                  <input type="time" id="movHoraFin" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500" />
+                </div>
+              </div>
+              <p class="text-xs text-gray-500">Si deja las horas vacías, el movimiento aplica al día completo.</p>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Motivo <span class="required-asterisk" aria-hidden="true">*</span></label>
+                <input type="text" id="movMotivo" required placeholder="Ej. Vacaciones, jornada especial..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500" />
+              </div>
+            </div>
+          </div>
+
+          <div class="sys-form-footer">
+            <button type="button" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors" onclick="closeMovimientoModal()">
+              <i class="fas fa-times mr-2"></i>
+              Cancelar
+            </button>
+            <button type="submit" class="sys-action-btn sys-action-primary">
+              <i class="fas fa-save mr-2"></i>
+              Guardar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal detalle del día -->
+  <div id="agendaDiaModal" class="sys-detail-modal fixed inset-0 overflow-y-auto h-full w-full hidden z-50">
+    <div class="sys-detail-dialog relative mx-auto" style="max-width: 42rem;">
+      <div class="sys-detail-content">
+        <div class="sys-detail-topbar">
+          <h3 class="text-lg font-medium text-gray-900" id="agendaDiaTitulo">Detalle del día</h3>
+          <button onclick="closeAgendaDiaModal()" class="sys-detail-close" aria-label="Cerrar detalles">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="sys-detail-body">
+          <div id="agendaDiaTurnos" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
+          <div class="sys-detail-footer">
+            <button type="button" class="sys-action-btn sys-action-neutral" onclick="closeAgendaDiaModal()">
+              <i class="fas fa-times mr-2"></i> Cerrar
+            </button>
+            <button type="button" class="sys-action-btn sys-action-primary" onclick="irACitas()">
+              <i class="fas fa-calendar-plus mr-2"></i> Ir a Citas
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script th:src="@{/js/auth-guard.js}"></script>
+  <script th:src="@{/js/sidebar.js}"></script>
+  <script th:src="@{/js/user-session.js}"></script>
+  <script th:src="@{/js/catalogos.js}"></script>
+  <script th:src="@{/js/agenda.js}"></script>
+  <script>
+    // Mobile sidebar functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+      const sidebar = document.getElementById('sidebar');
+
+      if (mobileMenuToggle && sidebar) {
+        mobileMenuToggle.addEventListener('click', function() {
+          if (window.innerWidth <= 768) {
+            sidebar.classList.toggle('show');
+          }
+        });
+      }
+
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+          sidebar.classList.remove('show');
+        }
+      });
+    });
+
+    function logout() {
+      Swal.fire({
+        title: '¿Cerrar sesión?',
+        text: '¿Estás seguro de que quieres salir del sistema?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, cerrar sesión',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          if (window.ClinicaAuth) { window.ClinicaAuth.clearSession(); } else { try { localStorage.removeItem('clinica.session'); sessionStorage.removeItem('clinica.session'); } catch (e) {} }
+          window.location.replace('/login');
+        }
+      });
+    }
+  </script>
+</body>
+</html>

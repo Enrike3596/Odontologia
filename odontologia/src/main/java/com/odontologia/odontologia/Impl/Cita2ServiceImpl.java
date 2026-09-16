@@ -18,7 +18,9 @@ import com.odontologia.odontologia.Repository.Cita2Repository;
 import com.odontologia.odontologia.Repository.OdontologoRepository;
 import com.odontologia.odontologia.Repository.Paciente2Repository;
 import com.odontologia.odontologia.Repository.TipoCitaRepository;
+import com.odontologia.odontologia.Service.AgendaService;
 import com.odontologia.odontologia.Service.Cita2Service;
+import com.odontologia.odontologia.Service.EmailService;
 
 @Service
 public class Cita2ServiceImpl implements Cita2Service{
@@ -34,6 +36,12 @@ public class Cita2ServiceImpl implements Cita2Service{
 
 	@Autowired
 	private TipoCitaRepository tipoCitaRepository;
+
+	@Autowired
+	private AgendaService agendaService;
+
+	@Autowired(required = false)
+	private EmailService emailService;
 
 	@Override
 	public List<Cita2Dto> listarCitas() {
@@ -53,14 +61,35 @@ public class Cita2ServiceImpl implements Cita2Service{
 	@Override
 	public Cita2Dto crearCita(Cita2Dto citaDto) {
 		Cita2 cita = convertirDtoAEntity(citaDto);
+		// Validar contra la agenda: turno abierto y sin solape
+		agendaService.validarTurnoDisponible(
+				cita.getOdontologo().getId(), cita.getFecha(), cita.getHora());
 		Cita2 guardada = citaRepository.save(cita);
-		return convertirEntityADto(guardada);
+		Cita2Dto resultado = convertirEntityADto(guardada);
+		notificarPorCorreo(resultado, citaDto.getEnviarRecordatorio(), citaDto.getEmailSolicitante());
+		return resultado;
 	}
 
 	@Override
 	public Cita2Dto actualizarCita(Long id, Cita2Dto citaDto) {
 		Cita2 existente = citaRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Cita no encontrada con ID: " + id));
+
+		// Resolver nuevos valores (los no enviados conservan los actuales)
+		java.time.LocalDate nuevaFecha = citaDto.getFecha() != null ? citaDto.getFecha() : existente.getFecha();
+		java.time.LocalTime nuevaHora = citaDto.getHora() != null ? citaDto.getHora() : existente.getHora();
+		Long nuevoOdontologoId = existente.getOdontologo().getId();
+		if (citaDto.getOdontologo() != null && citaDto.getOdontologo().getId() != null) {
+			nuevoOdontologoId = citaDto.getOdontologo().getId();
+		}
+
+		// Solo revalidar agenda si cambió el turno
+		boolean cambioTurno = !nuevaFecha.equals(existente.getFecha())
+				|| !nuevaHora.equals(existente.getHora())
+				|| !nuevoOdontologoId.equals(existente.getOdontologo().getId());
+		if (cambioTurno && !agendaService.turnoDisponible(nuevoOdontologoId, nuevaFecha, nuevaHora, id)) {
+			throw new RuntimeException("El turno no está disponible en la agenda del odontólogo (cerrado u ocupado)");
+		}
 
 		// Actualizar campos simples
 		existente.setFecha(citaDto.getFecha());
@@ -89,6 +118,22 @@ public class Cita2ServiceImpl implements Cita2Service{
 
 		Cita2 actualizada = citaRepository.save(existente);
 		return convertirEntityADto(actualizada);
+	}
+
+	/**
+	 * Dispara los correos de confirmación/recordatorio sin romper el flujo:
+	 * cualquier fallo de correo solo se registra en log.
+	 */
+	private void notificarPorCorreo(Cita2Dto guardada, Boolean enviarRecordatorio, String emailSolicitante) {
+		if (emailService == null) {
+			return;
+		}
+		try {
+			emailService.notificarCitaAgendada(guardada, enviarRecordatorio, emailSolicitante);
+		} catch (Exception e) {
+			// No interrumpir la creación de la cita por fallos de correo
+			System.err.println("[Citas] No se pudo enviar el correo de la cita " + guardada.getId() + ": " + e.getMessage());
+		}
 	}
 
 	@Override

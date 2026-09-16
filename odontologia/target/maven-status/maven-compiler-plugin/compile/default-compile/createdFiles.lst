@@ -1,6 +1,7 @@
 com\odontologia\odontologia\Controller\Rest\TipoCitaRestController.class
 com\odontologia\odontologia\Controller\Rest\UsuarioRestController.class
 com\odontologia\odontologia\Repository\Cita2Repository.class
+com\odontologia\odontologia\Impl\AgendaServiceImpl$1.class
 com\odontologia\odontologia\Repository\RolRepository.class
 com\odontologia\odontologia\Controller\Rest\RolRestController.class
 com\odontologia\odontologia\Dto\RolDto.class

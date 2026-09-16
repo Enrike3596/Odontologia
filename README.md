@@ -1,6 +1,6 @@
 # Sistema de Gestión Odontológica 🦷
 
-Sistema web para la gestión integral de una clínica odontológica: administración de **usuarios, pacientes, odontólogos, citas, historias clínicas, tipos de cita y roles**, con autenticación por email/usuario/documento.
+Sistema web para la gestión integral de una clínica odontológica: administración de **usuarios, pacientes, odontólogos, citas, agenda médica mensual, historias clínicas, tipos de cita y roles**, con autenticación por email/usuario/documento, **envío de correos de confirmación/recordatorio vía Gmail SMTP** e **impresión del comprobante de cita**.
 
 ---
 
@@ -13,7 +13,8 @@ Sistema web para la gestión integral de una clínica odontológica: administrac
 | **Spring Boot** | 3.5.6 | Framework base (parent `spring-boot-starter-parent`) |
 | **Spring Web (MVC + REST)** | — | Controladores MVC (`VistaController`) y API REST (`/api/**`) |
 | **Spring Data JPA / Hibernate** | — | Persistencia, entidades y repositorios. `ddl-auto=update` |
-| **Thymeleaf** | — | Renderizado server-side de vistas (`src/main/resources/templates/`) |
+| **Spring Mail (SMTP)** | — | Confirmación y recordatorio de citas por correo (Gmail/Workspace, `app.mail.enabled`) |
+| **Thymeleaf** | — | Renderizado server-side de vistas (`src/main/resources/templates/`) + plantillas de correo (`templates/email/`) |
 | **Spring Actuator** | — | Monitoreo y health checks |
 | **Spring DevTools** | — | Recarga en caliente en desarrollo |
 | **Lombok** | — | Reducción de boilerplate (`@Data`, `@Entity`, DTOs) |
@@ -24,8 +25,8 @@ Sistema web para la gestión integral de una clínica odontológica: administrac
 ### Frontend
 | Tecnología | Uso |
 |---|---|
-| **Thymeleaf + HTML5** | Vistas: `home.html`, `login.html`, `citas.html`, `Pacientes.html`, `Odontologos.html`, `HistoriasClinicas.html`, `Usuarios.html`, `configuracion.html`, `Pagina inicial/index.html` |
-| **JavaScript vanilla (Fetch API)** | Lógica por módulo: `login.js`, `citas.js`, `pacientes.js`, `odontologos.js`, `historiaclinica.js`, `usuarios.js`, `home.js`, `navigation.js`, `sidebar.js`, `components.js`, `auth-guard.js`, `user-session.js`, `table-pager.js`, `contacto.js` |
+| **Thymeleaf + HTML5** | Vistas: `home.html`, `login.html`, `citas.html`, `Agenda.html`, `Pacientes.html`, `Odontologos.html`, `HistoriasClinicas.html`, `Usuarios.html`, `configuracion.html`, `Pagina inicial/index.html`, `email/confirmacion-cita.html`, `email/recordatorio-cita.html` |
+| **JavaScript vanilla (Fetch API)** | Lógica por módulo: `login.js`, `citas.js`, `agenda.js`, `catalogos.js`, `pacientes.js`, `odontologos.js`, `historiaclinica.js`, `usuarios.js`, `home.js`, `navigation.js`, `sidebar.js`, `components.js`, `auth-guard.js`, `user-session.js`, `table-pager.js`, `contacto.js` |
 | **CSS propio (`app.css`) + Bootstrap 5.0.5-alpha** | Estilos del panel administrativo y de la página pública inicial |
 | **LineIcons 2.0, animate.css, tiny-slider, wow.js** | Iconos, animaciones y slider de la landing page (`Pagina Inicial/`) |
 | **Componentes reutilizables** | `static/Components/sidebar.html` y `topbar.html` cargados vía JS |
@@ -34,8 +35,8 @@ Sistema web para la gestión integral de una clínica odontológica: administrac
 | Tecnología | Detalle |
 |---|---|
 | **PostgreSQL 5432** | BD `odontologia` (ver `odontologia/base.sql`) |
-| Tablas | `roles`, `usuarios`, `pacientes`, `odontologos`, `tipos_cita`, `historias_clinicas`, `citas` |
-| Script base | `odontologia/base.sql` — re-ejecutable, crea tablas + datos semilla (3 roles, usuario admin, 5 pacientes, 3 odontólogos, 4 tipos de cita, 2 citas) |
+| Tablas | `roles`, `usuarios`, `pacientes`, `odontologos`, `tipos_cita`, `historias_clinicas`, `citas`, `bloqueos_agenda` |
+| Script base | `odontologia/base.sql` — re-ejecutable, crea tablas + datos semilla (3 roles, usuario admin, 5 pacientes, 3 odontólogos, 4 tipos de cita, 2 citas) + normalización de catálogos |
 
 > Credencial inicial (cambiar en producción): `admin@clinica.com` / `admin` / `admin123`.
 
@@ -75,12 +76,13 @@ Arquitectura en **capas (N-Layer) estilo monolito MVC + API REST**, todo dentro 
 
 | Capa | Paquete | Contenido |
 |---|---|---|
-| Presentación web | `Controller.Mvc` | `VistaController` — rutas `/`, `/inicio`, `/dashboard`, `/citas`, `/pacientes`, `/odontologos`, `/historias-clinicas`, `/usuarios`, `/configuracion`, `/login` → plantillas Thymeleaf |
-| API REST | `Controller.Rest` | `AuthRestController`, `UsuarioRestController`, `Paciente2RestController`, `OdontologoRestController`, `Cita2RestController`, `HistoriaClinicaRestController`, `TipoCitaRestController`, `RolRestController` — CRUD JSON bajo `/api` |
-| Lógica de negocio | `Service` + `Impl` | Interfaces (`UsuarioService`, `Cita2Service`, …) e implementaciones (`UsuarioServiceImpl`, …). Ej.: `autenticar(identifier, password)` acepta email, username o documento |
-| Persistencia | `Repository` | `JpaRepository` por entidad: `UsuarioRepository`, `Paciente2Repository`, `OdontologoRepository`, `Cita2Repository`, `HistoriaClinicaRepository`, `TipoCitaRepository`, `RolRepository` |
-| Dominio | `Entity` | `Usuario`, `Rol`, `Paciente2`, `Odontologo`, `Cita2`, `HistoriaClinica`, `TipoCita`, `EstadoCitaEnum` (`PENDIENTE`, `CONFIRMADA`, `CANCELADA`, `COMPLETADA`) |
-| Transferencia | `Dto` | `UsuarioDto`, `Paciente2Dto`, `OdontologoDto`, `Cita2Dto`, `HistoriaClinicaDto`, `TipoCitaDto`, `RolDto`, `LoginRequestDto` |
+| Presentación web | `Controller.Mvc` | `VistaController` — rutas `/`, `/inicio`, `/dashboard`, `/citas`, `/agenda`, `/pacientes`, `/odontologos`, `/historias-clinicas`, `/usuarios`, `/configuracion`, `/login` → plantillas Thymeleaf |
+| API REST | `Controller.Rest` | `AuthRestController`, `UsuarioRestController`, `Paciente2RestController`, `OdontologoRestController`, `Cita2RestController`, `HistoriaClinicaRestController`, `TipoCitaRestController`, `RolRestController`, `AgendaRestController`, `CatalogoRestController` — CRUD JSON bajo `/api` |
+| Lógica de negocio | `Service` + `Impl` | Interfaces (`UsuarioService`, `Cita2Service`, `AgendaService`, `EmailService`, …) e implementaciones (`UsuarioServiceImpl`, …). Ej.: `autenticar(identifier, password)` acepta email, username o documento; `AgendaService` calcula disponibilidad y valida turnos; `EmailService` envía correos de forma asíncrona |
+| Tareas programadas | `Service` | `RecordatorioScheduler` — todos los días 07:00 envía recordatorios de las citas del día siguiente |
+| Persistencia | `Repository` | `JpaRepository` por entidad: `UsuarioRepository`, `Paciente2Repository`, `OdontologoRepository`, `Cita2Repository`, `HistoriaClinicaRepository`, `TipoCitaRepository`, `RolRepository`, `BloqueoAgendaRepository` |
+| Dominio | `Entity` | `Usuario`, `Rol`, `Paciente2`, `Odontologo`, `Cita2`, `HistoriaClinica`, `TipoCita`, `BloqueoAgenda`, enums `EstadoCitaEnum`, `TipoDocumento`, `Genero`, `Parentesco`, `TipoMovimientoAgenda` |
+| Transferencia | `Dto` | `UsuarioDto`, `Paciente2Dto`, `OdontologoDto`, `Cita2Dto`, `HistoriaClinicaDto`, `TipoCitaDto`, `RolDto`, `LoginRequestDto`, `BloqueoAgendaDto`, `AgendaDiaDto`, `SlotAgendaDto` |
 | Configuración | `Config` | `WebCacheConfig` (caché de recursos estáticos) |
 
 ### Patrones
@@ -142,7 +144,12 @@ Base: `http://localhost:8080/api`
 | Odontólogos | `GET` | `/api/odontologos`, `/api/odontologos/{id}` | Listar / obtener |
 | Odontólogos | `POST` | `/api/odontologos` | Crear |
 | Citas | `GET` | `/api/citas`, `/api/citas/{id}` | Listar / obtener |
-| Citas | `POST` | `/api/citas` | Crear |
+| Citas | `POST` | `/api/citas` | Crear (valida turno disponible en agenda; dispara correos si aplica) |
+| Agenda | `GET` | `/api/agenda?odontologoId&anio&mes` | Matriz mensual de turnos (LIBRE/OCUPADO/BLOQUEADO) |
+| Agenda | `GET` | `/api/agenda/dia?odontologoId&fecha` | Agenda de un día |
+| Agenda | `GET/POST` | `/api/agenda/movimientos` | Listar / crear apertura o cierre (solo Administrador) |
+| Agenda | `DELETE` | `/api/agenda/movimientos/{id}` | Eliminar movimiento (borrado lógico, solo Administrador) |
+| Catálogos | `GET` | `/api/catalogos` | Tipos de documento, géneros, parentescos, estados de cita |
 | Historias | `GET` | `/api/historias-clinicas`, `/api/historias-clinicas/{id}` | Listar / obtener (1 por paciente) |
 | Historias | `POST` | `/api/historias-clinicas` | Crear |
 | Tipos cita | `GET` | `/api/tipos-cita`, `/api/tipos-cita/{id}` | Listar / obtener |
@@ -150,11 +157,38 @@ Base: `http://localhost:8080/api`
 | Roles | `GET` | `/api/roles`, `/api/roles/{id}` | Listar / obtener (1=Administrador, 2=Odontólogo, 3=Recepcionista) |
 | Roles | `POST` | `/api/roles` | Crear |
 
-Vistas MVC: `/`, `/dashboard` (home), `/inicio` (landing pública), `/login`, `/citas`, `/pacientes`, `/odontologos`, `/historias-clinicas`, `/usuarios`, `/configuracion`.
+Vistas MVC: `/`, `/dashboard` (home), `/inicio` (landing pública), `/login`, `/citas`, `/agenda` (solo Administrador), `/pacientes`, `/odontologos`, `/historias-clinicas`, `/usuarios`, `/configuracion`.
 
 ---
 
-## 5. Requisitos previos
+## 5. Funcionalidades del plan de acción
+
+### 1. Agenda mensual del odontólogo (solo Administrador)
+- Vista `/agenda` (`Agenda.html` + `agenda.js`): selector de odontólogo y mes, calendario con conteos por día (libres/ocupados/cerrado/no laborable), detalle de turnos por día y tabla de aperturas/cierres del mes.
+- Los turnos se derivan del horario base del odontólogo (`diasTrabajo`, `horaInicio`, `horaFin`) en bloques de 30 min (`AgendaServiceImpl.DURACION_TURNO_MINUTOS`; pendiente definir duración por procedimiento al finalizar).
+- Modo mixto: el Administrador crea **cierres** (`BLOQUEO`: día completo o rango horario, ej. vacaciones) y **aperturas extra** (`APERTURA_EXTRA`: habilitar días/horas fuera del horario base) desde el modal "Apertura / Cierre".
+- Al crear/editar una cita el backend valida que el turno esté abierto y libre (`validarTurnoDisponible`); si no, rechaza con error.
+- Seguridad: enlace "Agenda Médica" oculto a no-admin (`user-session.js` + `data-require-admin`) y `Agenda.html` redirige a `/dashboard` si la sesión no es Administrador.
+
+### 2. Correos de confirmación y recordatorio (Gmail SMTP)
+- Al asignar una cita se envían (asíncronos, nunca bloquean la creación):
+  1. **Confirmación al paciente** (`templates/email/confirmacion-cita.html`) si tiene email y el checkbox "Enviar confirmación y recordatorio" está marcado.
+  2. **Copia informativa al usuario que agenda** (`templates/email/recordatorio-cita.html`) usando el email de la sesión, para no olvidar la cita.
+- Job diario 07:00 (`RecordatorioScheduler`): recordatorio de las citas de mañana (`PENDIENTE`/`CONFIRMADA`), marcado con `citas.recordatorio_enviado` para no duplicar.
+- **Paso final para activar** (credenciales pendientes): en `odontologia/src/main/resources/application.properties` descomentar el bloque `spring.mail.*`, colocar la cuenta Gmail, la **contraseña de aplicación** (Google > Seguridad > Verificación en 2 pasos > Contraseñas de aplicaciones) y `app.mail.from`, y poner `app.mail.enabled=true`. Sin esto, el sistema funciona igual pero solo registra en log.
+
+### 3. Impresión del comprobante de cita
+- Al crear una cita, el diálogo de éxito ofrece **"Imprimir comprobante"**; el modal de detalle conserva su botón **Imprimir**.
+- El comprobante (`#comprobanteCita` en `citas.html`: folio, paciente, fecha/hora, tipo, odontólogo, consultorio, estado, motivo, firmas) solo aparece en papel gracias a `@media print` en `app.css` (`window.print()` desde `printAppointment()` / `printCitaById()`).
+
+### 4. Enums vs tablas
+- **Enums nuevos** (`Entity/`): `TipoDocumento` (CC, CE, TI, PP, PA, RC), `Genero` (M, F, O), `Parentesco` (catálogo + texto libre como "Otro"). Se validan/normalizan en `Paciente2ServiceImpl`, `OdontologoServiceImpl`, `UsuarioServiceImpl`; la columna sigue `VARCHAR` para no romper datos históricos (normalización idempotente en `base.sql`).
+- **Se mantiene como tabla**: `TipoCita` (catálogo administrable vía `/api/tipos-cita`).
+- Fuente única frontend: `GET /api/catalogos` + `static/js/catalogos.js` (con fallback local); selects de tipo de documento unificados y parentesco con sugerencias (`datalist`) en Pacientes y Odontólogos. Se corrigió la inconsistencia `PA` vs `PP`.
+
+---
+
+## 6. Requisitos previos
 
 - **Java 21** (`java -version`)
 - **Maven 3.9+** (o usar `./mvnw` incluido)
@@ -162,7 +196,7 @@ Vistas MVC: `/`, `/dashboard` (home), `/inicio` (landing pública), `/login`, `/
 
 ---
 
-## 6. Instalación y ejecución
+## 7. Instalación y ejecución
 
 ```bash
 # 1. Crear la base de datos (una sola vez)
@@ -190,9 +224,16 @@ cd odontologia
 
 JPA tiene `ddl-auto=update`, por lo que las tablas se crean/actualizan al arrancar aunque no se ejecute `base.sql`; el script además deja los datos base (roles + admin).
 
+### Activar el envío de correos (paso final)
+1. Generar una **contraseña de aplicación** de Gmail (Cuenta Google > Seguridad > Verificación en 2 pasos > Contraseñas de aplicaciones).
+2. En `odontologia/src/main/resources/application.properties`, descomentar el bloque `spring.mail.*`, colocar cuenta, App Password y `app.mail.from`, y poner `app.mail.enabled=true`.
+3. Reiniciar la app. Sin este paso, las citas se crean normalmente pero los correos solo se registran en log.
+
+> La agenda médica (`/agenda`) solo es visible y operable por el rol **Administrador**.
+
 ---
 
-## 7. Notas técnicas y deuda conocida
+## 8. Notas técnicas y deuda conocida
 
 - Las contraseñas se guardan y comparan **en texto plano** (`UsuarioServiceImpl` + `base.sql`). Pendiente migrar a **BCrypt + Spring Security / JWT**.
 - Sin validación Bean Validation global ni manejo centralizado de excepciones (`@ControllerAdvice`).
@@ -201,7 +242,7 @@ JPA tiene `ddl-auto=update`, por lo que las tablas se crean/actualizan al arranc
 
 ---
 
-## 8. Roadmap sugerido
+## 9. Roadmap sugerido
 
 1. Spring Security + BCrypt + JWT.
 2. CRUD completo (PUT/DELETE) en todos los RestControllers.

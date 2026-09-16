@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
+  <div style="background:#059669;color:#fff;padding:20px 24px;">
+    <h2 style="margin:0;">Clínica Odontología</h2>
+    <p style="margin:4px 0 0;">Confirmación de cita odontológica</p>
+  </div>
+  <div style="padding:24px;color:#0f172a;">
+    <p>Hola <strong th:text="${paciente}">Paciente</strong>,</p>
+    <p>Su cita ha sido asignada con la siguiente información:</p>
+    <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+      <tr><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#64748b;">Folio</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;"><strong th:text="${folio}">CITA-—</strong></td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#64748b;">Fecha</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;" th:text="${fecha}">—</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#64748b;">Hora</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;" th:text="${hora}">—</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#64748b;">Tipo de cita</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;" th:text="${tipoCita}">—</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#64748b;">Odontólogo</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;" th:text="${odontologo}">—</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid #f1f5f9;color:#64748b;">Motivo</td><td style="padding:8px;border-bottom:1px solid #f1f5f9;" th:text="${motivo}">—</td></tr>
+    </table>
+    <p>Por favor llegue 15 minutos antes. Si no puede asistir, cancele con anticipación.</p>
+    <p style="color:#64748b;font-size:12px;">Este es un mensaje automático, por favor no responda a este correo.</p>
+  </div>
+</div>
+</body>
+</html>

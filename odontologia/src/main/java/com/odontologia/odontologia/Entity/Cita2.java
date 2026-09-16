@@ -50,4 +50,7 @@ public class Cita2 {
 
     @Column(length = 255)
     private String observaciones;
+
+    @Column(name = "recordatorio_enviado")
+    private Boolean recordatorioEnviado = false;
 }

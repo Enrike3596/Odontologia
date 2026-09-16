@@ -2891,3 +2891,110 @@ form label .text-red-500 {
     color: #dc2626 !important;
     font-weight: 700;
 }
+
+/* ============================================================================
+   COMPROBANTE DE CITA IMPRIMIBLE (punto 3 del plan de acción)
+   ============================================================================ */
+/* En pantalla la sección existe pero permanece oculta */
+.print-only {
+    display: none;
+}
+
+.comp-sheet {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.75rem;
+    color: #0f172a;
+    background: #fff;
+    font-size: 0.9rem;
+}
+
+.comp-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #0ea5e9;
+}
+
+.comp-head h1 {
+    margin: 0;
+    font-size: 1.4rem;
+    color: #0369a1;
+}
+
+.comp-head p {
+    margin: 0.2rem 0 0;
+    color: #475569;
+}
+
+.comp-folio {
+    text-align: right;
+    font-weight: 700;
+}
+
+.comp-emision {
+    font-weight: 400;
+    font-size: 0.78rem;
+    color: #64748b;
+}
+
+.comp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem 1.5rem;
+    margin: 1.25rem 0;
+}
+
+.comp-motivo {
+    margin: 0 0 1.5rem;
+    padding: 0.9rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    background: #f8fafc;
+}
+
+.comp-motivo p {
+    margin: 0.4rem 0 0;
+}
+
+.comp-firmas {
+    display: flex;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-top: 3rem;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #475569;
+}
+
+.comp-nota {
+    margin-top: 1.5rem;
+    font-size: 0.78rem;
+    color: #64748b;
+    text-align: center;
+}
+
+/* Al imprimir: solo el comprobante */
+@media print {
+    body > *:not(#comprobanteCita) {
+        display: none !important;
+    }
+
+    body {
+        background: #fff;
+    }
+
+    .print-only {
+        display: block !important;
+    }
+
+    .comp-sheet {
+        border: none;
+        border-radius: 0;
+        max-width: 100%;
+    }
+}

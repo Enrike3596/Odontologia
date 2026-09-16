@@ -35,6 +35,26 @@
         return { name: name, email: s.email || '', role: mapRole(s.rol) };
     }
 
+    function isAdminSession() {
+        var s = getSession();
+        if (!s) return false;
+        var rol = s.rol;
+        // El login guarda el nombre del rol como string; soportar objeto por compatibilidad
+        if (rol && typeof rol === 'object') rol = rol.nombre || '';
+        return String(rol || '').toLowerCase().indexOf('admin') !== -1;
+    }
+
+    /**
+     * Oculta los elementos [data-require-admin] (ej. enlace Agenda Médica)
+     * cuando la sesión no es de rol Administrador.
+     */
+    function applyAdminVisibility() {
+        if (isAdminSession()) return;
+        document.querySelectorAll('[data-require-admin]').forEach(function (el) {
+            el.style.display = 'none';
+        });
+    }
+
     function setAll(selector, value) {
         var nodes = document.querySelectorAll(selector);
         nodes.forEach(function (el) { el.textContent = value; });
@@ -88,7 +108,11 @@
 
     // El script carga al final del body: pintar de inmediato y como respaldo en DOMContentLoaded
     paintSessionUser();
-    document.addEventListener('DOMContentLoaded', paintSessionUser);
+    applyAdminVisibility();
+    document.addEventListener('DOMContentLoaded', function () {
+        paintSessionUser();
+        applyAdminVisibility();
+    });
 
     window.toggleUserMenu = toggleUserMenu;
     window.paintSessionUser = paintSessionUser;

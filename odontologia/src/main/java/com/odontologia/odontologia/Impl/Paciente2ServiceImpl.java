@@ -7,7 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.odontologia.odontologia.Dto.Paciente2Dto;
+import com.odontologia.odontologia.Entity.Genero;
 import com.odontologia.odontologia.Entity.Paciente2;
+import com.odontologia.odontologia.Entity.Parentesco;
+import com.odontologia.odontologia.Entity.TipoDocumento;
 import com.odontologia.odontologia.Repository.Paciente2Repository;
 import com.odontologia.odontologia.Service.Paciente2Service;
 
@@ -48,15 +51,15 @@ public class Paciente2ServiceImpl  implements Paciente2Service {
 
 		existente.setNombres(pacienteDto.getNombres());
 		existente.setApellidos(pacienteDto.getApellidos());
-		existente.setTipoDocumento(pacienteDto.getTipoDocumento());
-		existente.setDocumento(pacienteDto.getDocumento());
+		existente.setTipoDocumento(normalizarTipoDocumento(pacienteDto.getTipoDocumento()));
+		existente.setDocumento(validarDocumento(pacienteDto.getTipoDocumento(), pacienteDto.getDocumento()));
 		existente.setFechaNacimiento(pacienteDto.getFechaNacimiento());
-		existente.setGenero(pacienteDto.getGenero());
+		existente.setGenero(normalizarGenero(pacienteDto.getGenero()));
 		existente.setEmail(pacienteDto.getEmail());
 		existente.setTelefono(pacienteDto.getTelefono());
 		existente.setDireccion(pacienteDto.getDireccion());
 		existente.setContactoEmergenciaNombre(pacienteDto.getContactoEmergenciaNombre());
-		existente.setContactoEmergenciaParentesco(pacienteDto.getContactoEmergenciaParentesco());
+		existente.setContactoEmergenciaParentesco(Parentesco.normalizar(pacienteDto.getContactoEmergenciaParentesco()));
 		existente.setContactoEmergenciaTelefono(pacienteDto.getContactoEmergenciaTelefono());
 		existente.setAlergias(pacienteDto.getAlergias());
 		existente.setMedicamentos(pacienteDto.getMedicamentos());
@@ -103,19 +106,40 @@ public class Paciente2ServiceImpl  implements Paciente2Service {
 		}
 		p.setNombres(dto.getNombres());
 		p.setApellidos(dto.getApellidos());
-		p.setTipoDocumento(dto.getTipoDocumento());
-		p.setDocumento(dto.getDocumento());
+		p.setTipoDocumento(normalizarTipoDocumento(dto.getTipoDocumento()));
+		p.setDocumento(validarDocumento(dto.getTipoDocumento(), dto.getDocumento()));
 		p.setFechaNacimiento(dto.getFechaNacimiento());
-		p.setGenero(dto.getGenero());
+		p.setGenero(normalizarGenero(dto.getGenero()));
 		p.setEmail(dto.getEmail());
 		p.setTelefono(dto.getTelefono());
 		p.setDireccion(dto.getDireccion());
 		p.setContactoEmergenciaNombre(dto.getContactoEmergenciaNombre());
-		p.setContactoEmergenciaParentesco(dto.getContactoEmergenciaParentesco());
+		p.setContactoEmergenciaParentesco(Parentesco.normalizar(dto.getContactoEmergenciaParentesco()));
 		p.setContactoEmergenciaTelefono(dto.getContactoEmergenciaTelefono());
 		p.setAlergias(dto.getAlergias());
 		p.setMedicamentos(dto.getMedicamentos());
 		p.setObservaciones(dto.getObservaciones());
 		return p;
+	}
+
+	// Normalización contra los catálogos (punto 4 del plan de acción)
+	private String normalizarTipoDocumento(String valor) {
+		return TipoDocumento.desde(valor).getCodigo();
+	}
+
+	private String normalizarGenero(String valor) {
+		return Genero.desde(valor).getCodigo();
+	}
+
+	private String validarDocumento(String tipoDocumento, String documento) {
+		String tipo = normalizarTipoDocumento(tipoDocumento);
+		if (documento == null || documento.trim().isEmpty()) {
+			throw new IllegalArgumentException("El número de documento es requerido");
+		}
+		String doc = documento.trim();
+		if (("CC".equals(tipo) || "TI".equals(tipo) || "RC".equals(tipo)) && !doc.matches("\\d+")) {
+			throw new IllegalArgumentException("El documento debe contener solo números para " + tipo);
+		}
+		return doc;
 	}
 }

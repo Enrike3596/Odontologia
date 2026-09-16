@@ -19,4 +19,8 @@ public class Cita2Dto {
     private TipoCitaDto tipoCita;
     private EstadoCitaEnum estado;
     private String observaciones;
+    /** Opt-in del formulario: enviar correos de confirmación/recordatorio. */
+    private Boolean enviarRecordatorio;
+    /** Email del usuario que agenda (desde la sesión) para la copia informativa. */
+    private String emailSolicitante;
 }

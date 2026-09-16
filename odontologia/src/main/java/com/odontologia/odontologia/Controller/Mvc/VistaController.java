@@ -26,6 +26,11 @@ public class VistaController {
         return "citas"; // Carga templates/citas.html
     }
 
+    @GetMapping("/agenda")
+    public String agenda() {
+        return "Agenda"; // Carga templates/Agenda.html (solo Administrador, ver agenda.js)
+    }
+
     @GetMapping("/pacientes")
     public String pacientes() {
         return "Pacientes"; // Carga templates/Pacientes.html

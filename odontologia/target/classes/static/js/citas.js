@@ -425,6 +425,18 @@ async function handleNewAppointmentSubmit(e) {
         const isEdit = AppointmentsModule.editMode;
 
         // Preparar datos para la API (el backend espera objetos, no IDs)
+        // enviarRecordatorio: checkbox del formulario (punto 2: correos).
+        // emailSolicitante: email del usuario en sesión para la copia informativa.
+        var enviarRecordatorioEl = document.getElementById('enviarRecordatorio');
+        var sesionRaw = null;
+        try {
+            sesionRaw = localStorage.getItem('clinica.session') || sessionStorage.getItem('clinica.session');
+        } catch (e) { /* sin acceso a storage */ }
+        var emailSolicitante = null;
+        try {
+            var sesion = sesionRaw ? JSON.parse(sesionRaw) : null;
+            emailSolicitante = (sesion && sesion.email) || null;
+        } catch (e) { /* sesión no parseable */ }
         const citaData = {
             paciente: { id: parseInt(appointmentData.pacienteId) },
             odontologo: { id: parseInt(appointmentData.odontologoId) },
@@ -432,7 +444,9 @@ async function handleNewAppointmentSubmit(e) {
             fecha: appointmentData.fechaCita,
             hora: appointmentData.horaCita,
             observaciones: appointmentData.motivoConsulta || appointmentData.observaciones || '',
-            estado: appointmentData.estado || 'PENDIENTE'
+            estado: appointmentData.estado || 'PENDIENTE',
+            enviarRecordatorio: enviarRecordatorioEl ? enviarRecordatorioEl.checked : true,
+            emailSolicitante: emailSolicitante
         };
 
         // En modo edición, agregar el ID de la cita
@@ -476,8 +490,9 @@ async function handleNewAppointmentSubmit(e) {
         AppointmentsModule.editMode = false;
         AppointmentsModule.editingAppointmentId = null;
 
-        // Mostrar éxito
-        await Swal.fire({
+        // Mostrar éxito con opción de imprimir el comprobante (punto 3)
+        AppointmentsModule.currentAppointment = result;
+        var swalResult = await Swal.fire({
             icon: 'success',
             title: `¡Cita ${successText} exitosamente!`,
             html: `
@@ -498,9 +513,15 @@ async function handleNewAppointmentSubmit(e) {
                     </div>
                 </div>
             `,
-            confirmButtonText: 'Entendido',
-            confirmButtonColor: '#10b981'
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-print mr-2"></i>Imprimir comprobante',
+            cancelButtonText: 'Entendido',
+            confirmButtonColor: '#059669',
+            cancelButtonColor: '#6b7280'
         });
+        if (swalResult.isConfirmed) {
+            printAppointment();
+        }
 
         // Recargar lista
         await loadAppointments();
@@ -984,23 +1005,81 @@ function openCalendarView() {
 }
 
 /**
- * Imprimir cita
+ * Imprimir comprobante de la cita actual (punto 3 del plan de acción).
+ * Rellena la sección imprimible #comprobanteCita y abre el diálogo
+ * de impresión del navegador (solo el comprobante es visible en papel).
  */
 function printAppointment() {
-    if (AppointmentsModule.currentAppointment) {
+    var cita = AppointmentsModule.currentAppointment;
+    if (!cita) {
         Swal.fire({
-            icon: 'info',
-            title: 'Imprimiendo cita...',
-            html: `
-                <div class="text-center">
-                    <i class="fas fa-print text-4xl text-gray-500 mb-3"></i>
-                    <p class="text-gray-600">Generando comprobante de cita para imprimir.</p>
-                </div>
-            `,
-            timer: 2000,
-            confirmButtonColor: '#6b7280'
+            icon: 'warning',
+            title: 'Sin cita seleccionada',
+            text: 'Abra el detalle de una cita para imprimir su comprobante.',
+            confirmButtonColor: '#f59e0b'
         });
+        return;
     }
+    if (!rellenarComprobante(cita)) {
+        Swal.fire({
+            icon: 'error',
+            title: 'No se pudo generar el comprobante',
+            confirmButtonColor: '#dc2626'
+        });
+        return;
+    }
+    window.print();
+}
+
+/**
+ * Rellena el comprobante imprimible con los datos de la cita.
+ * @returns {boolean} false si falta la sección en el DOM.
+ */
+function rellenarComprobante(cita) {
+    var box = document.getElementById('comprobanteCita');
+    if (!box) return false;
+
+    var set = function (id, valor) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = valor || '—';
+    };
+
+    var paciente = ((cita.paciente && cita.paciente.nombres) || '') + ' ' + ((cita.paciente && cita.paciente.apellidos) || '');
+    var odontologo = 'Dr. ' + (((cita.odontologo && cita.odontologo.nombre) || '') + ' ' + ((cita.odontologo && cita.odontologo.apellido) || '')).trim();
+
+    set('compFolio', 'Folio CITA-' + (cita.id || '—'));
+    set('compFechaEmision', new Date().toLocaleString('es-CO'));
+    set('compPaciente', paciente.trim() || '—');
+    set('compDocumento', (cita.paciente && cita.paciente.documento) || 'No especificado');
+    set('compTelefono', (cita.paciente && cita.paciente.telefono) || 'No especificado');
+    set('compFecha', formatDate(cita.fecha));
+    set('compHora', cita.hora || '—');
+    set('compTipo', (cita.tipoCita && cita.tipoCita.nombre) || 'Consulta General');
+    set('compOdontologo', odontologo);
+    set('compConsultorio', cita.consultorio || 'Por asignar');
+    set('compEstado', getStatusText(cita.estado));
+    set('compMotivo', cita.observaciones || 'No especificado');
+    return true;
+}
+
+/**
+ * Imprime una cita recién creada (se usa desde el éxito del formulario).
+ */
+function printCitaById(citaId) {
+    var cached = (AppointmentsModule.cachedCitas || []).find(function (c) {
+        return String(c.id) === String(citaId);
+    });
+    if (cached) {
+        AppointmentsModule.currentAppointment = cached;
+        printAppointment();
+        return;
+    }
+    CitasAPI.getCitaById(citaId).then(function (cita) {
+        AppointmentsModule.currentAppointment = cita;
+        printAppointment();
+    }).catch(function () {
+        Swal.fire({ icon: 'error', title: 'No se pudo cargar la cita para imprimir', confirmButtonColor: '#dc2626' });
+    });
 }
 
 /**
@@ -1853,6 +1932,7 @@ window.confirmAppointment = confirmAppointment;
 window.cancelAppointment = cancelAppointment;
 window.openCalendarView = openCalendarView;
 window.printAppointment = printAppointment;
+window.printCitaById = printCitaById;
 window.goToPreviousDay = goToPreviousDay;
 window.goToNextDay = goToNextDay;
 window.goToToday = goToToday;

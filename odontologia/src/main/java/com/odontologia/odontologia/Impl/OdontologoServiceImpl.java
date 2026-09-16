@@ -7,7 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.odontologia.odontologia.Dto.OdontologoDto;
+import com.odontologia.odontologia.Entity.Genero;
 import com.odontologia.odontologia.Entity.Odontologo;
+import com.odontologia.odontologia.Entity.Parentesco;
+import com.odontologia.odontologia.Entity.TipoDocumento;
 import com.odontologia.odontologia.Repository.OdontologoRepository;
 import com.odontologia.odontologia.Service.OdontologoService;
 
@@ -46,10 +49,10 @@ public class OdontologoServiceImpl implements OdontologoService {
 		existente.setNombre(odontologoDto.getNombre());
 		existente.setApellido(odontologoDto.getApellido());
 		existente.setMatricula(odontologoDto.getMatricula());
-		existente.setTipoDocumento(odontologoDto.getTipoDocumento());
+		existente.setTipoDocumento(normalizarOpcionalTipoDocumento(odontologoDto.getTipoDocumento()));
 		existente.setDocumento(odontologoDto.getDocumento());
 		existente.setFechaNacimiento(odontologoDto.getFechaNacimiento());
-		existente.setGenero(odontologoDto.getGenero());
+		existente.setGenero(normalizarOpcionalGenero(odontologoDto.getGenero()));
 		existente.setEmail(odontologoDto.getEmail());
 		existente.setTelefono(odontologoDto.getTelefono());
 		existente.setDireccion(odontologoDto.getDireccion());
@@ -58,7 +61,7 @@ public class OdontologoServiceImpl implements OdontologoService {
 		existente.setExperiencia(odontologoDto.getExperiencia());
 		existente.setEspecialidades(odontologoDto.getEspecialidades());
 		existente.setContactoEmergenciaNombre(odontologoDto.getContactoEmergenciaNombre());
-		existente.setContactoEmergenciaParentesco(odontologoDto.getContactoEmergenciaParentesco());
+		existente.setContactoEmergenciaParentesco(normalizarOpcionalParentesco(odontologoDto.getContactoEmergenciaParentesco()));
 		existente.setContactoEmergenciaTelefono(odontologoDto.getContactoEmergenciaTelefono());
 		existente.setDiasTrabajo(odontologoDto.getDiasTrabajo());
 		existente.setHoraInicio(odontologoDto.getHoraInicio());
@@ -110,10 +113,10 @@ public class OdontologoServiceImpl implements OdontologoService {
 		o.setNombre(dto.getNombre());
 		o.setApellido(dto.getApellido());
 		o.setMatricula(dto.getMatricula());
-		o.setTipoDocumento(dto.getTipoDocumento());
+		o.setTipoDocumento(normalizarOpcionalTipoDocumento(dto.getTipoDocumento()));
 		o.setDocumento(dto.getDocumento());
 		o.setFechaNacimiento(dto.getFechaNacimiento());
-		o.setGenero(dto.getGenero());
+		o.setGenero(normalizarOpcionalGenero(dto.getGenero()));
 		o.setEmail(dto.getEmail());
 		o.setTelefono(dto.getTelefono());
 		o.setDireccion(dto.getDireccion());
@@ -122,12 +125,34 @@ public class OdontologoServiceImpl implements OdontologoService {
 		o.setExperiencia(dto.getExperiencia());
 		o.setEspecialidades(dto.getEspecialidades());
 		o.setContactoEmergenciaNombre(dto.getContactoEmergenciaNombre());
-		o.setContactoEmergenciaParentesco(dto.getContactoEmergenciaParentesco());
+		o.setContactoEmergenciaParentesco(normalizarOpcionalParentesco(dto.getContactoEmergenciaParentesco()));
 		o.setContactoEmergenciaTelefono(dto.getContactoEmergenciaTelefono());
 		o.setDiasTrabajo(dto.getDiasTrabajo());
 		o.setHoraInicio(dto.getHoraInicio());
 		o.setHoraFin(dto.getHoraFin());
 		o.setObservaciones(dto.getObservaciones());
 		return o;
+	}
+
+	// Normalización opcional contra catálogos (columnas nullable en BD)
+	private String normalizarOpcionalTipoDocumento(String valor) {
+		if (valor == null || valor.trim().isEmpty()) {
+			return valor;
+		}
+		return TipoDocumento.desde(valor).getCodigo();
+	}
+
+	private String normalizarOpcionalGenero(String valor) {
+		if (valor == null || valor.trim().isEmpty()) {
+			return valor;
+		}
+		return Genero.desde(valor).getCodigo();
+	}
+
+	private String normalizarOpcionalParentesco(String valor) {
+		if (valor == null || valor.trim().isEmpty()) {
+			return valor;
+		}
+		return Parentesco.normalizar(valor);
 	}
 }
