@@ -2507,6 +2507,131 @@ html {
     transition: width 0.25s ease;
 }
 
+/* Iconos del menú: cápsulas uniformes para lectura rápida */
+#sidebar .nav-link[data-view] i,
+.sidebar-menu a[data-view] i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 2.15rem;
+    width: 2.15rem;
+    height: 2.15rem;
+    margin-right: 0.7rem;
+    border-radius: 0.7rem;
+    font-size: 0.95rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#sidebar .nav-link[data-view="dashboard"] i,
+.sidebar-menu a[data-view="dashboard"] i {
+    color: #64748b;
+    background: #f1f5f9;
+    box-shadow: inset 0 0 0 1px #e2e8f0;
+}
+
+#sidebar .nav-link[data-view="citas"] i,
+.sidebar-menu a[data-view="citas"] i {
+    color: #059669;
+    background: #d1fae5;
+    box-shadow: inset 0 0 0 1px #a7f3d0;
+}
+
+#sidebar .nav-link[data-view="agenda"] i,
+.sidebar-menu a[data-view="agenda"] i {
+    color: #0f766e;
+    background: #ccfbf1;
+    box-shadow: inset 0 0 0 1px #99f6e4;
+}
+
+#sidebar .nav-link[data-view="pacientes"] i,
+.sidebar-menu a[data-view="pacientes"] i {
+    color: #2563eb;
+    background: #dbeafe;
+    box-shadow: inset 0 0 0 1px #bfdbfe;
+}
+
+#sidebar .nav-link[data-view="odontologos"] i,
+.sidebar-menu a[data-view="odontologos"] i {
+    color: #7c3aed;
+    background: #ede9fe;
+    box-shadow: inset 0 0 0 1px #ddd6fe;
+}
+
+#sidebar .nav-link[data-view="historia"] i,
+.sidebar-menu a[data-view="historia"] i {
+    color: #0f766e;
+    background: #ccfbf1;
+    box-shadow: inset 0 0 0 1px #99f6e4;
+}
+
+#sidebar .nav-link[data-view="usuarios"] i,
+.sidebar-menu a[data-view="usuarios"] i {
+    color: #c2410c;
+    background: #ffedd5;
+    box-shadow: inset 0 0 0 1px #fed7aa;
+}
+
+#sidebar .nav-link[data-view="configuracion"] i,
+.sidebar-menu a[data-view="configuracion"] i {
+    color: #475569;
+    background: #f1f5f9;
+    box-shadow: inset 0 0 0 1px #cbd5e1;
+}
+
+#sidebar .nav-link[data-view]:hover i,
+.sidebar-menu a[data-view]:hover i {
+    transform: translateY(-1px) scale(1.05);
+}
+
+/* Iconos destacados del menú: lectura rápida sin depender solo del texto */
+#sidebar .nav-link[data-view="agenda"] i,
+#sidebar .nav-link[data-view="pacientes"] i,
+.sidebar-menu a[data-view="agenda"] i,
+.sidebar-menu a[data-view="pacientes"] i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.15rem;
+    height: 2.15rem;
+    margin-right: 0.7rem;
+    border-radius: 0.7rem;
+    font-size: 0.95rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#sidebar .nav-link[data-view="agenda"] i,
+.sidebar-menu a[data-view="agenda"] i {
+    color: #0f766e;
+    background: #ccfbf1;
+    box-shadow: inset 0 0 0 1px #99f6e4;
+}
+
+#sidebar .nav-link[data-view="pacientes"] i,
+.sidebar-menu a[data-view="pacientes"] i {
+    color: #2563eb;
+    background: #dbeafe;
+    box-shadow: inset 0 0 0 1px #bfdbfe;
+}
+
+#sidebar .nav-link[data-view="agenda"]:hover i,
+#sidebar .nav-link[data-view="pacientes"]:hover i,
+.sidebar-menu a[data-view="agenda"]:hover i,
+.sidebar-menu a[data-view="pacientes"]:hover i {
+    transform: translateY(-1px) scale(1.05);
+}
+
+html.sidebar-collapsed #sidebar .nav-link[data-view="agenda"] i,
+html.sidebar-collapsed #sidebar .nav-link[data-view="pacientes"] i,
+#sidebar.collapsed .nav-link[data-view="agenda"] i,
+#sidebar.collapsed .nav-link[data-view="pacientes"] i {
+    margin-right: 0;
+}
+
+html.sidebar-collapsed #sidebar .nav-link[data-view] i,
+#sidebar.collapsed .nav-link[data-view] i {
+    margin-right: 0;
+}
+
 /* Botón flotante en el borde del sidebar para colapsar/expandir */
 .sidebar-collapse-btn {
     position: absolute;
