@@ -221,8 +221,9 @@
         cancelButtonText: 'Cancelar'
       }).then((result) => {
         if (result.isConfirmed) {
-          if (window.ClinicaAuth) { window.ClinicaAuth.clearSession(); } else { try { localStorage.removeItem('clinica.session'); sessionStorage.removeItem('clinica.session'); } catch (e) {} }
-          window.location.replace('/login');
+          // logout() centralizado: invalida la sesión en el servidor y luego limpia + redirige
+          if (window.ClinicaAuth && window.ClinicaAuth.logout) { window.ClinicaAuth.logout(); }
+          else { try { localStorage.removeItem('clinica.session'); sessionStorage.removeItem('clinica.session'); } catch (e) {} window.location.replace('/login'); }
         }
       });
     }

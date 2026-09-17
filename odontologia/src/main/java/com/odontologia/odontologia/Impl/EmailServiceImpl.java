@@ -69,6 +69,19 @@ public class EmailServiceImpl implements EmailService {
                 "email/recordatorio-cita", contextoCita(cita));
     }
 
+    @Override
+    @Async
+    public void enviarCodigoRecuperacion(String destinatario, String nombre, String codigo) {
+        if (!esEmailValido(destinatario) || codigo == null || codigo.isBlank()) {
+            return;
+        }
+        Context ctx = new Context();
+        ctx.setVariable("nombre", nombre != null && !nombre.isBlank() ? nombre : "Usuario");
+        ctx.setVariable("codigo", codigo);
+        enviarSeguro(destinatario.trim(), "Código de recuperación de acceso",
+                "email/recuperacion", ctx);
+    }
+
     // ---------- internos ----------
 
     private Context contextoCita(Cita2Dto cita) {

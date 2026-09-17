@@ -19,4 +19,15 @@ public interface UsuarioService {
      * @throws RuntimeException si las credenciales son invalidas o el usuario esta inactivo
      */
     UsuarioDto autenticar(String identifier, String password);
+    /**
+     * Solicita un código de recuperación (6 dígitos, 15 min de vigencia)
+     * enviado al correo del usuario. Respuesta siempre genérica para no
+     * revelar si el identificador existe.
+     */
+    void solicitarRecuperacion(String identifier);
+    /**
+     * Canjea el código de recuperación por una contraseña nueva (aplica la
+     * política de claves y la guarda como hash BCrypt). Uso único.
+     */
+    void restablecerPassword(String codigo, String nuevaPassword);
 }

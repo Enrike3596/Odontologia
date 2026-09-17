@@ -55,6 +55,26 @@
         });
     }
 
+    /**
+     * Refresca la caché de UI con los datos del servidor (/api/auth/me).
+     * Si la sesión del servidor ya no existe, limpia la caché local para
+     * no mostrar un usuario que ya salió (el guardia redirige al login).
+     */
+    async function refreshFromServer() {
+        try {
+            if (!window.ClinicaAuth || typeof window.ClinicaAuth.serverSession !== 'function') return;
+            const me = await window.ClinicaAuth.serverSession();
+            if (me && me !== 'unknown') {
+                const remember = (() => { try { return !!localStorage.getItem('clinica.session'); } catch (e) { return false; } })();
+                window.ClinicaAuth.saveSessionCache(me, remember);
+                paintSessionUser();
+                applyAdminVisibility();
+            } else if (me === null) {
+                window.ClinicaAuth.clearSession();
+            }
+        } catch (e) { /* respaldo: se pinta con la caché local */ }
+    }
+
     function setAll(selector, value) {
         var nodes = document.querySelectorAll(selector);
         nodes.forEach(function (el) { el.textContent = value; });
@@ -109,9 +129,11 @@
     // El script carga al final del body: pintar de inmediato y como respaldo en DOMContentLoaded
     paintSessionUser();
     applyAdminVisibility();
+    refreshFromServer();
     document.addEventListener('DOMContentLoaded', function () {
         paintSessionUser();
         applyAdminVisibility();
+        refreshFromServer();
     });
 
     window.toggleUserMenu = toggleUserMenu;

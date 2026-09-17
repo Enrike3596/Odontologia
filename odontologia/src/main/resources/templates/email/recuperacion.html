@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body style="margin:0;padding:0;background:#eef5fb;font-family:Arial,Helvetica,sans-serif;color:#17324a;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#eef5fb;padding:28px 12px;"><tr><td align="center">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;background:#ffffff;border:1px solid #cfe0ef;border-radius:14px;overflow:hidden;">
+    <tr><td style="padding:28px 32px;background:#00685f;color:#ffffff;"><div style="font-size:21px;font-weight:bold;">Clínica Odontología</div><div style="margin-top:5px;font-size:13px;color:#cdeee9;">Recuperación de acceso</div></td></tr>
+    <tr><td style="padding:32px;">
+      <p style="margin:0 0 8px;font-size:16px;">Hola <strong th:text="${nombre}">Usuario</strong>,</p>
+      <p style="margin:0 0 22px;line-height:1.55;color:#5d7181;">Recibimos una solicitud para restablecer tu contraseña. Usa este código de 6 dígitos (vigente por 15 minutos):</p>
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:22px;background:#eff7fd;border:1px solid #d5e8f6;border-radius:10px;"><tr><td align="center" style="padding:20px 18px;font-size:34px;font-weight:bold;letter-spacing:8px;color:#00685f;"><span th:text="${codigo}">000000</span></td></tr></table>
+      <div style="margin-top:24px;padding:14px 16px;border-left:4px solid #c2410c;background:#fff7ed;color:#9a3412;font-size:13px;line-height:1.5;">Si no solicitaste este cambio, ignora este mensaje y avisa a recepción. Nunca compartas este código.</div>
+      <p style="margin:26px 0 0;color:#8999a5;font-size:11px;line-height:1.5;">Este es un mensaje automático. Por favor no respondas a este correo.</p>
+    </td></tr>
+    <tr><td style="padding:16px 32px;background:#f7fbfe;color:#7b94a5;text-align:center;font-size:11px;">Estamos preparados para recibirte.</td></tr>
+  </table>
+</td></tr></table>
+</body>
+</html>

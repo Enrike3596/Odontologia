@@ -57,7 +57,9 @@ CREATE TABLE IF NOT EXISTS usuarios (
     telefono VARCHAR(15) NOT NULL,
     direccion VARCHAR(255),
     username VARCHAR(50) NOT NULL UNIQUE,
-    password VARCHAR(100) NOT NULL,
+    -- Hash BCrypt ($2b$, 60 caracteres). Los valores legados en texto plano
+    -- se migran a hash automáticamente al autenticar (re-hash al entrar).
+    password VARCHAR(255) NOT NULL,
     activo BOOLEAN NOT NULL DEFAULT TRUE,
     rol_id BIGINT NOT NULL REFERENCES roles(id)
 );
@@ -65,8 +67,10 @@ CREATE TABLE IF NOT EXISTS usuarios (
 CREATE INDEX IF NOT EXISTS idx_usuarios_rol ON usuarios(rol_id);
 CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(email);
 
--- Usuario administrador inicial (password en texto plano, igual que
--- los usuarios creados por UsuarioServiceImpl; cambiar tras migrar a BCrypt)
+-- Usuario administrador inicial (la clave 'admin123' en texto plano se
+-- convierte a hash BCrypt al iniciar sesión por primera vez; cámbiela
+-- de inmediato en el módulo de Usuarios: mín. 10 caracteres con
+-- mayúscula, minúscula y número)
 INSERT INTO usuarios
     (nombres, apellidos, tipo_documento, documento, fecha_nacimiento, genero,
      email, telefono, direccion, username, password, activo, rol_id)

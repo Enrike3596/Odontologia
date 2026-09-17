@@ -12,18 +12,38 @@ import com.odontologia.odontologia.Entity.Genero;
 import com.odontologia.odontologia.Entity.Rol;
 import com.odontologia.odontologia.Entity.TipoDocumento;
 import com.odontologia.odontologia.Entity.Usuario;
+import com.odontologia.odontologia.Repository.PasswordResetTokenRepository;
 import com.odontologia.odontologia.Repository.RolRepository;
 import com.odontologia.odontologia.Repository.UsuarioRepository;
+import com.odontologia.odontologia.Service.EmailService;
 import com.odontologia.odontologia.Service.UsuarioService;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
 public class UsuarioServiceImpl implements UsuarioService {
+
+	/**
+	 * Política de contraseñas: mínimo 10 caracteres, con mayúscula,
+	 * minúscula y número. Se aplica al crear, actualizar y restablecer;
+	 * nunca al autenticar (para no filtrar información).
+	 */
+	public static final int PASSWORD_MIN_LENGTH = 10;
 
 	@Autowired
 	private UsuarioRepository usuarioRepository;
 	
 	@Autowired
 	private RolRepository rolRepository;
+
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+
+	@Autowired
+	private PasswordResetTokenRepository resetTokenRepository;
+
+	@Autowired(required = false)
+	private EmailService emailService;
 
 	@Override
 	public List<UsuarioDto> listarUsuarios() {
@@ -36,6 +56,34 @@ public class UsuarioServiceImpl implements UsuarioService {
 		Usuario u = usuarioRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
 		return convertirEntityADto(u);
+	}
+
+	/** Valida la política y devuelve el hash BCrypt (nunca el texto plano). */
+	public String codificarPassword(String passwordPlana) {
+		validarPoliticaPassword(passwordPlana);
+		return passwordEncoder.encode(passwordPlana);
+	}
+
+	public static void validarPoliticaPassword(String password) {
+		if (password == null || password.length() < PASSWORD_MIN_LENGTH) {
+			throw new RuntimeException(
+					"La contraseña debe tener al menos " + PASSWORD_MIN_LENGTH + " caracteres");
+		}
+		boolean mayus = false, minus = false, numero = false;
+		for (char c : password.toCharArray()) {
+			if (Character.isUpperCase(c)) mayus = true;
+			else if (Character.isLowerCase(c)) minus = true;
+			else if (Character.isDigit(c)) numero = true;
+		}
+		if (!mayus || !minus || !numero) {
+			throw new RuntimeException(
+					"La contraseña debe incluir mayúscula, minúscula y número");
+		}
+	}
+
+	/** Detecta hashes BCrypt ($2a$/$2b$/$2y$) frente a valores legados en plano. */
+	public static boolean esHashBCrypt(String valor) {
+		return valor != null && valor.matches("^\\$2[aby]\\$\\d{2}\\$.{53}$");
 	}
 
 	@Override
@@ -68,12 +116,12 @@ public class UsuarioServiceImpl implements UsuarioService {
 			u.setDireccion(usuarioDto.getDireccion());
 			u.setActivo(usuarioDto.getActivo() != null ? usuarioDto.getActivo() : true);
 			
-			// Si no se proporciona password, generamos una temporal
-			if (usuarioDto.getPassword() == null || usuarioDto.getPassword().isEmpty()) {
-				u.setPassword("temp123"); // En producción debería ser encriptada
-			} else {
-				u.setPassword(usuarioDto.getPassword());
-			}
+		// La contraseña es obligatoria y se almacena solo como hash BCrypt.
+		// (Se eliminó la clave temporal "temp123" en texto plano.)
+		if (usuarioDto.getPassword() == null || usuarioDto.getPassword().isEmpty()) {
+			throw new RuntimeException("La contraseña es requerida");
+		}
+		u.setPassword(codificarPassword(usuarioDto.getPassword()));
 			
 			// Si no se proporciona username, generamos uno basado en email
 			if (usuarioDto.getUsername() == null || usuarioDto.getUsername().isEmpty()) {
@@ -125,9 +173,9 @@ public class UsuarioServiceImpl implements UsuarioService {
 		if (usuarioDto.getActivo() != null) {
 			existente.setActivo(usuarioDto.getActivo());
 		}
-		// Solo actualizar password si se proporciona
+		// Solo actualizar password si se proporciona (se guarda como hash BCrypt)
 		if (usuarioDto.getPassword() != null && !usuarioDto.getPassword().isEmpty()) {
-			existente.setPassword(usuarioDto.getPassword());
+			existente.setPassword(codificarPassword(usuarioDto.getPassword()));
 		}
 		if (usuarioDto.getRol() != null && usuarioDto.getRol().getId() != null) {
 			Rol rol = rolRepository.findById(usuarioDto.getRol().getId())
@@ -157,23 +205,134 @@ public class UsuarioServiceImpl implements UsuarioService {
 		}
 
 		String id = identifier.trim();
-		Usuario usuario = usuarioRepository.findByEmail(id)
-				.or(() -> usuarioRepository.findByUsername(id))
-				.or(() -> usuarioRepository.findByDocumento(id))
-				.orElseThrow(() -> new RuntimeException("Credenciales inválidas"));
+		Usuario usuario = buscarPorIdentificador(id);
 
 		if (usuario.getActivo() == null || !usuario.getActivo()) {
 			throw new RuntimeException("Usuario inactivo. Contacte al administrador");
 		}
 
-		// NOTA: las contraseñas se almacenan en texto plano (compatibilidad con
-		// los usuarios existentes). Si a futuro se usa BCrypt, comparar aquí con
-		// passwordEncoder.matches(password, usuario.getPassword()).
-		if (!password.equals(usuario.getPassword())) {
-			throw new RuntimeException("Credenciales inválidas");
+	// Verificación con BCrypt. Migración transparente de claves legadas:
+	// si el valor en BD aún está en texto plano y coincide, se re-hashea
+	// y se guarda en el acto (el usuario no percibe el cambio).
+		String guardado = usuario.getPassword();
+		if (esHashBCrypt(guardado)) {
+			if (!passwordEncoder.matches(password, guardado)) {
+				throw new RuntimeException("Credenciales inválidas");
+			}
+		} else {
+			if (!password.equals(guardado)) {
+				throw new RuntimeException("Credenciales inválidas");
+			}
+			usuario.setPassword(passwordEncoder.encode(password));
+			usuarioRepository.save(usuario);
 		}
 
 		return convertirEntityADto(usuario);
+	}
+
+	private Usuario buscarPorIdentificador(String id) {
+		return usuarioRepository.findByEmail(id)
+				.or(() -> usuarioRepository.findByUsername(id))
+				.or(() -> usuarioRepository.findByDocumento(id))
+				.orElseThrow(() -> new RuntimeException("Credenciales inválidas"));
+	}
+
+	@Override
+	@org.springframework.transaction.annotation.Transactional
+	public void solicitarRecuperacion(String identifier) {
+		if (identifier == null || identifier.trim().isEmpty()) {
+			throw new RuntimeException("El identificador es requerido");
+		}
+		String id = identifier.trim();
+		Usuario usuario;
+		try {
+			usuario = buscarPorIdentificador(id);
+		} catch (RuntimeException e) {
+			return; // Respuesta genérica: no revelar si el identificador existe
+		}
+		if (usuario.getActivo() == null || !usuario.getActivo()) {
+			return;
+		}
+		String email = usuario.getEmail();
+		if (email == null || !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+			return;
+		}
+		// Invalidar códigos previos pendientes del usuario
+		resetTokenRepository.findByUsuarioIdAndUsadoFalse(usuario.getId())
+				.forEach(t -> {
+					t.setUsado(true);
+					resetTokenRepository.save(t);
+				});
+		// Código de 6 dígitos con vigencia de 15 minutos (en BD solo su SHA-256)
+		String codigo;
+		try {
+			int n = java.security.SecureRandom.getInstanceStrong().nextInt(900_000) + 100_000;
+			codigo = String.valueOf(n);
+		} catch (java.security.NoSuchAlgorithmException e) {
+			codigo = String.valueOf(new java.security.SecureRandom().nextInt(900_000) + 100_000);
+		}
+		com.odontologia.odontologia.Entity.PasswordResetToken token =
+				new com.odontologia.odontologia.Entity.PasswordResetToken();
+		token.setUsuario(usuario);
+		token.setCodigoHash(sha256Hex(codigo));
+		token.setExpiraEn(java.time.LocalDateTime.now().plusMinutes(15));
+		token.setUsado(false);
+		token.setCreadoEn(java.time.LocalDateTime.now());
+		resetTokenRepository.save(token);
+
+		try {
+			if (emailService != null) {
+				String nombre = ((usuario.getNombres() != null ? usuario.getNombres() : "")
+						+ " " + (usuario.getApellidos() != null ? usuario.getApellidos() : "")).trim();
+				emailService.enviarCodigoRecuperacion(email.trim(), nombre, codigo);
+			}
+		} catch (Exception e) {
+			System.err.println("[Recuperación] No se pudo enviar el código al usuario "
+					+ usuario.getId() + ": " + e.getMessage());
+		}
+	}
+
+	@Override
+	@org.springframework.transaction.annotation.Transactional
+	public void restablecerPassword(String codigo, String nuevaPassword) {
+		if (codigo == null || codigo.trim().isEmpty()) {
+			throw new RuntimeException("El código es requerido");
+		}
+		validarPoliticaPassword(nuevaPassword);
+		com.odontologia.odontologia.Entity.PasswordResetToken token = resetTokenRepository
+				.findByCodigoHashAndUsadoFalseAndExpiraEnAfter(
+						sha256Hex(codigo.trim()), java.time.LocalDateTime.now())
+				.orElseThrow(() -> new RuntimeException("Código inválido o vencido"));
+		Usuario usuario = token.getUsuario();
+		usuario.setPassword(passwordEncoder.encode(nuevaPassword));
+		usuarioRepository.save(usuario);
+		token.setUsado(true);
+		resetTokenRepository.save(token);
+	}
+
+	/** Limpieza diaria de códigos vencidos (higiene de la tabla). */
+	@org.springframework.scheduling.annotation.Scheduled(cron = "0 0 3 * * *")
+	@org.springframework.transaction.annotation.Transactional
+	public void purgarCodigosVencidos() {
+		try {
+			resetTokenRepository.deleteByExpiraEnBefore(java.time.LocalDateTime.now());
+		} catch (Exception e) {
+			System.err.println("[Recuperación] No se pudieron purgar códigos: " + e.getMessage());
+		}
+	}
+
+	public static String sha256Hex(String texto) {
+		try {
+			java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+			byte[] digest = md.digest(texto.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+			StringBuilder sb = new StringBuilder();
+			for (byte b : digest) {
+				sb.append(String.format("%02x", b));
+			}
+			return sb.toString();
+		} catch (java.security.NoSuchAlgorithmException e) {
+			throw new RuntimeException("SHA-256 no disponible", e);
+		}
 	}
 
 	private UsuarioDto convertirEntityADto(Usuario u) {

@@ -193,22 +193,6 @@
             <span>Acceder al Portal Odontológico</span>
             <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
           </button>
-
-          <!-- Divisor -->
-          <div class="relative flex items-center justify-center py-2">
-            <div class="w-full h-[1px] bg-surface-container-high"></div>
-            <span class="absolute px-3 bg-surface text-outline text-[11px] leading-[14px] tracking-[0.03em] font-semibold">o acceso verificado</span>
-          </div>
-
-          <!-- Acceso biométrico -->
-          <button class="w-full h-[52px] rounded-full bg-surface-container-lowest shadow-sm flex items-center justify-center gap-3 active:scale-[0.98] transition-all hover:bg-surface-container-low group"
-                  onclick="triggerBiometrics()" type="button">
-            <div class="w-8 h-8 rounded-full bg-secondary-container/30 flex items-center justify-center text-secondary group-hover:scale-110 transition-transform">
-              <span class="material-symbols-outlined text-[20px]">fingerprint</span>
-            </div>
-            <span class="text-[13px] leading-[18px] tracking-[0.015em] font-semibold text-on-surface">Acceso rápido con FaceID / Huella</span>
-            <span class="material-symbols-outlined text-outline-variant text-[18px]">sensors</span>
-          </button>
         </form>
       </div>
 
@@ -224,7 +208,7 @@
           </p>
         </div>
 
-        <div class="space-y-4">
+        <div class="space-y-4" id="recovery-step-1">
           <div class="flex flex-col">
             <label class="text-[13px] leading-[18px] tracking-[0.015em] font-semibold text-on-surface mb-1.5 px-1" for="recovery-input">
               Correo Electrónico o Documento Registrado <span class="required-asterisk" aria-hidden="true" style="color:#dc2626;font-weight:700;">*</span>
@@ -234,42 +218,58 @@
               <input class="w-full h-[52px] pl-11 pr-4 rounded-xl bg-surface-container-lowest text-on-surface text-[14px] leading-[22px] placeholder:text-outline/70 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                      id="recovery-input" placeholder="ej. paciente@clinicadental.com o DNI" type="text" required />
             </div>
-          </div>
-
-          <div class="flex flex-col">
-            <span class="text-[11px] leading-[14px] tracking-[0.03em] font-semibold text-on-surface-variant uppercase mb-2 px-1">Método preferido de envío</span>
-            <div class="space-y-2">
-              <label class="flex items-center justify-between p-3 rounded-xl bg-surface-container-lowest shadow-sm cursor-pointer hover:bg-surface-container-low transition-colors">
-                <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary">
-                    <span class="material-symbols-outlined text-[18px]">chat</span>
-                  </div>
-                  <div class="flex flex-col">
-                    <span class="text-[13px] leading-[18px] tracking-[0.015em] font-semibold text-on-surface">WhatsApp / Mensaje SMS</span>
-                    <span class="text-[12px] leading-[18px] text-on-surface-variant">Al teléfono móvil registrado</span>
-                  </div>
-                </div>
-                <input checked class="accent-[#00685f] w-4 h-4 cursor-pointer" name="recovery-method" type="radio" value="whatsapp" />
-              </label>
-              <label class="flex items-center justify-between p-3 rounded-xl bg-surface-container-lowest shadow-sm cursor-pointer hover:bg-surface-container-low transition-colors">
-                <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary">
-                    <span class="material-symbols-outlined text-[18px]">mark_email_read</span>
-                  </div>
-                  <div class="flex flex-col">
-                    <span class="text-[13px] leading-[18px] tracking-[0.015em] font-semibold text-on-surface">Correo Electrónico</span>
-                    <span class="text-[12px] leading-[18px] text-on-surface-variant">Enlace con token temporal</span>
-                  </div>
-                </div>
-                <input class="accent-[#00685f] w-4 h-4 cursor-pointer" name="recovery-method" type="radio" value="email" />
-              </label>
-            </div>
+            <p class="text-[11px] leading-[16px] text-on-surface-variant mt-1.5 px-1">El código de 6 dígitos llegará al correo registrado (vigente 15 minutos).</p>
           </div>
 
           <button class="w-full h-[52px] mt-2 rounded-full bg-gradient-to-r from-primary to-secondary text-on-primary text-[15px] leading-[20px] tracking-[0.01em] font-semibold shadow-lg flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
                   id="btn-recovery-submit" onclick="handleRecoveryAction()" type="button">
             <span class="material-symbols-outlined text-[20px]">send</span>
-            <span>Enviar Enlace de Recuperación</span>
+            <span>Enviar código de recuperación</span>
+          </button>
+
+          <button class="w-full h-11 rounded-full text-[13px] leading-[18px] tracking-[0.015em] font-semibold text-primary flex items-center justify-center gap-2 hover:bg-surface-container-low transition-colors"
+                  onclick="switchAuthView('login')" type="button">
+            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+            <span>Volver a Iniciar Sesión</span>
+          </button>
+        </div>
+
+        <div class="space-y-4 hidden" id="recovery-step-2">
+          <div class="flex flex-col">
+            <label class="text-[13px] leading-[18px] tracking-[0.015em] font-semibold text-on-surface mb-1.5 px-1" for="recovery-code">
+              Código de 6 dígitos <span class="required-asterisk" aria-hidden="true" style="color:#dc2626;font-weight:700;">*</span>
+            </label>
+            <div class="relative flex items-center">
+              <span class="absolute left-4 material-symbols-outlined text-outline text-[20px] pointer-events-none">pin</span>
+              <input class="w-full h-[52px] pl-11 pr-4 rounded-xl bg-surface-container-lowest text-on-surface text-[14px] leading-[22px] tracking-[0.3em] text-center placeholder:text-outline/70 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                     id="recovery-code" placeholder="000000" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" />
+            </div>
+          </div>
+          <div class="flex flex-col">
+            <label class="text-[13px] leading-[18px] tracking-[0.015em] font-semibold text-on-surface mb-1.5 px-1" for="recovery-new-password">
+              Nueva contraseña <span class="required-asterisk" aria-hidden="true" style="color:#dc2626;font-weight:700;">*</span>
+            </label>
+            <div class="relative flex items-center">
+              <span class="absolute left-4 material-symbols-outlined text-outline text-[20px] pointer-events-none">key</span>
+              <input class="w-full h-[52px] pl-11 pr-4 rounded-xl bg-surface-container-lowest text-on-surface text-[14px] leading-[22px] placeholder:text-outline/70 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                     id="recovery-new-password" placeholder="Mín. 10 caracteres, mayúscula, minúscula y número" type="password" autocomplete="new-password" />
+            </div>
+          </div>
+          <div class="flex flex-col">
+            <label class="text-[13px] leading-[18px] tracking-[0.015em] font-semibold text-on-surface mb-1.5 px-1" for="recovery-confirm-password">
+              Confirmar nueva contraseña <span class="required-asterisk" aria-hidden="true" style="color:#dc2626;font-weight:700;">*</span>
+            </label>
+            <div class="relative flex items-center">
+              <span class="absolute left-4 material-symbols-outlined text-outline text-[20px] pointer-events-none">key</span>
+              <input class="w-full h-[52px] pl-11 pr-4 rounded-xl bg-surface-container-lowest text-on-surface text-[14px] leading-[22px] shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                     id="recovery-confirm-password" placeholder="Repita la nueva contraseña" type="password" autocomplete="new-password" />
+            </div>
+          </div>
+
+          <button class="w-full h-[52px] mt-2 rounded-full bg-gradient-to-r from-primary to-secondary text-on-primary text-[15px] leading-[20px] tracking-[0.01em] font-semibold shadow-lg flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+                  id="btn-reset-submit" onclick="handleResetAction()" type="button">
+            <span class="material-symbols-outlined text-[20px]">lock_reset</span>
+            <span>Restablecer contraseña</span>
           </button>
 
           <button class="w-full h-11 rounded-full text-[13px] leading-[18px] tracking-[0.015em] font-semibold text-primary flex items-center justify-center gap-2 hover:bg-surface-container-low transition-colors"

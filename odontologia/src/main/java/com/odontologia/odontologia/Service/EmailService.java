@@ -17,4 +17,7 @@ public interface EmailService {
 
     /** Recordatorio de una cita próxima (job programado). */
     void enviarRecordatorio(Cita2Dto cita);
+
+    /** Código de recuperación de contraseña (6 dígitos, 15 min de vigencia). */
+    void enviarCodigoRecuperacion(String destinatario, String nombre, String codigo);
 }

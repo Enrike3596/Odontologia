@@ -1,6 +1,6 @@
 # Sistema de Gestión Odontológica 🦷
 
-Sistema web para la gestión integral de una clínica odontológica: administración de **usuarios, pacientes, odontólogos, citas, agenda médica mensual, historias clínicas, tipos de cita y roles**, con autenticación por email/usuario/documento, **envío de correos de confirmación/recordatorio vía Gmail SMTP** e **impresión del comprobante de cita**.
+Sistema web para la gestión integral de una clínica odontológica: administración de **usuarios, pacientes, odontólogos, citas, agenda médica mensual, historias clínicas, tipos de cita y roles**, con autenticación por email/usuario/documento (**Spring Security + hash BCrypt + sesión en servidor + recuperación por correo**), **envío de correos de confirmación/recordatorio vía Gmail SMTP** e **impresión del comprobante de cita**.
 
 ---
 
@@ -12,6 +12,7 @@ Sistema web para la gestión integral de una clínica odontológica: administrac
 | **Java** | 21 | Lenguaje principal |
 | **Spring Boot** | 3.5.6 | Framework base (parent `spring-boot-starter-parent`) |
 | **Spring Web (MVC + REST)** | — | Controladores MVC (`VistaController`) y API REST (`/api/**`) |
+| **Spring Security** | — | Sesión HTTP del lado servidor, reglas por rol (`/api/agenda/movimientos` solo Administrador), 401/403 JSON en API y redirección a `/login` en vistas. `PasswordEncoder` BCrypt (costo 12) |
 | **Spring Data JPA / Hibernate** | — | Persistencia, entidades y repositorios. `ddl-auto=update` |
 | **Spring Mail (SMTP)** | — | Confirmación y recordatorio de citas por correo (Gmail/Workspace, `app.mail.enabled`) |
 | **Thymeleaf** | — | Renderizado server-side de vistas (`src/main/resources/templates/`) + plantillas de correo (`templates/email/`) |
@@ -20,12 +21,12 @@ Sistema web para la gestión integral de una clínica odontológica: administrac
 | **Lombok** | — | Reducción de boilerplate (`@Data`, `@Entity`, DTOs) |
 | **PostgreSQL Driver** | runtime | Conexión JDBC a PostgreSQL |
 | **Maven** | — | Gestión de dependencias y build (`pom.xml`, `mvnw` / `mvnw.cmd`) |
-| **JUnit / spring-boot-starter-test** | — | Pruebas (`OdontologiaApplicationTests`) |
+| **JUnit / spring-boot-starter-test** | — | Pruebas (`OdontologiaApplicationTests`, `UsuarioPasswordSecurityTest`: hash BCrypt, política de clave, migración legada, recuperación) |
 
 ### Frontend
 | Tecnología | Uso |
 |---|---|
-| **Thymeleaf + HTML5** | Vistas: `home.html`, `login.html`, `citas.html`, `Agenda.html`, `Pacientes.html`, `Odontologos.html`, `HistoriasClinicas.html`, `Usuarios.html`, `configuracion.html`, `Pagina inicial/index.html`, `email/confirmacion-cita.html`, `email/recordatorio-cita.html` |
+| **Thymeleaf + HTML5** | Vistas: `home.html`, `login.html`, `citas.html`, `Agenda.html`, `Pacientes.html`, `Odontologos.html`, `HistoriasClinicas.html`, `Usuarios.html`, `configuracion.html`, `Pagina inicial/index.html`, `email/confirmacion-cita.html`, `email/recordatorio-cita.html`, `email/recuperacion.html` |
 | **JavaScript vanilla (Fetch API)** | Lógica por módulo: `login.js`, `citas.js`, `agenda.js`, `catalogos.js`, `pacientes.js`, `odontologos.js`, `historiaclinica.js`, `usuarios.js`, `home.js`, `navigation.js`, `sidebar.js`, `components.js`, `auth-guard.js`, `user-session.js`, `table-pager.js`, `contacto.js` |
 | **CSS propio (`app.css`) + Bootstrap 5.0.5-alpha** | Estilos del panel administrativo y de la página pública inicial |
 | **LineIcons 2.0, animate.css, tiny-slider, wow.js** | Iconos, animaciones y slider de la landing page (`Pagina Inicial/`) |
@@ -35,10 +36,10 @@ Sistema web para la gestión integral de una clínica odontológica: administrac
 | Tecnología | Detalle |
 |---|---|
 | **PostgreSQL 5432** | BD `odontologia` (ver `odontologia/base.sql`) |
-| Tablas | `roles`, `usuarios`, `pacientes`, `odontologos`, `tipos_cita`, `historias_clinicas`, `citas`, `bloqueos_agenda` |
+| Tablas | `roles`, `usuarios`, `pacientes`, `odontologos`, `tipos_cita`, `historias_clinicas`, `citas`, `bloqueos_agenda`, `password_reset_tokens` |
 | Script base | `odontologia/base.sql` — re-ejecutable, crea tablas + datos semilla (3 roles, usuario admin, 5 pacientes, 3 odontólogos, 4 tipos de cita, 2 citas) + normalización de catálogos |
 
-> Credencial inicial (cambiar en producción): `admin@clinica.com` / `admin` / `admin123`.
+> Credencial inicial: `admin@clinica.com` / `admin` / `admin123`. La clave en plano migra a hash BCrypt al primer ingreso; **cámbiela de inmediato** en el módulo Usuarios (mín. 10 caracteres con mayúscula, minúscula y número).
 
 ---
 
@@ -81,15 +82,15 @@ Arquitectura en **capas (N-Layer) estilo monolito MVC + API REST**, todo dentro 
 | Lógica de negocio | `Service` + `Impl` | Interfaces (`UsuarioService`, `Cita2Service`, `AgendaService`, `EmailService`, …) e implementaciones (`UsuarioServiceImpl`, …). Ej.: `autenticar(identifier, password)` acepta email, username o documento; `AgendaService` calcula disponibilidad y valida turnos; `EmailService` envía correos de forma asíncrona |
 | Tareas programadas | `Service` | `RecordatorioScheduler` — todos los días 07:00 envía recordatorios de las citas del día siguiente |
 | Persistencia | `Repository` | `JpaRepository` por entidad: `UsuarioRepository`, `Paciente2Repository`, `OdontologoRepository`, `Cita2Repository`, `HistoriaClinicaRepository`, `TipoCitaRepository`, `RolRepository`, `BloqueoAgendaRepository` |
-| Dominio | `Entity` | `Usuario`, `Rol`, `Paciente2`, `Odontologo`, `Cita2`, `HistoriaClinica`, `TipoCita`, `BloqueoAgenda`, enums `EstadoCitaEnum`, `TipoDocumento`, `Genero`, `Parentesco`, `TipoMovimientoAgenda` |
+| Dominio | `Entity` | `Usuario`, `Rol`, `Paciente2`, `Odontologo`, `Cita2`, `HistoriaClinica`, `TipoCita`, `BloqueoAgenda`, `PasswordResetToken`, enums `EstadoCitaEnum`, `TipoDocumento`, `Genero`, `Parentesco`, `TipoMovimientoAgenda` |
 | Transferencia | `Dto` | `UsuarioDto`, `Paciente2Dto`, `OdontologoDto`, `Cita2Dto`, `HistoriaClinicaDto`, `TipoCitaDto`, `RolDto`, `LoginRequestDto`, `BloqueoAgendaDto`, `AgendaDiaDto`, `SlotAgendaDto` |
-| Configuración | `Config` | `WebCacheConfig` (caché de recursos estáticos) |
+| Configuración | `Config` | `SecurityConfig` (filter chain + `PasswordEncoder` BCrypt), `Roles` (mapeo rol→authority), `AuthPrincipal` (identidad de sesión), `LoginAttemptService` (límite de intentos), `WebCacheConfig` (caché de recursos estáticos) |
 
 ### Patrones
 - **MVC server-side** (Thymeleaf) para las páginas + **REST + AJAX** (JS `fetch`) para los datos — sin SPA framework.
 - **DTO** para desacoplar entidades JPA del JSON/vistas.
 - **Repository + Service Interface/Impl** (inyección con `@Autowired`).
-- Sesión de usuario en cliente (`user-session.js` + `auth-guard.js`); login stateful simple sin JWT/Spring Security.
+- **Sesión en servidor** (Spring Security + `JSESSIONID` HttpOnly/SameSite): el `localStorage` (`auth-guard.js`, `user-session.js`) es solo caché de UI; la validez se verifica contra `GET /api/auth/me`. Sin sesión: API → 401 JSON, vistas → redirect a `/login`.
 
 ---
 
@@ -105,16 +106,18 @@ Odontologia/
     └── src/
         ├── main/
         │   ├── java/com/odontologia/odontologia/
-        │   │   ├── OdontologiaApplication.java
-        │   │   ├── Config/        → WebCacheConfig
+  │   │   ├── OdontologiaApplication.java
+  │   │   ├── Config/        → SecurityConfig, Roles, AuthPrincipal,
+  │   │   │                    LoginAttemptService, WebCacheConfig
         │   │   ├── Controller/
         │   │   │   ├── Mvc/       → VistaController
         │   │   │   └── Rest/      → Auth, Usuario, Paciente2, Odontologo,
         │   │   │                    Cita2, HistoriaClinica, TipoCita, Rol
         │   │   ├── Dto/           → *Dto, LoginRequestDto
-        │   │   ├── Entity/        → Usuario, Rol, Paciente2, Odontologo,
-        │   │   │                    Cita2, HistoriaClinica, TipoCita, EstadoCitaEnum
-        │   │   ├── Repository/    → JpaRepositories
+  │   │   ├── Entity/        → Usuario, Rol, Paciente2, Odontologo,
+  │   │   │                    Cita2, HistoriaClinica, TipoCita, EstadoCitaEnum,
+  │   │   │                    PasswordResetToken
+  │   │   ├── Repository/    → JpaRepositories (+ PasswordResetTokenRepository)
         │   │   ├── Service/       → interfaces
         │   │   └── Impl/          → implementaciones
         │   └── resources/
@@ -125,7 +128,7 @@ Odontologia/
         │           ├── css/       → app.css + Pagina Inicial/
         │           ├── Imagenes/
         │           └── Components/→ sidebar.html, topbar.html
-        └── test/                  → OdontologiaApplicationTests
+        └── test/          → OdontologiaApplicationTests, UsuarioPasswordSecurityTest
 ```
 
 ---
@@ -136,7 +139,11 @@ Base: `http://localhost:8080/api`
 
 | Módulo | Método | Ruta | Descripción |
 |---|---|---|---|
-| Auth | `POST` | `/api/auth/login` | Login con `{ identifier, password }` (email, username o documento). `200` + `UsuarioDto`, `400` faltantes, `401` credenciales inválidas, `403` usuario inactivo |
+| Auth | `POST` | `/api/auth/login` | Login con `{ identifier, password }` (email, username o documento). Crea sesión servidor. `200` + `UsuarioDto`, `400` faltantes, `401` credenciales inválidas, `403` usuario inactivo, `429` por exceso de intentos (5 fallos / 15 min) |
+| Auth | `GET` | `/api/auth/me` | Sesión actual (fuente de verdad del guardia frontend). `200` + `UsuarioDto`, `401` sin sesión |
+| Auth | `POST` | `/api/auth/logout` | Invalida la sesión del servidor |
+| Auth | `POST` | `/api/auth/recovery` | Solicita código de 6 dígitos al correo (`{ identifier }`; respuesta genérica anti-enumeración; vigencia 15 min) |
+| Auth | `POST` | `/api/auth/reset` | Canjea `{ codigo, nuevaPassword }` (aplica política de clave, uso único) |
 | Usuarios | `GET` | `/api/usuarios`, `/api/usuarios/{id}` | Listar / obtener |
 | Usuarios | `POST` | `/api/usuarios` | Crear (rol por defecto si no se envía) |
 | Pacientes | `GET` | `/api/pacientes`, `/api/pacientes/{id}` | Listar / obtener |
@@ -188,7 +195,34 @@ Vistas MVC: `/`, `/dashboard` (home), `/inicio` (landing pública), `/login`, `/
 
 ---
 
-## 6. Requisitos previos
+## 6. Seguridad — inicio de sesión fortalecido
+
+### 6.1 Contraseñas con hash BCrypt (nunca en plano)
+- `PasswordEncoder` BCrypt costo 12 (`Config/SecurityConfig`); columna `usuarios.password` en `VARCHAR(255)`.
+- Crear/actualizar/restablecer siempre guardan el hash (`UsuarioServiceImpl.codificarPassword`); el DTO de respuesta nunca incluye la clave.
+- **Migración transparente**: los valores legados en plano se verifican una vez y se **re-hashean al entrar**; con clave errónea no hay migración.
+- **Procedimiento en BD**: no requiere script — al primer login de cada usuario su fila queda con `$2b$...` (60 caracteres). Verificable con `SELECT id, username, length(password), left(password,4) FROM usuarios;`.
+
+### 6.2 Política de contraseñas
+- Mínimo **10 caracteres con mayúscula, minúscula y número**. Se exige en backend (`validarPoliticaPassword`) al crear, actualizar y restablecer; el frontend la refleja en `usuarios.js` y `login.js`.
+- Se eliminó la clave temporal `temp123`: crear usuario sin contraseña ahora es error.
+
+### 6.3 Sesión en servidor + autorización por rol
+- Login exitoso crea sesión HTTP (`JSESSIONID` HttpOnly + `SameSite=Lax`, expira a los 30 min de inactividad; `changeSessionId` anti-fijación).
+- Reglas (`SecurityConfig`): `/api/auth/**` público; `/api/**` exige sesión; `POST/DELETE /api/agenda/movimientos` exige rol **Administrador** (mapeo en `Config/Roles`).
+- Sin sesión: API → `401` JSON, vistas → redirect a `/login`. Sin rol: API → `403` JSON.
+- `auth-guard.js` valida contra `GET /api/auth/me`; `ClinicaAuth.logout()` invalida en servidor (`POST /api/auth/logout`); los 8 `logout()` de las plantillas lo usan.
+- **Límite de intentos** (`LoginAttemptService`, en memoria): 5 fallos por identificador+IP en 15 min → `429` con tiempo de reintento; el éxito limpia el contador.
+
+### 6.4 Recuperación de cuenta real (antes simulada)
+- Flujo en 2 pasos en `login.html`/`login.js`: `POST /api/auth/recovery` → código de **6 dígitos por correo** (`templates/email/recuperacion.html`, 15 min de vigencia) → `POST /api/auth/reset` con código + clave nueva.
+- En BD (`password_reset_tokens`) solo se guarda el **SHA-256** del código, con marca de uso único; purga diaria de vencidos (`purgarCodigosVencidos`, 03:00).
+- Respuestas genéricas para no revelar si la cuenta existe; la recuperación también está bajo límite de intentos.
+- **Quitado**: botón "FaceID/Huella" (entraba sin credenciales con sesión recordada) y opciones WhatsApp/SMS sin infraestructura.
+
+---
+
+## 7. Requisitos previos
 
 - **Java 21** (`java -version`)
 - **Maven 3.9+** (o usar `./mvnw` incluido)
@@ -196,7 +230,7 @@ Vistas MVC: `/`, `/dashboard` (home), `/inicio` (landing pública), `/login`, `/
 
 ---
 
-## 7. Instalación y ejecución
+## 8. Instalación y ejecución
 
 ```bash
 # 1. Crear la base de datos (una sola vez)
@@ -233,18 +267,18 @@ JPA tiene `ddl-auto=update`, por lo que las tablas se crean/actualizan al arranc
 
 ---
 
-## 8. Notas técnicas y deuda conocida
+## 9. Notas técnicas y deuda conocida
 
-- Las contraseñas se guardan y comparan **en texto plano** (`UsuarioServiceImpl` + `base.sql`). Pendiente migrar a **BCrypt + Spring Security / JWT**.
 - Sin validación Bean Validation global ni manejo centralizado de excepciones (`@ControllerAdvice`).
-- `application.properties` con credenciales de desarrollo hardcodeadas — externalizar vía variables de entorno en producción.
-- El frontend no usa framework SPA; la protección de rutas es solo cliente (`auth-guard.js`).
+- `application.properties` con credenciales de desarrollo hardcodeadas — externalizar vía variables de entorno en producción (incluye la App Password de Gmail).
+- CSRF por token desactivado para `/api/**` (app misma-origen + cookie `SameSite=Lax`); reevaluar si se expone cross-origin.
+- El límite de intentos es en memoria (se reinicia al replegar; para multi-instancia usar Redis/Bucket4j).
 
 ---
 
-## 9. Roadmap sugerido
+## 10. Roadmap sugerido
 
-1. Spring Security + BCrypt + JWT.
+1. ~~Spring Security + BCrypt + JWT~~ ✅ Hecho (sesión servidor + BCrypt; JWT queda opcional).
 2. CRUD completo (PUT/DELETE) en todos los RestControllers.
 3. Paginación/filtros server-side y validaciones.
 4. `docker-compose.yml` (app + postgres) y perfiles `dev/prod`.

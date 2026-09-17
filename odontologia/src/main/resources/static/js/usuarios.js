@@ -59,6 +59,17 @@ function showWarningAlert(message) {
     });
 }
 
+// Política de contraseñas (reflejo del backend UsuarioServiceImpl):
+// mín. 10 caracteres con mayúscula, minúscula y número.
+// Devuelve el mensaje de error o null si cumple.
+function validarPoliticaPassword(pwd) {
+    if (!pwd || pwd.length < 10) return 'La contraseña debe tener al menos 10 caracteres.';
+    if (!/[A-Z]/.test(pwd) || !/[a-z]/.test(pwd) || !/[0-9]/.test(pwd)) {
+        return 'La contraseña debe incluir mayúscula, minúscula y número.';
+    }
+    return null;
+}
+
 function showInfoAlert(message) {
     Swal.fire({
         icon: 'info',
@@ -870,6 +881,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
+            // Política de contraseñas (igual que el backend): mín. 10 con mayúscula, minúscula y número
+            const politicaError = validarPoliticaPassword(usuarioData.password);
+            if (politicaError) {
+                showWarningAlert(politicaError);
+                return;
+            }
+
             // Generar username basado en email si no se proporciona
             usuarioData.username = usuarioData.email.split('@')[0];
 
@@ -919,10 +937,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Si se proporcionan contraseñas, validar que coincidan
+            // Si se proporcionan contraseñas, validar que coincidan y cumplan la política
             if (usuarioData.password && usuarioData.password !== usuarioData.confirmPassword) {
                 showWarningAlert('Las contraseñas no coinciden');
                 return;
+            }
+            if (usuarioData.password) {
+                const politicaEditError = validarPoliticaPassword(usuarioData.password);
+                if (politicaEditError) {
+                    showWarningAlert(politicaEditError);
+                    return;
+                }
             }
 
             // Remover confirmPassword antes de enviar
