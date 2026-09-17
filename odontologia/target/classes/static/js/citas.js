@@ -1938,35 +1938,13 @@ async function deleteAppointment(citaId) {
 }
 
 /**
- * Carga la lista de pacientes en el select
+ * Inicializa el paciente sin desplegar la lista completa.
+ * El paciente se agrega únicamente después de buscarlo por cédula.
  */
 async function loadPacientesSelect() {
-    try {
-        const response = await fetch('/api/pacientes');
-        if (!response.ok) throw new Error('Error al cargar pacientes');
-
-        const pacientes = await response.json();
-        const select = document.getElementById('pacienteId');
-
-        if (select) {
-            const current = select.value;
-            select.innerHTML = '<option value="">Ingrese la cédula para buscar...</option>';
-            pacientes.forEach(paciente => {
-                const option = document.createElement('option');
-                option.value = paciente.id;
-                option.textContent = `${paciente.nombres} ${paciente.apellidos} · CC ${paciente.documento || ''}`;
-                option.dataset.documento = paciente.documento || '';
-                select.appendChild(option);
-            });
-            if (current) select.value = current;
-        }
-    } catch (error) {
-        console.error('Error al cargar pacientes:', error);
-        // Si falla, mostrar opción por defecto
-        const select = document.getElementById('pacienteId');
-        if (select) {
-            select.innerHTML = '<option value="">Ingrese la cédula para buscar...</option>';
-        }
+    const select = document.getElementById('pacienteId');
+    if (select && !select.value) {
+        select.innerHTML = '<option value="">Ingrese la cédula para buscar...</option>';
     }
 }
 
@@ -2101,14 +2079,11 @@ async function ensureOdontologoOption(odontologoId, odontologo) {
     select.appendChild(option);
 }
 
-/** Muestra el nombre del paciente traído por cédula. */
+/** Muestra un resultado inline únicamente cuando la búsqueda no encuentra paciente. */
 function mostrarPacientePreview(paciente) {
     const el = document.getElementById('pacienteNombrePreview');
     if (!el) return;
-    if (paciente && (paciente.nombres || paciente.apellidos)) {
-        el.textContent = `Paciente: ${paciente.nombres || ''} ${paciente.apellidos || ''} · CC ${paciente.documento || ''}`.trim();
-        el.classList.remove('hidden');
-    } else {
+    if (!paciente) {
         el.textContent = '';
         el.classList.add('hidden');
     }
@@ -2133,7 +2108,7 @@ async function buscarPacientePorCedula() {
         await ensurePacienteOption(paciente.id, paciente);
         if (select) select.value = paciente.id;
         if (cedulaInput) cedulaInput.value = paciente.documento || cedula;
-        mostrarPacientePreview(paciente);
+        mostrarPacientePreview(null);
         Swal.fire({
             icon: 'success',
             title: 'Paciente encontrado',
@@ -2144,7 +2119,12 @@ async function buscarPacientePorCedula() {
     } catch (error) {
         console.error('Paciente no encontrado por cédula:', error);
         Swal.close();
-        mostrarPacientePreview(null);
+        const preview = document.getElementById('pacienteNombrePreview');
+        if (preview) {
+            preview.textContent = 'No se encontró un paciente con esa cédula.';
+            preview.classList.remove('hidden', 'text-emerald-700');
+            preview.classList.add('text-red-600');
+        }
         Swal.fire({
             icon: 'error',
             title: 'Paciente no encontrado',
