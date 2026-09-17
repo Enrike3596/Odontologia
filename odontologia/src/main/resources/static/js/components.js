@@ -77,7 +77,7 @@ class ComponentLoader {
             await this.loadUserInfoInTopbar();
         };
         
-        await this.loadComponent('/components/topbar.html', containerId, wrappedCallback);
+        await this.loadComponent('/Components/topbar.html', containerId, wrappedCallback);
     }
     
     /**
@@ -168,7 +168,7 @@ class ComponentLoader {
                 this.updateSidebarActiveState(currentPage);
             }
         };
-        await this.loadComponent('/components/sidebar.html', containerId, wrappedCallback);
+        await this.loadComponent('/Components/sidebar.html', containerId, wrappedCallback);
     }
 
     /**
@@ -182,18 +182,19 @@ class ComponentLoader {
             const sidebarLinks = document.querySelectorAll('.sidebar-menu a, .nav-link');
             sidebarLinks.forEach(link => link.classList.remove('active'));
 
-            // Mapear identificadores de página a nombres de archivo exactos del sistema odontológico
+            // Mapear identificadores de página a rutas reales (VistaController + templates).
+            // Solo existen estas vistas: cualquier otra sección muestra advertencia
+            // en consola en lugar de navegar a un 404.
             const pageToFile = {
-                'dashboard': 'dashboard',
-                'citas': 'citas',
-                'pacientes': 'pacientes',
-                'odontologos': 'odontologos',
-                'historia': 'historia-clinica',
-                'usuarios': 'usuarios',
-                'configuracion': 'configuracion',
-                'reportes': 'reportes',
-                'inventario': 'inventario',
-                'tratamientos': 'tratamientos'
+                'dashboard': '/dashboard',
+                'citas': '/citas',
+                'agenda': '/agenda',
+                'pacientes': '/pacientes',
+                'odontologos': '/odontologos',
+                'historia': '/historias-clinicas',
+                'historias-clinicas': '/historias-clinicas',
+                'usuarios': '/usuarios',
+                'configuracion': '/configuracion'
             };
 
             const targetFile = pageToFile[currentPage];
@@ -359,10 +360,20 @@ function goToSettings() {
     window.location.href = '/configuracion';
 }
 
-// Función para ir al perfil del usuario
+// Función para ir al perfil del usuario.
+// NOTA: no existe una vista de perfil en el sistema (sin ruta ni template),
+// por eso se informa en lugar de navegar a un 404.
 function goToProfile() {
-    // Redirigir al perfil del usuario en el sistema odontológico
-    window.location.href = '/perfil';
+    if (window.Swal && typeof window.Swal.fire === 'function') {
+        window.Swal.fire({
+            icon: 'info',
+            title: 'Mi perfil',
+            text: 'La vista de perfil aún no está disponible en el sistema.',
+            confirmButtonText: 'Entendido'
+        });
+    } else {
+        alert('La vista de perfil aún no está disponible en el sistema.');
+    }
 }
 
 // Función para mostrar información de la clínica
@@ -371,19 +382,20 @@ function showClinicInfo() {
     // Aquí implementarías la lógica para mostrar información de la clínica
 }
 
-// Navegación específica del sistema odontológico
+// Navegación específica del sistema odontológico.
+// Solo rutas reales (VistaController): nacionalizar aquí evita 404 por
+// enlaces obsoletos (historia-clinica, reportes, inventario, tratamientos).
 function navigateToSection(section) {
     const routes = {
         'dashboard': '/dashboard',
         'citas': '/citas',
+        'agenda': '/agenda',
         'pacientes': '/pacientes',
         'odontologos': '/odontologos',
-        'historia': '/historia-clinica',
+        'historia': '/historias-clinicas',
+        'historias-clinicas': '/historias-clinicas',
         'usuarios': '/usuarios',
-        'configuracion': '/configuracion',
-        'reportes': '/reportes',
-        'inventario': '/inventario',
-        'tratamientos': '/tratamientos'
+        'configuracion': '/configuracion'
     };
     
     if (routes[section]) {

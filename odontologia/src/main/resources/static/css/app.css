@@ -2463,7 +2463,7 @@ html {
     min-width: 0;
 }
 
-/* Componente sidebar reutilizable (/components/sidebar.html) con misma logica */
+/* Componente sidebar reutilizable (/Components/sidebar.html) con misma logica */
 .sidebar {
     display: flex;
     flex-direction: column;
