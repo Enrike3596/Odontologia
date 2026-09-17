@@ -61,6 +61,12 @@ public class Cita2ServiceImpl implements Cita2Service{
 	@Override
 	public Cita2Dto crearCita(Cita2Dto citaDto) {
 		Cita2 cita = convertirDtoAEntity(citaDto);
+		if (cita.getEstado() == null) {
+			cita.setEstado(com.odontologia.odontologia.Entity.EstadoCitaEnum.PENDIENTE);
+		}
+		if (cita.getHora() != null) {
+			cita.setHora(cita.getHora().withSecond(0).withNano(0));
+		}
 		// Validar contra la agenda: turno abierto y sin solape
 		agendaService.validarTurnoDisponible(
 				cita.getOdontologo().getId(), cita.getFecha(), cita.getHora());
@@ -83,19 +89,30 @@ public class Cita2ServiceImpl implements Cita2Service{
 			nuevoOdontologoId = citaDto.getOdontologo().getId();
 		}
 
-		// Solo revalidar agenda si cambió el turno
-		boolean cambioTurno = !nuevaFecha.equals(existente.getFecha())
-				|| !nuevaHora.equals(existente.getHora())
-				|| !nuevoOdontologoId.equals(existente.getOdontologo().getId());
+		// Solo revalidar agenda si cambió el turno (comparación nula-segura)
+		boolean cambioTurno = !java.util.Objects.equals(nuevaFecha, existente.getFecha())
+				|| (nuevaHora != null && existente.getHora() != null
+					&& !nuevaHora.withSecond(0).withNano(0).equals(existente.getHora().withSecond(0).withNano(0)))
+				|| (nuevaHora != null && existente.getHora() == null)
+				|| !java.util.Objects.equals(nuevoOdontologoId,
+					existente.getOdontologo() != null ? existente.getOdontologo().getId() : null);
 		if (cambioTurno && !agendaService.turnoDisponible(nuevoOdontologoId, nuevaFecha, nuevaHora, id)) {
 			throw new RuntimeException("El turno no está disponible en la agenda del odontólogo (cerrado u ocupado)");
 		}
 
-		// Actualizar campos simples
-		existente.setFecha(citaDto.getFecha());
-		existente.setHora(citaDto.getHora());
-		existente.setEstado(citaDto.getEstado());
-		existente.setObservaciones(citaDto.getObservaciones());
+		// Actualizar campos simples (solo si vienen en el DTO: cancelar envía solo estado)
+		if (citaDto.getFecha() != null) {
+			existente.setFecha(citaDto.getFecha());
+		}
+		if (citaDto.getHora() != null) {
+			existente.setHora(citaDto.getHora().withSecond(0).withNano(0));
+		}
+		if (citaDto.getEstado() != null) {
+			existente.setEstado(citaDto.getEstado());
+		}
+		if (citaDto.getObservaciones() != null) {
+			existente.setObservaciones(citaDto.getObservaciones());
+		}
 
 		// Actualizar relaciones si vienen en el DTO
 		if (citaDto.getPaciente() != null && citaDto.getPaciente().getId() != null) {
@@ -153,26 +170,49 @@ public class Cita2ServiceImpl implements Cita2Service{
 				|| cita.getEstado() == com.odontologia.odontologia.Entity.EstadoCitaEnum.COMPLETADA) {
 			throw new RuntimeException("Solo se pueden confirmar citas pendientes");
 		}
-		if (cita.getEstado() != com.odontologia.odontologia.Entity.EstadoCitaEnum.CONFIRMADA) {
-			java.time.LocalDate manana = java.time.LocalDate.now().plusDays(1);
-			if (cita.getFecha() == null || !cita.getFecha().equals(manana)) {
-				throw new RuntimeException("La cita solo puede confirmarse un día antes (mañana: " + manana + ")");
-			}
-			cita.setEstado(com.odontologia.odontologia.Entity.EstadoCitaEnum.CONFIRMADA);
-			cita = citaRepository.save(cita);
+		if (cita.getEstado() == com.odontologia.odontologia.Entity.EstadoCitaEnum.CONFIRMADA) {
+			return convertirEntityADto(cita);
+		}
+		// Regla: la confirmación se realiza el mismo día, antes de la hora de la cita
+		java.time.LocalDate hoy = java.time.LocalDate.now();
+		if (cita.getFecha() == null || !cita.getFecha().equals(hoy)) {
+			throw new RuntimeException("La cita solo puede confirmarse el mismo día de la cita (hoy: " + hoy + ")");
+		}
+		if (cita.getHora() != null
+				&& !java.time.LocalTime.now().isBefore(cita.getHora().withSecond(0).withNano(0))) {
+			throw new RuntimeException("La cita solo puede confirmarse antes de su hora (" + cita.getHora() + ")");
+		}
+		cita.setEstado(com.odontologia.odontologia.Entity.EstadoCitaEnum.CONFIRMADA);
+		cita = citaRepository.save(cita);
+		return convertirEntityADto(cita);
+	}
+
+	@Override
+	@org.springframework.transaction.annotation.Transactional
+	public Cita2Dto enviarRecordatorio(Long id) {
+		Cita2 cita = citaRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Cita no encontrada con ID: " + id));
+		if (cita.getEstado() == com.odontologia.odontologia.Entity.EstadoCitaEnum.CANCELADA
+				|| cita.getEstado() == com.odontologia.odontologia.Entity.EstadoCitaEnum.COMPLETADA) {
+			throw new RuntimeException("Solo se puede enviar recordatorio de citas pendientes o confirmadas");
+		}
+		// Regla: el recordatorio solo se realiza un día antes de la cita
+		java.time.LocalDate manana = java.time.LocalDate.now().plusDays(1);
+		if (cita.getFecha() == null || !cita.getFecha().equals(manana)) {
+			throw new RuntimeException("El recordatorio solo puede enviarse un día antes de la cita (mañana: " + manana + ")");
 		}
 		Cita2Dto resultado = convertirEntityADto(cita);
-		// Envío automático del recordatorio de la cita asignada
 		try {
 			if (emailService != null) {
 				emailService.enviarRecordatorio(resultado);
 			}
 		} catch (Exception e) {
-			System.err.println("[Citas] Confirmada pero falló el recordatorio de la cita " + id + ": " + e.getMessage());
+			System.err.println("[Citas] Falló el recordatorio de la cita " + id + ": " + e.getMessage());
 		}
 		try {
 			cita.setRecordatorioEnviado(true);
-			citaRepository.save(cita);
+			cita = citaRepository.save(cita);
+			resultado = convertirEntityADto(cita);
 		} catch (Exception e) {
 			System.err.println("[Citas] No se pudo marcar recordatorio_enviado en cita " + id + ": " + e.getMessage());
 		}
@@ -187,6 +227,7 @@ public class Cita2ServiceImpl implements Cita2Service{
 		dto.setHora(cita.getHora());
 		dto.setEstado(cita.getEstado());
 		dto.setObservaciones(cita.getObservaciones());
+		dto.setRecordatorioEnviado(cita.getRecordatorioEnviado());
 
 		if (cita.getPaciente() != null) {
 			Paciente2 p = cita.getPaciente();

@@ -121,21 +121,61 @@ public class AgendaServiceImpl implements AgendaService {
 
     @Override
     public void validarTurnoDisponible(Long odontologoId, LocalDate fecha, LocalTime hora) {
-        if (!turnoDisponible(odontologoId, fecha, hora, null)) {
-            throw new RuntimeException("El turno no está disponible en la agenda del odontólogo (cerrado u ocupado)");
+        String motivo = motivoNoDisponible(odontologoId, fecha, hora, null);
+        if (motivo != null) {
+            throw new RuntimeException(motivo);
         }
     }
 
     @Override
     public boolean turnoDisponible(Long odontologoId, LocalDate fecha, LocalTime hora, Long excluirCitaId) {
+        return motivoNoDisponible(odontologoId, fecha, hora, excluirCitaId) == null;
+    }
+
+    /**
+     * Devuelve null si el turno está libre; en caso contrario el motivo legible
+     * (día no laborable, fuera de horario, ocupado o bloqueado). Centraliza la
+     * regla para que crear/editar citas y la agenda usen el mismo criterio.
+     */
+    private String motivoNoDisponible(Long odontologoId, LocalDate fecha, LocalTime hora, Long excluirCitaId) {
         if (fecha == null || hora == null) {
-            return false;
+            return "Se requiere fecha y hora para validar el turno";
         }
-        AgendaDiaDto dia = agendaDia(odontologoId, fecha);
-        return dia.getTurnos().stream().anyMatch(s ->
-                s.getHora().equals(hora)
-                        && "LIBRE".equals(s.getEstado())
-                        && (excluirCitaId == null || !excluirCitaId.equals(s.getCitaId())));
+        // Normalizar segundos/nanos: el formulario envía HH:mm y la BD TIME puede traer segundos
+        LocalTime horaNorm = hora.withSecond(0).withNano(0);
+        AgendaDiaDto dia;
+        try {
+            dia = agendaDia(odontologoId, fecha);
+        } catch (RuntimeException e) {
+            return e.getMessage();
+        }
+        if (dia.getTurnos() == null || dia.getTurnos().isEmpty()) {
+            return "El odontólogo no labora ese día (" + dia.getDiaSemana() + " " + fecha
+                    + "). Revise sus días de trabajo en el módulo de Odontólogos o cree una apertura extra en Agenda Médica";
+        }
+        SlotAgendaDto slot = dia.getTurnos().stream()
+                .filter(s -> s.getHora() != null && s.getHora().withSecond(0).withNano(0).equals(horaNorm))
+                .findFirst()
+                .orElse(null);
+        if (slot == null) {
+            String libres = dia.getTurnos().stream()
+                    .filter(s -> "LIBRE".equals(s.getEstado()))
+                    .map(s -> s.getHora().format(HORA_FMT))
+                    .collect(Collectors.joining(", "));
+            return "La hora " + horaNorm.format(HORA_FMT) + " está fuera del horario del odontólogo ese día"
+                    + (libres.isEmpty() ? " (sin turnos libres)" : ". Turnos libres: " + libres);
+        }
+        if ("OCUPADO".equals(slot.getEstado())
+                && (excluirCitaId == null || !excluirCitaId.equals(slot.getCitaId()))) {
+            return "El turno " + horaNorm.format(HORA_FMT) + " del " + fecha + " ya está ocupado por otra cita";
+        }
+        if ("BLOQUEADO".equals(slot.getEstado())) {
+            return "El turno " + horaNorm.format(HORA_FMT) + " del " + fecha + " está bloqueado en la agenda del odontólogo";
+        }
+        if (!"LIBRE".equals(slot.getEstado())) {
+            return "El turno no está disponible en la agenda del odontólogo (cerrado u ocupado)";
+        }
+        return null;
     }
 
     @Override
@@ -222,13 +262,65 @@ public class AgendaServiceImpl implements AgendaService {
         return dias.contains(nombreDia(dow));
     }
 
+    /**
+     * Normaliza "días de trabajo" aceptando los formatos reales en BD y UI:
+     * - Rangos: "Lunes-Viernes", "Lunes - Viernes", "lunes a viernes"
+     * - Listas: "lunes, miercoles, viernes" / "lunes;mércoles;viernes"
+     * - Día único: "lunes"
+     * Todo insensible a mayúsculas/tildes/espacios. Expande rangos a días individuales.
+     */
     private Set<String> normalizarDias(String diasTrabajo) {
         if (diasTrabajo == null || diasTrabajo.trim().isEmpty()) {
             return new HashSet<>();
         }
-        return Arrays.stream(diasTrabajo.split(","))
-                .map(d -> sinTildes(d.trim().toLowerCase(Locale.ROOT)))
-                .collect(Collectors.toSet());
+        List<String> orden = Arrays.asList(
+                "lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo");
+        Set<String> dias = new HashSet<>();
+        // Separar lista por coma o punto y coma
+        for (String token : diasTrabajo.split("[,;]")) {
+            String t = sinTildes(token.trim().toLowerCase(Locale.ROOT));
+            if (t.isEmpty()) {
+                continue;
+            }
+            // Rango con " a " (ej: "lunes a viernes")
+            if (t.contains(" a ")) {
+                String[] partes = t.split("\\s+a\\s+");
+                if (partes.length == 2) {
+                    agregarRango(dias, orden, partes[0].trim(), partes[1].trim());
+                    continue;
+                }
+            }
+            // Rango con guion (ej: "lunes-viernes", "lunes - viernes")
+            if (t.contains("-")) {
+                String[] partes = t.split("\\s*-\\s*");
+                if (partes.length == 2 && !partes[0].isEmpty() && !partes[1].isEmpty()) {
+                    agregarRango(dias, orden, partes[0].trim(), partes[1].trim());
+                    continue;
+                }
+            }
+            // Día único (solo se acepta si es un día conocido)
+            if (orden.contains(t)) {
+                dias.add(t);
+            }
+        }
+        return dias;
+    }
+
+    private void agregarRango(Set<String> dias, List<String> orden, String inicio, String fin) {
+        int i = orden.indexOf(inicio);
+        int f = orden.indexOf(fin);
+        if (i < 0 || f < 0) {
+            return;
+        }
+        // Rango normal (lun-vie) o con wrap (sab-mar); se recorre en orden circular
+        int idx = i;
+        do {
+            dias.add(orden.get(idx));
+            if (idx == f) {
+                break;
+            }
+            idx = (idx + 1) % orden.size();
+        } while (idx != i);
     }
 
     private String nombreDia(DayOfWeek dow) {

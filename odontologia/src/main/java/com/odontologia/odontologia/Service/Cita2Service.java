@@ -12,8 +12,15 @@ public interface Cita2Service {
     Cita2Dto actualizarCita(Long id, Cita2Dto citaDto);
     void eliminarCita(Long id);
     /**
-     * Confirmación de cita (botón habilitado solo un día antes):
-     * pasa a CONFIRMADA y envía automáticamente el recordatorio al paciente.
+     * Confirmación de la cita (acción independiente del recordatorio):
+     * solo el mismo día de la cita y antes de su hora. Pasa a CONFIRMADA.
+     * No envía correos.
      */
     Cita2Dto confirmarCita(Long id);
+    /**
+     * Recordatorio de la cita por correo (acción independiente de la confirmación):
+     * solo un día antes de la cita (fecha == mañana). Envía el correo al
+     * paciente y marca recordatorioEnviado. No cambia el estado.
+     */
+    Cita2Dto enviarRecordatorio(Long id);
 }

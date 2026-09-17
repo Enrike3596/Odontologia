@@ -633,11 +633,16 @@
           </div>
 
           <div class="sys-detail-footer">
-            <button id="btnConfirmarDetalle" class="sys-action-btn sys-action-primary" onclick="confirmAppointmentFromModal()" disabled title="La confirmación se habilita un día antes de la cita">
+            <button id="btnConfirmarDetalle" class="sys-action-btn sys-action-primary" onclick="confirmAppointmentFromModal()" disabled title="La confirmación se habilita el mismo día de la cita, antes de su hora">
               <i class="fas fa-check-circle mr-2"></i>
               Confirmar cita
             </button>
-            <p class="text-xs text-gray-500 w-full mt-2" id="confirmarDetalleHint">La confirmación se habilita únicamente un día antes de la cita y envía el recordatorio automáticamente.</p>
+            <p class="text-xs text-gray-500 w-full mt-2" id="confirmarDetalleHint">La confirmación se habilita el mismo día de la cita, antes de su hora.</p>
+            <button id="btnRecordatorioDetalle" class="sys-action-btn sys-action-secondary" onclick="sendReminderFromModal()" disabled title="El recordatorio se habilita únicamente un día antes de la cita">
+              <i class="fas fa-bell mr-2"></i>
+              Enviar recordatorio
+            </button>
+            <p class="text-xs text-gray-500 w-full mt-2" id="recordatorioDetalleHint">El recordatorio por correo se habilita únicamente un día antes de la cita.</p>
             <button class="sys-action-btn sys-action-secondary" onclick="printAppointment()">
               <i class="fas fa-print mr-2"></i>
               Imprimir

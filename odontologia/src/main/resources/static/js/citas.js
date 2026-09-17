@@ -79,6 +79,16 @@ const CitasAPI = {
         }
     },
 
+    // Agenda real de un odontólogo en una fecha (turnos LIBRE/OCUPADO/BLOQUEADO)
+    async getAgendaDia(odontologoId, fecha) {
+        const response = await fetch(`${AppointmentsModule.apiBaseUrl}/agenda/dia?odontologoId=${encodeURIComponent(odontologoId)}&fecha=${encodeURIComponent(fecha)}`);
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(extraerMensajeBackend(errorText) || 'No se pudo cargar la agenda del odontólogo');
+        }
+        return await response.json();
+    },
+
     // Crear nueva cita
     async createCita(citaData) {
         try {
@@ -97,7 +107,7 @@ const CitasAPI = {
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('Error del servidor:', errorText);
-                throw new Error(`Error ${response.status}: ${response.statusText}. ${errorText}`);
+                throw new Error(extraerMensajeBackend(errorText) || `Error ${response.status}: ${response.statusText}`);
             }
 
             const result = await response.json();
@@ -124,7 +134,7 @@ const CitasAPI = {
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error(`Error HTTP ${response.status}:`, errorText);
-                throw new Error(`Error ${response.status}: ${response.statusText}`);
+                throw new Error(extraerMensajeBackend(errorText) || `Error ${response.status}: ${response.statusText}`);
             }
 
             const result = await response.json();
@@ -150,14 +160,26 @@ const CitasAPI = {
         }
     },
 
-    // Confirmar cita (solo un día antes): confirma y envía el recordatorio automáticamente
+    // Confirmar cita: solo el mismo día, antes de la hora (no envía correos)
     async confirmarCita(id) {
         const response = await fetch(`${AppointmentsModule.apiBaseUrl}/citas/${id}/confirmar`, {
             method: 'POST'
         });
         if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(errorText || 'No se pudo confirmar la cita');
+            throw new Error(extraerMensajeBackend(errorText) || 'No se pudo confirmar la cita');
+        }
+        return await response.json();
+    },
+
+    // Recordatorio de cita por correo: solo un día antes (no cambia el estado)
+    async enviarRecordatorio(id) {
+        const response = await fetch(`${AppointmentsModule.apiBaseUrl}/citas/${id}/recordatorio`, {
+            method: 'POST'
+        });
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(extraerMensajeBackend(errorText) || 'No se pudo enviar el recordatorio');
         }
         return await response.json();
     },
@@ -179,6 +201,106 @@ const CitasAPI = {
         return await response.json();
     }
 };
+
+/**
+ * Extrae el mensaje legible del backend sin exponer el trace del 500.
+ * El backend de citas devuelve {message: "..."} en 409; los errores
+ * antiguos de Spring devuelven {message, trace, ...}. Se prioriza message.
+ */
+function extraerMensajeBackend(raw) {
+    if (!raw) return '';
+    try {
+        const obj = JSON.parse(raw);
+        if (obj && obj.message) return String(obj.message).slice(0, 500);
+        if (obj && obj.error) return String(obj.error).slice(0, 500);
+    } catch (e) { /* no es JSON */ }
+    // Si es HTML de error de Spring/Tomcat, no mostrarlo crudo
+    if (/<html|<!doctype/i.test(raw)) return '';
+    return String(raw).slice(0, 500);
+}
+
+/** Horas base del formulario (respaldo cuando aún no hay odontólogo/fecha). */
+const HORAS_BASE_CITAS = [
+    '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
+    '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30'
+];
+
+function pintarHorasCita(horas, valorSeleccionado) {
+    const select = document.getElementById('horaCita');
+    if (!select) return;
+    const actual = valorSeleccionado !== undefined ? valorSeleccionado : select.value;
+    select.innerHTML = '<option value="">Seleccionar hora...</option>';
+    horas.forEach(function (h) {
+        const option = document.createElement('option');
+        option.value = h;
+        option.textContent = formatearHora12(h);
+        select.appendChild(option);
+    });
+    if (actual && horas.includes(actual)) select.value = actual;
+}
+
+function formatearHora12(hhmm) {
+    const parts = String(hhmm || '').split(':');
+    if (parts.length < 2) return hhmm;
+    const h = parseInt(parts[0], 10);
+    const m = parts[1];
+    const period = h >= 12 ? 'PM' : 'AM';
+    const dh = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    return String(dh).padStart(2, '0') + ':' + m + ' ' + period;
+}
+
+function mostrarHintAgenda(texto, esError) {
+    let hint = document.getElementById('horaCitaHint');
+    if (!hint) {
+        const select = document.getElementById('horaCita');
+        if (!select || !select.parentElement) return;
+        hint = document.createElement('p');
+        hint.id = 'horaCitaHint';
+        hint.className = 'text-xs mt-1';
+        select.parentElement.appendChild(hint);
+    }
+    hint.textContent = texto || '';
+    hint.classList.toggle('text-red-600', !!esError);
+    hint.classList.toggle('text-gray-500', !esError);
+}
+
+/**
+ * Recarga el select de horas con los turnos LIBRE de la agenda real
+ * del odontólogo en la fecha elegida. Evita el 409 antes de enviar.
+ * Devuelve la lista de horas libres.
+ */
+async function actualizarHorasDisponibles(preservarSeleccion) {
+    const odoSelect = document.getElementById('odontologoId');
+    const fechaInput = document.getElementById('fechaCita');
+    const odontologoId = odoSelect?.value || '';
+    const fecha = fechaInput?.value || '';
+    if (!odontologoId || !fecha) {
+        if (preservarSeleccion !== false) pintarHorasCita(HORAS_BASE_CITAS);
+        mostrarHintAgenda('Seleccione odontólogo y fecha para ver los turnos libres de su agenda.', false);
+        return [];
+    }
+    try {
+        mostrarHintAgenda('Cargando turnos libres de la agenda...', false);
+        const dia = await CitasAPI.getAgendaDia(odontologoId, fecha);
+        const libres = (dia.turnos || []).filter(t => t.estado === 'LIBRE').map(t => String(t.hora).slice(0, 5));
+        if (libres.length === 0) {
+            pintarHorasCita([], '');
+            const motivo = dia.laborable === false
+                ? `El odontólogo no labora el ${fecha} (${dia.diaSemana || ''}). Elija otro día o pida una apertura extra en Agenda Médica.`
+                : `Sin turnos libres el ${fecha} (ocupados o bloqueados). Elija otra fecha u odontólogo.`;
+            mostrarHintAgenda(motivo, true);
+            return [];
+        }
+        pintarHorasCita(libres);
+        mostrarHintAgenda(`${libres.length} turno(s) libres en la agenda del odontólogo para el ${fecha}.`, false);
+        return libres;
+    } catch (e) {
+        console.warn('No se pudo cargar la agenda, se conserva el horario base:', e);
+        pintarHorasCita(HORAS_BASE_CITAS);
+        mostrarHintAgenda('No se pudo cargar la agenda en línea; verifique la hora antes de agendar.', true);
+        return [];
+    }
+}
 
 // Inicialización del módulo
 document.addEventListener('DOMContentLoaded', function() {
@@ -235,6 +357,18 @@ function setupEventListeners() {
                 buscarPacientePorCedula();
             }
         });
+    }
+
+    // Al cambiar odontólogo o fecha, recargar turnos libres de la agenda real
+    const odoSel = document.getElementById('odontologoId');
+    if (odoSel && !odoSel.dataset.agendaBound) {
+        odoSel.dataset.agendaBound = '1';
+        odoSel.addEventListener('change', function () { actualizarHorasDisponibles(); });
+    }
+    const fechaSel = document.getElementById('fechaCita');
+    if (fechaSel && !fechaSel.dataset.agendaBound) {
+        fechaSel.dataset.agendaBound = '1';
+        fechaSel.addEventListener('change', function () { actualizarHorasDisponibles(); });
     }
 
     // Mobile menu toggle
@@ -430,6 +564,27 @@ async function openNewAppointmentModal(editData = null) {
         // Mostrar modal
         modal.classList.remove('hidden');
 
+        // Sincronizar horas con la agenda real (evita elegir un turno cerrado/ocupado)
+        setupEventListeners();
+        try {
+            if (isEditMode && editData && editData.fecha) {
+                await actualizarHorasDisponibles(false);
+                // Conservar la hora actual de la cita en edición aunque ya no esté libre
+                const horaInputEdit = document.getElementById('horaCita');
+                const horaActual = formatTimeForSelect(editData.hora || editData.horaCita);
+                if (horaInputEdit && horaActual
+                    && !Array.from(horaInputEdit.options).some(o => o.value === horaActual)) {
+                    const opt = document.createElement('option');
+                    opt.value = horaActual;
+                    opt.textContent = formatearHora12(horaActual) + ' (actual)';
+                    horaInputEdit.appendChild(opt);
+                    horaInputEdit.value = horaActual;
+                }
+            } else {
+                await actualizarHorasDisponibles();
+            }
+        } catch (e) { /* la agenda se valida de nuevo al guardar */ }
+
         // Focus en la cédula (nuevo flujo: primero se digita la cédula)
         setTimeout(() => {
             const cedulaInput = document.getElementById('cedulaPaciente');
@@ -529,6 +684,38 @@ async function handleNewAppointmentSubmit(e) {
         const successText = isEdit ? 'actualizada' : 'programada';
 
         console.log('Modo edición:', isEdit, 'ID cita:', AppointmentsModule.editingAppointmentId);
+
+        // Validación contra la agenda real antes de enviar (evita el 409/500)
+        // En edición se permite conservar la hora actual aunque ya no figure libre.
+        try {
+            const dia = await CitasAPI.getAgendaDia(citaData.odontologo.id, citaData.fecha);
+            const horaSel = String(citaData.hora || '').slice(0, 5);
+            const slot = (dia.turnos || []).find(t => String(t.hora).slice(0, 5) === horaSel);
+            const esHoraActualEdicion = isEdit && (function () {
+                const cur = (AppointmentsModule.cachedCitas || []).find(c => String(c.id) === String(AppointmentsModule.editingAppointmentId));
+                return cur && String(cur.fecha).slice(0, 10) === String(citaData.fecha).slice(0, 10)
+                    && String(cur.hora).slice(0, 5) === horaSel
+                    && String((cur.odontologo && cur.odontologo.id) || '') === String(citaData.odontologo.id);
+            })();
+            if (!slot || (slot.estado !== 'LIBRE' && !esHoraActualEdicion)) {
+                const libres = (dia.turnos || []).filter(t => t.estado === 'LIBRE').map(t => String(t.hora).slice(0, 5));
+                await Swal.fire({
+                    icon: 'warning',
+                    title: 'Turno no disponible en la agenda',
+                    html: `<div class="text-left"><p class="text-gray-600 mb-2">${slot ? `La hora ${horaSel} está <strong>${slot.estado}</strong> para ese odontólogo.` : `La hora ${horaSel} está fuera del horario del odontólogo ese día.`}</p>`
+                        + (libres.length ? `<p class="text-gray-600">Turnos libres el ${citaData.fecha}: <strong>${libres.join(', ')}</strong></p>` : `<p class="text-gray-600">No hay turnos libres ese día. Elija otra fecha u odontólogo, o pida una apertura extra en Agenda Médica.</p>`)
+                        + `</div>`,
+                    confirmButtonText: 'Elegir otro turno',
+                    confirmButtonColor: '#f59e0b'
+                });
+                await actualizarHorasDisponibles();
+                return;
+            }
+        } catch (preErr) {
+            // Si la pre-validación misma falla por red, se deja que el backend decida
+            console.warn('Pre-validación de agenda omitida:', preErr && preErr.message);
+            if (preErr && /Turno no disponible|no labora|fuera del horario|ocupado|bloqueado|Sin turnos/i.test(preErr.message || '')) return;
+        }
 
         // Mostrar loading
         Swal.fire({
@@ -774,7 +961,7 @@ function showAppointmentDetailsModal(appointment) {
     // Guardar referencia de la cita actual
     AppointmentsModule.currentAppointment = appointment;
 
-    // Botón de confirmación: bloqueado por defecto, solo se habilita un día antes
+    // Botón de confirmación: bloqueado por defecto, solo se habilita el mismo día antes de la hora
     const btnConfirmar = document.getElementById('btnConfirmarDetalle');
     const hintConfirmar = document.getElementById('confirmarDetalleHint');
     if (btnConfirmar) {
@@ -783,12 +970,36 @@ function showAppointmentDetailsModal(appointment) {
         btnConfirmar.classList.toggle('opacity-50', !habilitado);
         btnConfirmar.classList.toggle('cursor-not-allowed', !habilitado);
         btnConfirmar.title = habilitado
-            ? 'Confirmar la cita y enviar el recordatorio automáticamente'
-            : 'La confirmación se habilita únicamente un día antes de la cita';
+            ? 'Confirmar la cita (solo hoy, antes de su hora)'
+            : 'La confirmación se habilita el mismo día de la cita, antes de su hora';
         if (hintConfirmar) {
             hintConfirmar.textContent = habilitado
-                ? 'Puede confirmar ahora: al hacerlo se enviará automáticamente el recordatorio.'
-                : 'La confirmación se habilita únicamente un día antes de la cita y envía el recordatorio automáticamente.';
+                ? 'Puede confirmar ahora: la cita es hoy y aún no llega su hora.'
+                : 'La confirmación se habilita el mismo día de la cita, antes de su hora.';
+        }
+    }
+
+    // Botón de recordatorio por correo: independiente, solo se habilita un día antes
+    const btnRecordatorio = document.getElementById('btnRecordatorioDetalle');
+    const hintRecordatorio = document.getElementById('recordatorioDetalleHint');
+    if (btnRecordatorio) {
+        const habilitado = puedeEnviarRecordatorio(appointment);
+        const yaEnviado = appointment && appointment.recordatorioEnviado === true;
+        btnRecordatorio.disabled = !habilitado;
+        btnRecordatorio.classList.toggle('opacity-50', !habilitado);
+        btnRecordatorio.classList.toggle('cursor-not-allowed', !habilitado);
+        btnRecordatorio.title = habilitado
+            ? (yaEnviado ? 'Reenviar el recordatorio por correo' : 'Enviar el recordatorio por correo')
+            : 'El recordatorio se habilita únicamente un día antes de la cita';
+        btnRecordatorio.innerHTML = yaEnviado
+            ? '<i class="fas fa-bell mr-2"></i>\n              Reenviar recordatorio'
+            : '<i class="fas fa-bell mr-2"></i>\n              Enviar recordatorio';
+        if (hintRecordatorio) {
+            hintRecordatorio.textContent = habilitado
+                ? (yaEnviado
+                    ? 'El recordatorio ya fue enviado; puede reenviarlo mientras sea un día antes.'
+                    : 'Puede enviar ahora el recordatorio por correo al paciente.')
+                : 'El recordatorio por correo se habilita únicamente un día antes de la cita.';
         }
     }
 
@@ -872,8 +1083,8 @@ async function editAppointment(appointmentId) {
 }
 
 /**
- * Confirmar cita: botón bloqueado por defecto, solo se habilita un día antes.
- * Al confirmar se envía automáticamente el recordatorio de la cita asignada.
+ * Confirmar cita: botón bloqueado por defecto, solo se habilita el mismo día
+ * antes de la hora de la cita. No envía correos (el recordatorio es aparte).
  */
 async function confirmAppointment(appointmentId) {
     // Obtener datos reales de la cita desde la API
@@ -891,18 +1102,18 @@ async function confirmAppointment(appointmentId) {
 
     const info = normalizeAppointmentForDialogs(appointment);
 
-    // Regla de negocio: solo un día antes (la fecha de la cita debe ser mañana)
+    // Regla de negocio: solo el mismo día, antes de la hora de la cita
     if (!puedeConfirmarCita(appointment)) {
         Swal.fire({
             icon: 'info',
             title: 'Confirmación no disponible',
             html: `
                 <div class="text-center">
-                    <p class="text-gray-600">La cita de <strong>${info.pacienteNombre}</strong> solo puede confirmarse <strong>un día antes</strong>.</p>
+                    <p class="text-gray-600">La cita de <strong>${info.pacienteNombre}</strong> solo puede confirmarse <strong>el mismo día, antes de su hora</strong>.</p>
                     <div class="mt-4 p-3 bg-blue-50 rounded-lg">
                         <p class="text-sm text-blue-700">
                             <i class="fas fa-calendar-day mr-1"></i>
-                            Fecha de la cita: ${formatDate(info.fechaCita)} — el botón se habilitará el día anterior.
+                            Fecha de la cita: ${formatDate(info.fechaCita)} a las ${info.horaCita} — el botón se habilitará ese día.
                         </p>
                     </div>
                 </div>
@@ -951,7 +1162,7 @@ async function confirmAppointment(appointmentId) {
                 }
             });
 
-            // Confirmación + envío automático del recordatorio (POST /api/citas/{id}/confirmar)
+            // Confirmación de la cita (POST /api/citas/{id}/confirmar). No envía correos.
             await CitasAPI.confirmarCita(appointmentId);
 
             // Confirmar éxito
@@ -961,12 +1172,6 @@ async function confirmAppointment(appointmentId) {
                 html: `
                     <div class="text-center">
                         <p class="text-gray-600">La cita de <strong>${info.pacienteNombre}</strong> ha sido confirmada exitosamente.</p>
-                        <div class="mt-4 p-3 bg-green-50 rounded-lg">
-                            <p class="text-sm text-green-700">
-                                <i class="fas fa-bell mr-1"></i>
-                                Se envió automáticamente el recordatorio de la cita al paciente
-                            </p>
-                        </div>
                     </div>
                 `,
                 confirmButtonText: 'Entendido',
@@ -998,6 +1203,132 @@ async function confirmAppointmentFromModal() {
         return;
     }
     await confirmAppointment(cita.id);
+    // Refrescar el detalle si sigue abierto
+    try {
+        const actualizada = await CitasAPI.getCitaById(cita.id);
+        showAppointmentDetailsModal(actualizada);
+    } catch (e) { /* el listado ya se recargó */ }
+}
+
+/**
+ * Recordatorio de cita por correo: botón bloqueado por defecto, solo se
+ * habilita un día antes de la cita. No cambia el estado (independiente
+ * de la confirmación, que es el mismo día antes de la hora).
+ */
+async function sendReminderAppointment(appointmentId) {
+    const appointment = await getAppointmentData(appointmentId);
+
+    if (!appointment) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudo obtener la información de la cita para enviar el recordatorio.',
+            confirmButtonColor: '#dc2626'
+        });
+        return;
+    }
+
+    const info = normalizeAppointmentForDialogs(appointment);
+
+    // Regla de negocio: solo un día antes (la fecha de la cita debe ser mañana)
+    if (!puedeEnviarRecordatorio(appointment)) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Recordatorio no disponible',
+            html: `
+                <div class="text-center">
+                    <p class="text-gray-600">El recordatorio de la cita de <strong>${info.pacienteNombre}</strong> solo puede enviarse <strong>un día antes</strong>.</p>
+                    <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                        <p class="text-sm text-blue-700">
+                            <i class="fas fa-bell mr-1"></i>
+                            Fecha de la cita: ${formatDate(info.fechaCita)} — el botón se habilitará el día anterior.
+                        </p>
+                    </div>
+                </div>
+            `,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#3b82f6'
+        });
+        return;
+    }
+
+    const yaEnviado = appointment.recordatorioEnviado === true;
+    const result = await Swal.fire({
+        icon: 'question',
+        title: yaEnviado ? '¿Reenviar recordatorio?' : '¿Enviar recordatorio por correo?',
+        html: `
+            <div class="text-center">
+                <div class="mb-4">
+                    <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-bell text-amber-600 text-xl"></i>
+                    </div>
+                    <p class="text-gray-700 mb-2">Paciente: <strong>${info.pacienteNombre}</strong></p>
+                    <p class="text-sm text-gray-500">${formatDate(info.fechaCita)} a las ${info.horaCita}</p>
+                </div>
+                <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                    <p class="text-amber-800 text-sm">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Se enviará el recordatorio por correo al paciente. El estado de la cita no cambiará.
+                    </p>
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: yaEnviado ? 'Sí, reenviar' : 'Sí, enviar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#f59e0b',
+        cancelButtonColor: '#6b7280'
+    });
+
+    if (result.isConfirmed) {
+        try {
+            Swal.fire({
+                title: 'Enviando recordatorio...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Recordatorio por correo (POST /api/citas/{id}/recordatorio). No cambia el estado.
+            await CitasAPI.enviarRecordatorio(appointmentId);
+
+            await Swal.fire({
+                icon: 'success',
+                title: 'Recordatorio enviado',
+                html: `
+                    <div class="text-center">
+                        <p class="text-gray-600">Se envió el recordatorio por correo para la cita de <strong>${info.pacienteNombre}</strong>.</p>
+                    </div>
+                `,
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#f59e0b'
+            });
+
+            await loadAppointments();
+            updateTodayTimeline();
+
+        } catch (error) {
+            console.error('Error al enviar recordatorio:', error);
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Error al enviar el recordatorio',
+                text: (error && error.message) ? String(error.message).slice(0, 400) : 'No se pudo enviar el recordatorio.',
+                confirmButtonColor: '#dc2626'
+            });
+        }
+    }
+}
+
+/** Enviar recordatorio desde el modal de detalle (usa la cita actual). */
+async function sendReminderFromModal() {
+    const cita = AppointmentsModule.currentAppointment;
+    if (!cita || !cita.id) {
+        Swal.fire({ icon: 'warning', title: 'Sin cita seleccionada', confirmButtonColor: '#f59e0b' });
+        return;
+    }
+    await sendReminderAppointment(cita.id);
     // Refrescar el detalle si sigue abierto
     try {
         const actualizada = await CitasAPI.getCitaById(cita.id);
@@ -1812,7 +2143,8 @@ function updateAppointmentsTable(citas) {
                     <button onclick="editAppointment(${cita.id})" class="sys-table-action sys-table-action-edit" title="Editar" aria-label="Editar">
                         <i class="fas fa-edit text-sm"></i>
                     </button>
-                    ${(() => { const ok = puedeConfirmarCita(cita); return `<button ${ok ? `onclick="confirmAppointment(${cita.id})"` : 'disabled'} class="sys-table-action ${ok ? 'sys-table-action-confirm' : 'opacity-40 cursor-not-allowed'}" title="${ok ? 'Confirmar cita y enviar recordatorio' : 'La confirmación se habilita un día antes de la cita'}" aria-label="Confirmar cita"><i class="fas fa-check-circle text-sm ${ok ? 'text-emerald-600' : 'text-gray-300'}"></i></button>`; })()}
+                    ${(() => { const ok = puedeConfirmarCita(cita); return `<button ${ok ? `onclick="confirmAppointment(${cita.id})"` : 'disabled'} class="sys-table-action ${ok ? 'sys-table-action-confirm' : 'opacity-40 cursor-not-allowed'}" title="${ok ? 'Confirmar cita (solo hoy, antes de su hora)' : 'La confirmación se habilita el mismo día de la cita, antes de su hora'}" aria-label="Confirmar cita"><i class="fas fa-check-circle text-sm ${ok ? 'text-emerald-600' : 'text-gray-300'}"></i></button>`; })()}
+                    ${(() => { const ok = puedeEnviarRecordatorio(cita); const ya = cita.recordatorioEnviado === true; return `<button ${ok ? `onclick="sendReminderAppointment(${cita.id})"` : 'disabled'} class="sys-table-action ${ok ? 'sys-table-action-remind' : 'opacity-40 cursor-not-allowed'}" title="${ok ? (ya ? 'Reenviar recordatorio por correo (un día antes)' : 'Enviar recordatorio por correo (un día antes)') : 'El recordatorio se habilita únicamente un día antes de la cita'}" aria-label="Enviar recordatorio"><i class="fas fa-bell text-sm ${ok ? 'text-amber-500' : 'text-gray-300'}"></i></button>`; })()}
                     <button onclick="deleteAppointment(${cita.id})" class="sys-table-action sys-table-action-delete" title="Eliminar" aria-label="Eliminar">
                         <i class="fas fa-trash text-sm"></i>
                     </button>
@@ -2141,11 +2473,30 @@ function claveFechaLocal(d) {
 
 /**
  * Regla del botón de confirmación: bloqueado por defecto,
- * se habilita únicamente un día antes de la cita (fecha == mañana) y en estado PENDIENTE.
+ * se habilita el mismo día de la cita antes de su hora y en estado PENDIENTE.
  */
 function puedeConfirmarCita(cita) {
     if (!cita) return false;
     if (String(cita.estado || '').toUpperCase() !== 'PENDIENTE') return false;
+    const fechaStr = String(cita.fecha || cita.fechaCita || '').slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) return false;
+    if (fechaStr !== claveFechaLocal(new Date())) return false;
+    const horaStr = String(cita.hora || cita.horaCita || '').slice(0, 5);
+    if (!/^\d{2}:\d{2}$/.test(horaStr)) return true;
+    const ahora = new Date();
+    const hhmmActual = String(ahora.getHours()).padStart(2, '0') + ':' + String(ahora.getMinutes()).padStart(2, '0');
+    return hhmmActual < horaStr;
+}
+
+/**
+ * Regla del botón de recordatorio por correo: bloqueado por defecto,
+ * se habilita únicamente un día antes de la cita (fecha == mañana)
+ * y en estado PENDIENTE o CONFIRMADA. Independiente de la confirmación.
+ */
+function puedeEnviarRecordatorio(cita) {
+    if (!cita) return false;
+    const estado = String(cita.estado || '').toUpperCase();
+    if (estado !== 'PENDIENTE' && estado !== 'CONFIRMADA') return false;
     const fechaStr = String(cita.fecha || cita.fechaCita || '').slice(0, 10);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) return false;
     const manana = new Date();
@@ -2213,9 +2564,13 @@ window.editAppointment = editAppointment;
 window.deleteAppointment = deleteAppointment;
 window.confirmAppointment = confirmAppointment;
 window.confirmAppointmentFromModal = confirmAppointmentFromModal;
+window.sendReminderAppointment = sendReminderAppointment;
+window.sendReminderFromModal = sendReminderFromModal;
 window.puedeConfirmarCita = puedeConfirmarCita;
+window.puedeEnviarRecordatorio = puedeEnviarRecordatorio;
 window.buscarPacientePorCedula = buscarPacientePorCedula;
 window.onTipoCitaChange = onTipoCitaChange;
+window.actualizarHorasDisponibles = actualizarHorasDisponibles;
 window.filtrarOdontologosPorEspecialidad = filtrarOdontologosPorEspecialidad;
 window.cancelAppointment = cancelAppointment;
 window.openCalendarView = openCalendarView;
