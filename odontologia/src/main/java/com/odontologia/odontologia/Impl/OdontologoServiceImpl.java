@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.odontologia.odontologia.Dto.OdontologoDto;
+import com.odontologia.odontologia.Enums.Especialidad;
 import com.odontologia.odontologia.Enums.Genero;
 import com.odontologia.odontologia.Entity.Odontologo;
 import com.odontologia.odontologia.Enums.Parentesco;
@@ -98,7 +99,7 @@ public class OdontologoServiceImpl implements OdontologoService {
 		existente.setUniversidad(odontologoDto.getUniversidad());
 		existente.setAnoGraduacion(odontologoDto.getAnoGraduacion());
 		existente.setExperiencia(odontologoDto.getExperiencia());
-		existente.setEspecialidades(odontologoDto.getEspecialidades());
+		existente.setEspecialidades(normalizarEspecialidades(odontologoDto.getEspecialidades()));
 		existente.setContactoEmergenciaNombre(odontologoDto.getContactoEmergenciaNombre());
 		existente.setContactoEmergenciaParentesco(normalizarOpcionalParentesco(odontologoDto.getContactoEmergenciaParentesco()));
 		existente.setContactoEmergenciaTelefono(odontologoDto.getContactoEmergenciaTelefono());
@@ -162,7 +163,7 @@ public class OdontologoServiceImpl implements OdontologoService {
 		o.setUniversidad(dto.getUniversidad());
 		o.setAnoGraduacion(dto.getAnoGraduacion());
 		o.setExperiencia(dto.getExperiencia());
-		o.setEspecialidades(dto.getEspecialidades());
+		o.setEspecialidades(normalizarEspecialidades(dto.getEspecialidades()));
 		o.setContactoEmergenciaNombre(dto.getContactoEmergenciaNombre());
 		o.setContactoEmergenciaParentesco(normalizarOpcionalParentesco(dto.getContactoEmergenciaParentesco()));
 		o.setContactoEmergenciaTelefono(dto.getContactoEmergenciaTelefono());
@@ -193,5 +194,13 @@ public class OdontologoServiceImpl implements OdontologoService {
 			return valor;
 		}
 		return Parentesco.normalizar(valor);
+	}
+
+	/**
+	 * Especialidades contra el catálogo cerrado: al menos una válida;
+	 * se guardan como etiquetas canónicas separadas por coma.
+	 */
+	private String normalizarEspecialidades(String valor) {
+		return Especialidad.normalizarLista(valor);
 	}
 }

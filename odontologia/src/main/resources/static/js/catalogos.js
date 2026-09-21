@@ -1,7 +1,9 @@
 /**
  * Catálogos centrales del sistema - única fuente frontend (punto 4).
- * Espejo de los enums backend: TipoDocumento, Genero, Parentesco, EstadoCitaEnum.
- * El tipo de cita NO va aquí: se carga de /api/tipos-cita (tabla administrable).
+ * Espejo de los enums backend: TipoDocumento, Genero, Parentesco,
+ * EstadoCitaEnum, Especialidad.
+ * El tipo de cita NO va aquí: se carga de /api/tipos-cita (tabla administrable,
+ * cuyo nombre pertenece al enum de especialidades).
  * Si el backend expone /api/catalogos, se usa; si falla, se usan estos valores.
  */
 (function () {
@@ -33,6 +35,19 @@
             { codigo: 'FINALIZADA', etiqueta: 'Finalizada' },
             { codigo: 'NO_ASISTIDA', etiqueta: 'No asistida' },
             { codigo: 'CANCELADA', etiqueta: 'Cancelada' }
+        ],
+        especialidades: [
+            { codigo: 'ODONTOLOGIA_GENERAL', etiqueta: 'Odontología General' },
+            { codigo: 'ORTODONCIA', etiqueta: 'Ortodoncia' },
+            { codigo: 'ENDODONCIA', etiqueta: 'Endodoncia' },
+            { codigo: 'PERIODONCIA', etiqueta: 'Periodoncia' },
+            { codigo: 'CIRUGIA_ORAL', etiqueta: 'Cirugía Oral' },
+            { codigo: 'PROTESIS_DENTAL', etiqueta: 'Prótesis Dental' },
+            { codigo: 'ODONTOPEDIATRIA', etiqueta: 'Odontopediatría' },
+            { codigo: 'ESTETICA_DENTAL', etiqueta: 'Estética Dental' },
+            { codigo: 'IMPLANTOLOGIA', etiqueta: 'Implantología' },
+            { codigo: 'LIMPIEZA_DENTAL', etiqueta: 'Limpieza Dental' },
+            { codigo: 'VALORACION', etiqueta: 'Valoración' }
         ]
     };
 

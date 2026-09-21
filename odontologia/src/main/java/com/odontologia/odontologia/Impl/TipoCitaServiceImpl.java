@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.odontologia.odontologia.Dto.TipoCitaDto;
 import com.odontologia.odontologia.Entity.TipoCita;
+import com.odontologia.odontologia.Enums.Especialidad;
 import com.odontologia.odontologia.Repository.TipoCitaRepository;
 import com.odontologia.odontologia.Service.TipoCitaService;
 
@@ -33,6 +34,7 @@ public class TipoCitaServiceImpl implements TipoCitaService {
 	@Override
 	public TipoCitaDto crearTipoCita(TipoCitaDto tipoCitaDto) {
 		TipoCita t = convertirDtoAEntity(tipoCitaDto);
+		t.setNombre(normalizarNombre(t.getNombre()));
 		TipoCita guardado = tipoCitaRepository.save(t);
 		return convertirEntityADto(guardado);
 	}
@@ -42,7 +44,7 @@ public class TipoCitaServiceImpl implements TipoCitaService {
 		TipoCita existente = tipoCitaRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("TipoCita no encontrado con ID: " + id));
 
-		existente.setNombre(tipoCitaDto.getNombre());
+		existente.setNombre(normalizarNombre(tipoCitaDto.getNombre()));
 		existente.setDescripcion(tipoCitaDto.getDescripcion());
 
 		TipoCita actualizado = tipoCitaRepository.save(existente);
@@ -71,5 +73,13 @@ public class TipoCitaServiceImpl implements TipoCitaService {
 		t.setNombre(dto.getNombre());
 		t.setDescripcion(dto.getDescripcion());
 		return t;
+	}
+
+	/**
+	 * El nombre del tipo de cita debe pertenecer al catálogo cerrado de
+	 * especialidades; se guarda con su etiqueta canónica.
+	 */
+	private String normalizarNombre(String nombre) {
+		return Especialidad.desde(nombre).getEtiqueta();
 	}
 }

@@ -16,6 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.odontologia.odontologia.Dto.OdontologoDto;
 import com.odontologia.odontologia.Service.OdontologoService;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = "*")
@@ -42,15 +47,27 @@ public class OdontologoRestController {
         return odontologoService.listarPorEspecialidad(especialidad);
     }
 
-    // Crear nuevo odontólogo
+    // Crear nuevo odontólogo (especialidades contra el enum Especialidad)
     @PostMapping("/odontologos")
-    public OdontologoDto crearOdontologo(@RequestBody OdontologoDto odontologoDto) {
-        return odontologoService.crearOdontologo(odontologoDto);
+    public ResponseEntity<?> crearOdontologo(@RequestBody OdontologoDto odontologoDto) {
+        try {
+            return ResponseEntity.ok(odontologoService.crearOdontologo(odontologoDto));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("message", e.getMessage() != null ? e.getMessage() : "No se pudo crear el odontólogo"));
+        }
     }
     // Actualizar odontólogo existente
     @PutMapping("/odontologos/{id}")
-    public OdontologoDto actualizarOdontologo(@PathVariable Long id, @RequestBody OdontologoDto odontologoDto) {
-        return odontologoService.actualizarOdontologo(id, odontologoDto);
+    public ResponseEntity<?> actualizarOdontologo(@PathVariable Long id, @RequestBody OdontologoDto odontologoDto) {
+        try {
+            return ResponseEntity.ok(odontologoService.actualizarOdontologo(id, odontologoDto));
+        } catch (RuntimeException e) {
+            String msg = e.getMessage() != null ? e.getMessage() : "No se pudo actualizar el odontólogo";
+            HttpStatus status = msg.contains("no encontrado")
+                    ? HttpStatus.NOT_FOUND : HttpStatus.CONFLICT;
+            return ResponseEntity.status(status).body(Map.of("message", msg));
+        }
     }
 
     // Eliminar odontólogo

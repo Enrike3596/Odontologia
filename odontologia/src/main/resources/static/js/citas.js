@@ -32,15 +32,19 @@ const AppointmentsModule = {
         { id: 'NO_ASISTIDA', name: 'No asistida', color: 'gray' },
         { id: 'CANCELADA', name: 'Cancelada', color: 'red' }
     ],
+    // Respaldo local si /api/tipos-cita no responde: etiquetas del enum Especialidad
     appointmentTypes: [
-        { id: 'consulta-general', name: 'Consulta General', icon: 'fa-stethoscope', color: 'blue' },
-        { id: 'limpieza', name: 'Limpieza Dental', icon: 'fa-tooth', color: 'green' },
-        { id: 'endodoncia', name: 'Endodoncia', icon: 'fa-procedures', color: 'red' },
-        { id: 'cirugia', name: 'Cirugía Oral', icon: 'fa-cut', color: 'purple' },
+        { id: 'odontologia-general', name: 'Odontología General', icon: 'fa-stethoscope', color: 'blue' },
         { id: 'ortodoncia', name: 'Ortodoncia', icon: 'fa-smile', color: 'indigo' },
+        { id: 'endodoncia', name: 'Endodoncia', icon: 'fa-procedures', color: 'red' },
         { id: 'periodoncia', name: 'Periodoncia', icon: 'fa-heart', color: 'pink' },
-        { id: 'estetica', name: 'Odontología Estética', icon: 'fa-star', color: 'yellow' },
-        { id: 'urgencia', name: 'Urgencia', icon: 'fa-exclamation-triangle', color: 'red' }
+        { id: 'cirugia-oral', name: 'Cirugía Oral', icon: 'fa-cut', color: 'purple' },
+        { id: 'protesis-dental', name: 'Prótesis Dental', icon: 'fa-cog', color: 'gray' },
+        { id: 'odontopediatria', name: 'Odontopediatría', icon: 'fa-child', color: 'teal' },
+        { id: 'estetica-dental', name: 'Estética Dental', icon: 'fa-star', color: 'yellow' },
+        { id: 'implantologia', name: 'Implantología', icon: 'fa-plus-circle', color: 'cyan' },
+        { id: 'limpieza', name: 'Limpieza Dental', icon: 'fa-tooth', color: 'green' },
+        { id: 'valoracion', name: 'Valoración', icon: 'fa-clipboard-check', color: 'orange' }
     ],
     currentDate: new Date(),
     apiBaseUrl: '/api'

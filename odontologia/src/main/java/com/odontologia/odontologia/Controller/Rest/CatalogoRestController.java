@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.odontologia.odontologia.Enums.EstadoCitaEnum;
+import com.odontologia.odontologia.Enums.Especialidad;
 import com.odontologia.odontologia.Enums.Genero;
 import com.odontologia.odontologia.Enums.Parentesco;
 import com.odontologia.odontologia.Enums.TipoDocumento;
@@ -18,8 +19,9 @@ import com.odontologia.odontologia.Enums.TipoDocumento;
 /**
  * Catálogos centrales del sistema (punto 4 del plan de acción).
  * Única fuente de verdad para los selects de tipo de documento,
- * género, parentesco y estado de cita. El tipo de cita se mantiene
- * como tabla administrable (/api/tipos-cita) y no como enum.
+ * género, parentesco, estado de cita y especialidad. El tipo de cita se mantiene
+ * como tabla administrable (/api/tipos-cita) pero su nombre debe pertenecer
+ * al enum de especialidades.
  */
 @RestController
 @RequestMapping("/api")
@@ -39,6 +41,9 @@ public class CatalogoRestController {
                 .collect(Collectors.toList()));
         res.put("estadosCita", Arrays.stream(EstadoCitaEnum.values())
                 .map(e -> item(e.name(), e.name()))
+                .collect(Collectors.toList()));
+        res.put("especialidades", Arrays.stream(Especialidad.values())
+                .map(e -> item(e.getCodigo(), e.getEtiqueta()))
                 .collect(Collectors.toList()));
         return res;
     }

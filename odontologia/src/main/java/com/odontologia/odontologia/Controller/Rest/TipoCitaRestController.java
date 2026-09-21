@@ -15,6 +15,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.odontologia.odontologia.Dto.TipoCitaDto;
 import com.odontologia.odontologia.Service.TipoCitaService;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api")
 public class TipoCitaRestController {
@@ -33,16 +38,28 @@ public class TipoCitaRestController {
         return tipoCitaService.obtenerTipoCitaPorId(id);
     }
 
-    // Crear nuevo tipo de cita
+    // Crear nuevo tipo de cita (el nombre debe pertenecer al enum Especialidad)
     @PostMapping("/tipos-cita")
-    public TipoCitaDto crearTipoCita(@RequestBody TipoCitaDto tipoCitaDto) {
-        return tipoCitaService.crearTipoCita(tipoCitaDto);
+    public ResponseEntity<?> crearTipoCita(@RequestBody TipoCitaDto tipoCitaDto) {
+        try {
+            return ResponseEntity.ok(tipoCitaService.crearTipoCita(tipoCitaDto));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("message", e.getMessage() != null ? e.getMessage() : "No se pudo crear el tipo de cita"));
+        }
     }
 
-    // Actualizar tipo de cita existente
+    // Actualizar tipo de cita existente (el nombre debe pertenecer al enum Especialidad)
     @PutMapping("/tipos-cita/{id}")
-    public TipoCitaDto actualizarTipoCita(@PathVariable Long id, @RequestBody TipoCitaDto tipoCitaDto) {
-        return tipoCitaService.actualizarTipoCita(id, tipoCitaDto);
+    public ResponseEntity<?> actualizarTipoCita(@PathVariable Long id, @RequestBody TipoCitaDto tipoCitaDto) {
+        try {
+            return ResponseEntity.ok(tipoCitaService.actualizarTipoCita(id, tipoCitaDto));
+        } catch (RuntimeException e) {
+            String msg = e.getMessage() != null ? e.getMessage() : "No se pudo actualizar el tipo de cita";
+            HttpStatus status = msg.contains("no encontrado")
+                    ? HttpStatus.NOT_FOUND : HttpStatus.CONFLICT;
+            return ResponseEntity.status(status).body(Map.of("message", msg));
+        }
     }
 
     // Eliminar tipo de cita
