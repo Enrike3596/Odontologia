@@ -18,6 +18,18 @@ public interface Cita2Service {
      */
     Cita2Dto confirmarCita(Long id);
     /**
+     * Finalización de la cita (paciente atendido):
+     * solo desde CONFIRMADA y una vez pasada la fecha/hora asignada.
+     * Pasa a FINALIZADA (terminal).
+     */
+    Cita2Dto finalizarCita(Long id);
+    /**
+     * Marca de no asistencia:
+     * solo si ya pasó 1 minuto desde la fecha/hora asignada y el estado
+     * es PENDIENTE, CONFIRMADA o REPROGRAMADA. Pasa a NO_ASISTIDA (terminal).
+     */
+    Cita2Dto marcarNoAsistida(Long id);
+    /**
      * Recordatorio de la cita por correo (acción independiente de la confirmación):
      * solo un día antes de la cita (fecha == mañana). Envía el correo al
      * paciente y marca recordatorioEnviado. No cambia el estado.

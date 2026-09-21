@@ -25,6 +25,14 @@
             'Padre', 'Madre', 'Esposo', 'Esposa', 'Hijo', 'Hija',
             'Hermano', 'Hermana', 'Abuelo', 'Abuela', 'Tío', 'Tía',
             'Primo', 'Prima', 'Amigo', 'Amiga', 'Tutor legal', 'Otro'
+        ],
+        estadosCita: [
+            { codigo: 'PENDIENTE', etiqueta: 'Pendiente' },
+            { codigo: 'CONFIRMADA', etiqueta: 'Confirmada' },
+            { codigo: 'REPROGRAMADA', etiqueta: 'Reprogramada' },
+            { codigo: 'FINALIZADA', etiqueta: 'Finalizada' },
+            { codigo: 'NO_ASISTIDA', etiqueta: 'No asistida' },
+            { codigo: 'CANCELADA', etiqueta: 'Cancelada' }
         ]
     };
 

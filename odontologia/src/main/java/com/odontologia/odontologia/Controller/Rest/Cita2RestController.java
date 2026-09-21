@@ -84,6 +84,32 @@ public class Cita2RestController {
         }
     }
 
+    // Finalizar cita: solo desde CONFIRMADA y después de la atención
+    @PostMapping("/citas/{id}/finalizar")
+    public ResponseEntity<?> finalizarCita(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(cita2Service.finalizarCita(id));
+        } catch (RuntimeException e) {
+            String msg = e.getMessage() != null ? e.getMessage() : "No se pudo finalizar la cita";
+            HttpStatus status = msg.contains("no encontrada")
+                    ? HttpStatus.NOT_FOUND : HttpStatus.CONFLICT;
+            return ResponseEntity.status(status).body(Map.of("message", msg));
+        }
+    }
+
+    // Marcar no asistida: solo 1 minuto después de la hora asignada
+    @PostMapping("/citas/{id}/no-asistida")
+    public ResponseEntity<?> marcarNoAsistida(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(cita2Service.marcarNoAsistida(id));
+        } catch (RuntimeException e) {
+            String msg = e.getMessage() != null ? e.getMessage() : "No se pudo marcar la inasistencia";
+            HttpStatus status = msg.contains("no encontrada")
+                    ? HttpStatus.NOT_FOUND : HttpStatus.CONFLICT;
+            return ResponseEntity.status(status).body(Map.of("message", msg));
+        }
+    }
+
     // Recordatorio de cita por correo: solo un día antes (no cambia el estado)
     @PostMapping("/citas/{id}/recordatorio")
     public ResponseEntity<?> enviarRecordatorio(@PathVariable Long id) {

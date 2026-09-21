@@ -43,7 +43,7 @@ public class RecordatorioScheduler {
             return;
         }
         LocalDate manana = LocalDate.now().plusDays(1);
-        List<EstadoCitaEnum> estados = Arrays.asList(EstadoCitaEnum.PENDIENTE, EstadoCitaEnum.CONFIRMADA);
+        List<EstadoCitaEnum> estados = Arrays.asList(EstadoCitaEnum.PENDIENTE, EstadoCitaEnum.CONFIRMADA, EstadoCitaEnum.REPROGRAMADA);
         List<Cita2> citas;
         try {
             citas = citaRepository.findByFechaAndEstadoIn(manana, estados);

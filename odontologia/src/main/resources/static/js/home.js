@@ -136,8 +136,12 @@ function estadoMeta(estado) {
     switch (String(estado || '').toUpperCase()) {
         case 'CONFIRMADA':
             return { text: 'Confirmada', badge: 'bg-green-100 text-green-800', dot: 'bg-green-500', row: 'bg-green-50 border-green-200', time: 'text-green-700', sub: 'text-green-600', icon: 'text-green-500' };
-        case 'COMPLETADA':
-            return { text: 'Completada', badge: 'bg-blue-100 text-blue-800', dot: 'bg-blue-500', row: 'bg-blue-50 border-blue-200', time: 'text-blue-700', sub: 'text-blue-600', icon: 'text-blue-500' };
+        case 'REPROGRAMADA':
+            return { text: 'Reprogramada', badge: 'bg-purple-100 text-purple-800', dot: 'bg-purple-500', row: 'bg-purple-50 border-purple-200', time: 'text-purple-700', sub: 'text-purple-600', icon: 'text-purple-500' };
+        case 'FINALIZADA':
+            return { text: 'Finalizada', badge: 'bg-blue-100 text-blue-800', dot: 'bg-blue-500', row: 'bg-blue-50 border-blue-200', time: 'text-blue-700', sub: 'text-blue-600', icon: 'text-blue-500' };
+        case 'NO_ASISTIDA':
+            return { text: 'No asistida', badge: 'bg-gray-100 text-gray-800', dot: 'bg-gray-500', row: 'bg-gray-50 border-gray-200', time: 'text-gray-700', sub: 'text-gray-600', icon: 'text-gray-500' };
         case 'CANCELADA':
             return { text: 'Cancelada', badge: 'bg-red-100 text-red-800', dot: 'bg-red-500', row: 'bg-red-50 border-red-200', time: 'text-red-700', sub: 'text-red-600', icon: 'text-red-500' };
         case 'PENDIENTE':
@@ -349,7 +353,7 @@ function renderStatusSummary() {
     const container = document.getElementById('statusSummaryList');
     if (!container) return;
 
-    const counts = { PENDIENTE: 0, CONFIRMADA: 0, COMPLETADA: 0, CANCELADA: 0, OTROS: 0 };
+    const counts = { PENDIENTE: 0, CONFIRMADA: 0, REPROGRAMADA: 0, FINALIZADA: 0, NO_ASISTIDA: 0, CANCELADA: 0, OTROS: 0 };
     DashboardModule.citas.forEach(function (c) {
         const e = String(c.estado || '').toUpperCase();
         if (counts[e] !== undefined) counts[e]++;
@@ -359,7 +363,9 @@ function renderStatusSummary() {
     const rows = [
         { label: 'Pendientes', count: counts.PENDIENTE, meta: estadoMeta('PENDIENTE') },
         { label: 'Confirmadas', count: counts.CONFIRMADA, meta: estadoMeta('CONFIRMADA') },
-        { label: 'Completadas', count: counts.COMPLETADA, meta: estadoMeta('COMPLETADA') },
+        { label: 'Reprogramadas', count: counts.REPROGRAMADA, meta: estadoMeta('REPROGRAMADA') },
+        { label: 'Finalizadas', count: counts.FINALIZADA, meta: estadoMeta('FINALIZADA') },
+        { label: 'No asistidas', count: counts.NO_ASISTIDA, meta: estadoMeta('NO_ASISTIDA') },
         { label: 'Canceladas', count: counts.CANCELADA, meta: estadoMeta('CANCELADA') }
     ];
 

@@ -27,7 +27,9 @@ const AppointmentsModule = {
     appointmentStatuses: [
         { id: 'PENDIENTE', name: 'Pendiente', color: 'yellow' },
         { id: 'CONFIRMADA', name: 'Confirmada', color: 'green' },
-        { id: 'COMPLETADA', name: 'Completada', color: 'blue' },
+        { id: 'REPROGRAMADA', name: 'Reprogramada', color: 'purple' },
+        { id: 'FINALIZADA', name: 'Finalizada', color: 'blue' },
+        { id: 'NO_ASISTIDA', name: 'No asistida', color: 'gray' },
         { id: 'CANCELADA', name: 'Cancelada', color: 'red' }
     ],
     appointmentTypes: [
@@ -2168,7 +2170,7 @@ function updateAppointmentStats(citas) {
         list.filter(cita => cita.estado === 'PENDIENTE').length,
         list.filter(cita => {
             const citaDate = new Date(cita.fecha);
-            return cita.estado === 'COMPLETADA' &&
+            return cita.estado === 'FINALIZADA' &&
                    citaDate.getMonth() === now.getMonth() &&
                    citaDate.getFullYear() === now.getFullYear();
         }).length,
@@ -2188,7 +2190,9 @@ function getStatusColor(estado) {
     const colors = {
         'PENDIENTE': 'bg-yellow-100 text-yellow-800',
         'CONFIRMADA': 'bg-green-100 text-green-800',
-        'COMPLETADA': 'bg-blue-100 text-blue-800',
+        'REPROGRAMADA': 'bg-purple-100 text-purple-800',
+        'FINALIZADA': 'bg-blue-100 text-blue-800',
+        'NO_ASISTIDA': 'bg-gray-100 text-gray-800',
         'CANCELADA': 'bg-red-100 text-red-800'
     };
     return colors[estado] || 'bg-gray-100 text-gray-800';
@@ -2201,7 +2205,9 @@ function getStatusText(estado) {
     const texts = {
         'PENDIENTE': 'Pendiente',
         'CONFIRMADA': 'Confirmada',
-        'COMPLETADA': 'Completada',
+        'REPROGRAMADA': 'Reprogramada',
+        'FINALIZADA': 'Finalizada',
+        'NO_ASISTIDA': 'No asistida',
         'CANCELADA': 'Cancelada'
     };
     return texts[estado] || estado;
