@@ -597,7 +597,8 @@ function initializeAppointmentsModule() {
 function setupEventListeners() {
     // Formulario de nueva cita
     const newAppointmentForm = document.getElementById('newAppointmentForm');
-    if (newAppointmentForm) {
+    if (newAppointmentForm && !newAppointmentForm.dataset.submitBound) {
+        newAppointmentForm.dataset.submitBound = '1';
         newAppointmentForm.addEventListener('submit', handleNewAppointmentSubmit);
     }
 
@@ -918,13 +919,18 @@ function closeNewAppointmentModal() {
 async function handleNewAppointmentSubmit(e) {
     e.preventDefault();
 
-    const formData = new FormData(e.target);
+    const form = e.target;
+    if (form.dataset.submitting === '1') return;
+    form.dataset.submitting = '1';
+
+    const formData = new FormData(form);
     const appointmentData = Object.fromEntries(formData);
 
     // Validar datos
     const validation = validateAppointmentData(appointmentData);
     if (!validation.isValid) {
         showValidationError(validation.errors);
+        delete form.dataset.submitting;
         return;
     }
 
@@ -1027,6 +1033,7 @@ async function handleNewAppointmentSubmit(e) {
                 });
                 if (!conf.isConfirmed) {
                     Swal.close();
+                    delete form.dataset.submitting;
                     return;
                 }
             }
@@ -1115,6 +1122,8 @@ async function handleNewAppointmentSubmit(e) {
             text: errorMessage,
             confirmButtonColor: '#dc2626'
         });
+    } finally {
+        delete form.dataset.submitting;
     }
 }
 
