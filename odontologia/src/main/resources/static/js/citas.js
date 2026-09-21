@@ -131,8 +131,10 @@ const CitasAPI = {
         }
     },
 
-    // Actualizar cita
+    // Actualizar cita (con timeout: un cuelgue de red nunca deja el flujo en espera infinita)
     async updateCita(id, citaData) {
+        const ctrl = ('AbortController' in window) ? new AbortController() : null;
+        const temporizador = ctrl ? setTimeout(() => ctrl.abort(), 30000) : null;
         try {
             console.log(`Actualizando cita ID ${id} con datos:`, citaData);
             const response = await fetch(`${AppointmentsModule.apiBaseUrl}/citas/${id}`, {
@@ -140,7 +142,8 @@ const CitasAPI = {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(citaData)
+                body: JSON.stringify(citaData),
+                ...(ctrl ? { signal: ctrl.signal } : {})
             });
 
             if (!response.ok) {
@@ -154,7 +157,12 @@ const CitasAPI = {
             return result;
         } catch (error) {
             console.error('Error en updateCita:', error);
+            if (error && error.name === 'AbortError') {
+                throw new Error('El servidor no respondió a tiempo (30 s). Verifique su conexión e intente de nuevo.');
+            }
             throw error;
+        } finally {
+            if (temporizador) clearTimeout(temporizador);
         }
     },
 
@@ -997,23 +1005,13 @@ async function handleNewAppointmentSubmit(e) {
             if (preErr && /Turno no disponible|no labora|fuera del horario|ocupado|bloqueado|Sin turnos/i.test(preErr.message || '')) return;
         }
 
-        // Mostrar loading
-        Swal.fire({
-            title: `${actionText} cita...`,
-            html: `Por favor espere mientras procesamos la información de la cita médica`,
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-
         let result;
+        if (isEdit && !AppointmentsModule.editingAppointmentId) {
+            throw new Error('No se encontró el ID de la cita para actualizar');
+        }
+        // Aviso previo (antes del loading): cambiar fecha/hora/odontólogo
+        // reprograma la cita (pasa a REPROGRAMADA)
         if (isEdit) {
-            // Verificar que tenemos el ID para actualizar
-            if (!AppointmentsModule.editingAppointmentId) {
-                throw new Error('No se encontró el ID de la cita para actualizar');
-            }
-            // Aviso: cambiar fecha/hora/odontólogo reprograma la cita (pasa a REPROGRAMADA)
             const curEdit = (AppointmentsModule.cachedCitas || []).find(c => String(c.id) === String(AppointmentsModule.editingAppointmentId));
             const turnoCambiado = curEdit && (
                 String(curEdit.fecha).slice(0, 10) !== String(citaData.fecha).slice(0, 10) ||
@@ -1032,11 +1030,22 @@ async function handleNewAppointmentSubmit(e) {
                     cancelButtonColor: '#6b7280'
                 });
                 if (!conf.isConfirmed) {
-                    Swal.close();
-                    delete form.dataset.submitting;
                     return;
                 }
             }
+        }
+
+        // Mostrar loading (después de las confirmaciones previas)
+        Swal.fire({
+            title: `${actionText} cita...`,
+            html: `Por favor espere mientras procesamos la información de la cita médica`,
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        if (isEdit) {
             // Actualizar cita existente
             result = await CitasAPI.updateCita(AppointmentsModule.editingAppointmentId, citaData);
             if (result && String(result.estado || '').toUpperCase() === 'REPROGRAMADA') {
