@@ -161,10 +161,17 @@ CREATE TABLE IF NOT EXISTS tipos_cita (
 );
 
 INSERT INTO tipos_cita (nombre, descripcion) VALUES
-    ('Limpieza dental', 'Profilaxis e higiene oral'),
+    ('Limpieza Dental', 'Profilaxis e higiene oral'),
     ('Endodoncia', 'Tratamiento de conducto'),
     ('Ortodoncia', 'Control y ajuste de ortodoncia'),
-    ('Valoración', 'Primera valoración general')
+    ('Valoración', 'Primera valoración general'),
+    ('Odontología General', 'Consulta odontológica general'),
+    ('Periodoncia', 'Tratamiento de encías y periodonto'),
+    ('Cirugía Oral', 'Procedimientos quirúrgicos orales'),
+    ('Prótesis Dental', 'Prótesis y rehabilitación oral'),
+    ('Odontopediatría', 'Odontología infantil'),
+    ('Estética Dental', 'Estética y diseño de sonrisa'),
+    ('Implantología', 'Implantes dentales')
 ON CONFLICT (nombre) DO NOTHING;
 
 -- ============================================

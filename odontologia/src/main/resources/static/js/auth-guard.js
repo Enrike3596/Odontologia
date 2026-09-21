@@ -107,6 +107,9 @@
   }
 
   async function redirectIfAuthenticated() {
+    // Sin rastro de sesión local no hay nada que verificar: se evita la
+    // sonda /api/auth/me y su 401 esperado en consola al arrancar.
+    if (!getSession()) return false;
     const me = await serverSession();
     if (me && me !== 'unknown') {
       window.location.replace(consumeNext('/dashboard'));
@@ -116,6 +119,7 @@
       window.location.replace(consumeNext('/dashboard'));
       return true;
     }
+    clearSession(); // sesión expirada en el servidor: soltar la caché local
     return false;
   }
 
