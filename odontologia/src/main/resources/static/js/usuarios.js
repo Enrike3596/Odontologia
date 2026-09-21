@@ -729,7 +729,7 @@ function renderUsersTable(usuarios) {
                     </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">Hace 2 horas</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div class="sys-table-actions">
                         <button class="sys-table-action sys-table-action-view" onclick="viewUser(${usuario.id || usuario.idUsuario})" title="Ver detalles" aria-label="Ver detalles">
                             <i class="fas fa-eye"></i>

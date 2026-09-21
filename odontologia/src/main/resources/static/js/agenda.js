@@ -256,7 +256,7 @@
                 + '<td class="px-4 py-3">' + tipo + '</td>'
                 + '<td class="px-4 py-3 text-sm text-gray-900">' + horario + '</td>'
                 + '<td class="px-4 py-3 text-sm text-gray-600">' + (m.motivo || '-') + '</td>'
-                + '<td class="px-4 py-3"><div class="sys-table-actions">'
+                + '<td class="px-4 py-3 text-right text-sm font-medium"><div class="sys-table-actions">'
                 + '<button class="sys-table-action sys-table-action-delete" onclick="eliminarMovimiento(' + m.id + ')" title="Eliminar" aria-label="Eliminar">'
                 + '<i class="fas fa-trash"></i></button>'
                 + '</div></td></tr>';
