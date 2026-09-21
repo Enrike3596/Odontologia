@@ -255,6 +255,12 @@ UPDATE citas SET estado = 'FINALIZADA' WHERE estado = 'COMPLETADA';
 ALTER TABLE citas DROP CONSTRAINT IF EXISTS citas_estado_check;
 ALTER TABLE citas ADD CONSTRAINT citas_estado_check
     CHECK (estado IN ('PENDIENTE', 'CONFIRMADA', 'CANCELADA', 'REPROGRAMADA', 'FINALIZADA', 'NO_ASISTIDA'));
+-- Citas vencidas existentes: el sistema las marca NO_ASISTIDA 1 minuto
+-- después de su fecha/hora; se normaliza el histórico con la misma regla.
+-- En Postgres, fecha (DATE) + hora (TIME) = TIMESTAMP.
+UPDATE citas SET estado = 'NO_ASISTIDA'
+WHERE estado IN ('PENDIENTE', 'CONFIRMADA', 'REPROGRAMADA')
+  AND (fecha + hora + INTERVAL '1 minute') < NOW();
 
 -- ============================================
 -- CONSULTAS DE VERIFICACION

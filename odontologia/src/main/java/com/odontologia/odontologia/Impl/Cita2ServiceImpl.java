@@ -99,6 +99,14 @@ public class Cita2ServiceImpl implements Cita2Service{
 		if (cambioTurno && !agendaService.turnoDisponible(nuevoOdontologoId, nuevaFecha, nuevaHora, id)) {
 			throw new RuntimeException("El turno no está disponible en la agenda del odontólogo (cerrado u ocupado)");
 		}
+		// Regla: no se puede reprogramar hacia una fecha/hora pasada
+		if (cambioTurno && nuevaFecha != null && nuevaHora != null) {
+			java.time.LocalDateTime nuevoTurno = java.time.LocalDateTime.of(nuevaFecha,
+					nuevaHora.withSecond(0).withNano(0));
+			if (!nuevoTurno.isAfter(java.time.LocalDateTime.now())) {
+				throw new RuntimeException("No se puede reprogramar a una fecha/hora pasada (" + nuevaFecha + " " + nuevaHora + ")");
+			}
+		}
 		// Regla: estados terminales no admiten cambios de turno ni reactivación
 		if (existente.getEstado() != null && existente.getEstado().esTerminal()
 				&& (cambioTurno || (citaDto.getEstado() != null && citaDto.getEstado() != existente.getEstado()))) {
@@ -144,8 +152,10 @@ public class Cita2ServiceImpl implements Cita2Service{
 		}
 
 		// Regla: cambiar fecha/hora/odontólogo reprograma automáticamente la cita
+		// y reinicia el control de recordatorio (la nueva fecha necesita su aviso)
 		if (cambioTurno) {
 			existente.setEstado(EstadoCitaEnum.REPROGRAMADA);
+			existente.setRecordatorioEnviado(false);
 		}
 
 		Cita2 actualizada = citaRepository.save(existente);
@@ -170,8 +180,11 @@ public class Cita2ServiceImpl implements Cita2Service{
 
 	@Override
 	public void eliminarCita(Long id) {
-		if (!citaRepository.existsById(id)) {
-			throw new RuntimeException("Cita no encontrada con ID: " + id);
+		Cita2 cita = citaRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Cita no encontrada con ID: " + id));
+		// Regla: NO_ASISTIDA es inmutable, ni siquiera se puede eliminar
+		if (cita.getEstado() == EstadoCitaEnum.NO_ASISTIDA) {
+			throw new RuntimeException("No se puede eliminar una cita no asistida (estado terminal e inmutable)");
 		}
 		citaRepository.deleteById(id);
 	}
@@ -181,6 +194,12 @@ public class Cita2ServiceImpl implements Cita2Service{
 	public Cita2Dto confirmarCita(Long id) {
 		Cita2 cita = citaRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Cita no encontrada con ID: " + id));
+		// Regla: vencida y sin confirmar -> pasa automáticamente a NO_ASISTIDA
+		if (estaVencida(cita) && cita.getEstado() != EstadoCitaEnum.CONFIRMADA) {
+			cita.setEstado(EstadoCitaEnum.NO_ASISTIDA);
+			citaRepository.save(cita);
+			throw new RuntimeException("La cita ya pasó su fecha y horario sin confirmarse: se marcó como no asistida");
+		}
 		if (cita.getEstado() != null && cita.getEstado().esTerminal()) {
 			throw new RuntimeException("Solo se pueden confirmar citas pendientes o reprogramadas (actual: " + cita.getEstado() + ")");
 		}
@@ -206,7 +225,7 @@ public class Cita2ServiceImpl implements Cita2Service{
 
 	@Override
 	@org.springframework.transaction.annotation.Transactional
-	public Cita2Dto finalizarCita(Long id) {
+	public Cita2Dto finalizarCita(Long id, Long odontologoId) {
 		Cita2 cita = citaRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Cita no encontrada con ID: " + id));
 		if (cita.getEstado() == EstadoCitaEnum.FINALIZADA) {
@@ -214,6 +233,14 @@ public class Cita2ServiceImpl implements Cita2Service{
 		}
 		if (cita.getEstado() != EstadoCitaEnum.CONFIRMADA) {
 			throw new RuntimeException("Solo se pueden finalizar citas confirmadas y ya atendidas (actual: " + cita.getEstado() + ")");
+		}
+		// Regla: la finalización la realiza el odontólogo asignado a la cita
+		Long asignadoId = cita.getOdontologo() != null ? cita.getOdontologo().getId() : null;
+		if (odontologoId != null && !odontologoId.equals(asignadoId)) {
+			throw new RuntimeException("Solo el odontólogo asignado puede dar por finalizada la cita (asignado: " + asignadoId + ")");
+		}
+		if (odontologoId == null && asignadoId == null) {
+			throw new RuntimeException("La cita no tiene odontólogo asignado para finalizarla");
 		}
 		// Regla: la finalización ocurre después de ser atendido (fecha/hora ya pasadas)
 		java.time.LocalDate hoy = java.time.LocalDate.now();
@@ -226,38 +253,63 @@ public class Cita2ServiceImpl implements Cita2Service{
 			throw new RuntimeException("La cita solo puede finalizarse después de su hora (" + cita.getHora() + ")");
 		}
 		cita.setEstado(EstadoCitaEnum.FINALIZADA);
+		// Auditoría: quién la finalizó (sin cambiar el esquema, queda en observaciones)
+		try {
+			Odontologo profesional = cita.getOdontologo();
+			String firma = (profesional != null)
+					? profesional.getNombre() + " " + profesional.getApellido() + " (id " + profesional.getId() + ")"
+					: ("id " + odontologoId);
+			String marca = "[Finalizada por Odont. " + firma + " el " + java.time.LocalDateTime.now().withSecond(0).withNano(0) + "]";
+			if (cita.getObservaciones() == null || !cita.getObservaciones().contains("[Finalizada por Odont.")) {
+				cita.setObservaciones((cita.getObservaciones() == null || cita.getObservaciones().isBlank())
+						? marca : cita.getObservaciones() + " " + marca);
+			}
+		} catch (Exception e) {
+			System.err.println("[Citas] No se pudo auditar la finalización de la cita " + id + ": " + e.getMessage());
+		}
 		cita = citaRepository.save(cita);
 		return convertirEntityADto(cita);
 	}
 
 	@Override
 	@org.springframework.transaction.annotation.Transactional
-	public Cita2Dto marcarNoAsistida(Long id) {
-		Cita2 cita = citaRepository.findById(id)
-				.orElseThrow(() -> new RuntimeException("Cita no encontrada con ID: " + id));
-		if (cita.getEstado() == EstadoCitaEnum.NO_ASISTIDA) {
-			return convertirEntityADto(cita);
+	public int marcarVencidasComoNoAsistidas() {
+		List<EstadoCitaEnum> activos = List.of(
+				EstadoCitaEnum.PENDIENTE, EstadoCitaEnum.CONFIRMADA, EstadoCitaEnum.REPROGRAMADA);
+		List<Cita2> candidatas;
+		try {
+			candidatas = citaRepository.findByEstadoIn(activos);
+		} catch (Exception e) {
+			System.err.println("[Citas] No se pudieron consultar vencidas: " + e.getMessage());
+			return 0;
 		}
-		if (cita.getEstado() == null || cita.getEstado().esTerminal()) {
-			throw new RuntimeException("Solo se puede marcar no asistida una cita pendiente, confirmada o reprogramada (actual: " + cita.getEstado() + ")");
+		int marcadas = 0;
+		for (Cita2 c : candidatas) {
+			try {
+				if (!estaVencida(c)) {
+					continue;
+				}
+				c.setEstado(EstadoCitaEnum.NO_ASISTIDA);
+				citaRepository.save(c);
+				marcadas++;
+			} catch (Exception e) {
+				System.err.println("[Citas] Fallo al marcar no asistida la cita " + c.getId() + ": " + e.getMessage());
+			}
 		}
-		if (cita.getEstado() != EstadoCitaEnum.PENDIENTE
-				&& cita.getEstado() != EstadoCitaEnum.CONFIRMADA
-				&& cita.getEstado() != EstadoCitaEnum.REPROGRAMADA) {
-			throw new RuntimeException("Solo se puede marcar no asistida una cita pendiente, confirmada o reprogramada (actual: " + cita.getEstado() + ")");
-		}
-		// Regla: solo después de 1 minuto de la hora asignada
-		if (cita.getFecha() == null || cita.getHora() == null) {
-			throw new RuntimeException("La cita no tiene fecha/hora asignada para evaluar la inasistencia");
+		return marcadas;
+	}
+
+	/**
+	 * Vencida = ya pasó 1 minuto desde la fecha/hora asignada.
+	 * Sin fecha/hora no se considera vencida (el llamador valida).
+	 */
+	private static boolean estaVencida(Cita2 cita) {
+		if (cita == null || cita.getFecha() == null || cita.getHora() == null) {
+			return false;
 		}
 		java.time.LocalDateTime finTolerancia = java.time.LocalDateTime.of(cita.getFecha(),
 				cita.getHora().withSecond(0).withNano(0)).plusMinutes(1);
-		if (!java.time.LocalDateTime.now().isAfter(finTolerancia)) {
-			throw new RuntimeException("La cita solo puede marcarse como no asistida 1 minuto después de su hora (" + cita.getHora() + ")");
-		}
-		cita.setEstado(EstadoCitaEnum.NO_ASISTIDA);
-		cita = citaRepository.save(cita);
-		return convertirEntityADto(cita);
+		return !java.time.LocalDateTime.now().isBefore(finTolerancia);
 	}
 
 	@Override

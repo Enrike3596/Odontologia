@@ -63,6 +63,8 @@ public class SecurityConfig {
                         // Gestión de agenda (apertura/cierre): solo Administrador
                         .requestMatchers(HttpMethod.POST, "/api/agenda/movimientos").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/agenda/movimientos/**").hasRole("ADMIN")
+                        // Finalizar cita: solo el odontólogo (o el administrador)
+                        .requestMatchers(HttpMethod.POST, "/api/citas/*/finalizar").hasAnyRole("ADMIN", "ODONTOLOGO")
                         .requestMatchers("/api/**").authenticated()
                         .requestMatchers("/dashboard", "/citas", "/agenda", "/pacientes",
                                 "/odontologos", "/historias-clinicas", "/usuarios", "/configuracion")

@@ -154,7 +154,10 @@ const CitasAPI = {
             const response = await fetch(`${AppointmentsModule.apiBaseUrl}/citas/${id}`, {
                 method: 'DELETE'
             });
-            if (!response.ok) throw new Error('Error al eliminar la cita');
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(extraerMensajeBackend(errorText) || 'Error al eliminar la cita');
+            }
             return true;
         } catch (error) {
             console.error('Error en deleteCita:', error);
@@ -185,6 +188,23 @@ const CitasAPI = {
         }
         return await response.json();
     },
+
+    // Finalizar cita: la realiza el odontólogo asignado, después de la atención
+    async finalizarCita(id, odontologoId) {
+        const response = await fetch(`${AppointmentsModule.apiBaseUrl}/citas/${id}/finalizar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(odontologoId ? { odontologoId } : {})
+        });
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(extraerMensajeBackend(errorText) || 'No se pudo finalizar la cita');
+        }
+        return await response.json();
+    },
+
+    // NOTA: NO_ASISTIDA la marca automáticamente el sistema 1 minuto después
+    // de la fecha/hora asignada. No existe marcado manual.
 
     // Buscar paciente por cédula/documento
     async getPacientePorDocumento(documento) {
@@ -735,8 +755,40 @@ async function handleNewAppointmentSubmit(e) {
             if (!AppointmentsModule.editingAppointmentId) {
                 throw new Error('No se encontró el ID de la cita para actualizar');
             }
+            // Aviso: cambiar fecha/hora/odontólogo reprograma la cita (pasa a REPROGRAMADA)
+            const curEdit = (AppointmentsModule.cachedCitas || []).find(c => String(c.id) === String(AppointmentsModule.editingAppointmentId));
+            const turnoCambiado = curEdit && (
+                String(curEdit.fecha).slice(0, 10) !== String(citaData.fecha).slice(0, 10) ||
+                String(curEdit.hora).slice(0, 5) !== String(citaData.hora).slice(0, 5) ||
+                String((curEdit.odontologo && curEdit.odontologo.id) || '') !== String(citaData.odontologo.id)
+            );
+            if (turnoCambiado) {
+                const conf = await Swal.fire({
+                    icon: 'info',
+                    title: 'La cita quedará reprogramada',
+                    html: '<p class="text-gray-600">Cambió la <strong>fecha, hora u odontólogo</strong>: al guardar, el estado pasará a <strong>REPROGRAMADA</strong>.</p>',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, reprogramar',
+                    cancelButtonText: 'Revisar',
+                    confirmButtonColor: '#7c3aed',
+                    cancelButtonColor: '#6b7280'
+                });
+                if (!conf.isConfirmed) {
+                    Swal.close();
+                    return;
+                }
+            }
             // Actualizar cita existente
             result = await CitasAPI.updateCita(AppointmentsModule.editingAppointmentId, citaData);
+            if (result && String(result.estado || '').toUpperCase() === 'REPROGRAMADA') {
+                await Swal.fire({
+                    icon: 'info',
+                    title: 'Cita reprogramada',
+                    html: `<p class="text-gray-600">Nueva fecha: <strong>${formatDate(result.fecha)} a las ${result.hora}</strong>. Estado: <strong>REPROGRAMADA</strong>.</p>`,
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#7c3aed'
+                });
+            }
         } else {
             // Crear nueva cita
             result = await CitasAPI.createCita(citaData);
@@ -1005,6 +1057,34 @@ function showAppointmentDetailsModal(appointment) {
         }
     }
 
+    // Botón Finalizar: lo realiza el odontólogo asignado (CONFIRMADA + fecha/hora pasada)
+    const btnFinalizar = document.getElementById('btnFinalizarDetalle');
+    const hintFinalizar = document.getElementById('finalizarDetalleHint');
+    if (btnFinalizar) {
+        const habilitado = puedeFinalizarCita(appointment);
+        btnFinalizar.disabled = !habilitado;
+        btnFinalizar.classList.toggle('opacity-50', !habilitado);
+        btnFinalizar.classList.toggle('cursor-not-allowed', !habilitado);
+        btnFinalizar.title = habilitado
+            ? 'Finalizar la cita (odontólogo asignado, tras la atención)'
+            : 'Solo el odontólogo asignado finaliza una cita confirmada pasada su fecha/hora';
+        if (hintFinalizar) {
+            hintFinalizar.textContent = habilitado
+                ? 'Puede finalizar ahora: cita confirmada y horario ya cumplido.'
+                : 'La finalización la realiza el odontólogo tras la atención.';
+        }
+    }
+
+    // Aviso de inasistencia automática: NO_ASISTIDA la marca el sistema
+    // 1 minuto después de la fecha/hora, sin acción manual e inmutable.
+    const hintNoAsistida = document.getElementById('noAsistidaDetalleHint');
+    if (hintNoAsistida) {
+        const esNoAsistida = String(appointment.estado || '').toUpperCase() === 'NO_ASISTIDA';
+        hintNoAsistida.textContent = esNoAsistida
+            ? 'Estado terminal e inmutable: marcada automáticamente por el sistema al vencer su horario sin asistencia.'
+            : 'Si la cita pasa su fecha y horario sin asistencia, el sistema la marcará NO_ASISTIDA automáticamente.';
+    }
+
     // Mostrar modal
     const modal = document.getElementById('viewAppointmentModal');
     modal.classList.remove('hidden');
@@ -1035,6 +1115,10 @@ async function editAppointment(appointmentId) {
     // Apertura instantánea desde caché (sin loader visible)
     const cached = (AppointmentsModule.cachedCitas || []).find(c => String(c.id) === String(appointmentId));
     if (cached) {
+        if (esNoAsistida(cached)) {
+            Swal.fire({ icon: 'info', title: 'Cita no asistida', text: 'Estado terminal e inmutable: fue marcada automáticamente por el sistema y no admite modificaciones.', confirmButtonColor: '#4b5563' });
+            return;
+        }
         await openNewAppointmentModal(cached);
         return;
     }
@@ -1067,6 +1151,11 @@ async function editAppointment(appointmentId) {
 
         // Cerrar loading
         Swal.close();
+
+        if (esNoAsistida(appointment)) {
+            Swal.fire({ icon: 'info', title: 'Cita no asistida', text: 'Estado terminal e inmutable: fue marcada automáticamente por el sistema y no admite modificaciones.', confirmButtonColor: '#4b5563' });
+            return;
+        }
 
         // Abrir modal de nueva cita en modo edición
         await openNewAppointmentModal(appointment);
@@ -1213,6 +1302,77 @@ async function confirmAppointmentFromModal() {
 }
 
 /**
+ * Finalizar cita: la realiza el odontólogo asignado después de la atención.
+ * Solo CONFIRMADA con fecha/hora ya pasada.
+ */
+async function finalizeAppointment(appointmentId) {
+    const appointment = await getAppointmentData(appointmentId);
+    if (!appointment) {
+        Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo obtener la información de la cita.', confirmButtonColor: '#dc2626' });
+        return;
+    }
+    if (!puedeFinalizarCita(appointment)) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Finalización no disponible',
+            html: '<p class="text-gray-600">Solo el <strong>odontólogo asignado</strong> puede finalizar una cita <strong>confirmada</strong> una vez pasada su fecha y horario.</p>',
+            confirmButtonColor: '#3b82f6'
+        });
+        return;
+    }
+    const info = normalizeAppointmentForDialogs(appointment);
+    const result = await Swal.fire({
+        icon: 'question',
+        title: '¿Finalizar cita?',
+        html: `
+            <div class="text-center">
+                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-flag-checkered text-blue-600 text-xl"></i>
+                </div>
+                <p class="text-gray-700 mb-2">Paciente: <strong>${info.pacienteNombre}</strong></p>
+                <p class="text-sm text-gray-500">${formatDate(info.fechaCita)} a las ${info.horaCita}</p>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-3">
+                    <p class="text-blue-800 text-sm"><i class="fas fa-user-md mr-2"></i>La finalización la registra el odontólogo <strong>${info.odontologoNombre || 'asignado'}</strong> tras la atención. El estado pasará a <strong>FINALIZADA</strong>.</p>
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Sí, finalizar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#2563eb',
+        cancelButtonColor: '#6b7280'
+    });
+    if (!result.isConfirmed) return;
+    try {
+        Swal.fire({ title: 'Finalizando cita...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        const odontologoId = appointment.odontologo && appointment.odontologo.id ? appointment.odontologo.id : null;
+        await CitasAPI.finalizarCita(appointmentId, odontologoId);
+        await Swal.fire({ icon: 'success', title: 'Cita finalizada', text: `La cita de ${info.pacienteNombre} fue finalizada por el odontólogo.`, confirmButtonColor: '#2563eb' });
+        await loadAppointments();
+        updateTodayTimeline();
+    } catch (error) {
+        Swal.fire({ icon: 'error', title: 'Error al finalizar', text: (error && error.message) || 'No se pudo finalizar la cita.', confirmButtonColor: '#dc2626' });
+    }
+}
+
+/** Finalizar desde el modal de detalle (usa la cita actual). */
+async function finalizeAppointmentFromModal() {
+    const cita = AppointmentsModule.currentAppointment;
+    if (!cita || !cita.id) {
+        Swal.fire({ icon: 'warning', title: 'Sin cita seleccionada', confirmButtonColor: '#f59e0b' });
+        return;
+    }
+    await finalizeAppointment(cita.id);
+    try {
+        const actualizada = await CitasAPI.getCitaById(cita.id);
+        showAppointmentDetailsModal(actualizada);
+    } catch (e) { /* el listado ya se recargó */ }
+}
+
+// NOTA: NO_ASISTIDA es automática (el sistema la marca 1 minuto después de la
+// fecha/hora sin asistencia) e inmutable. Sin diálogo ni botón manual.
+
+/**
  * Recordatorio de cita por correo: botón bloqueado por defecto, solo se
  * habilita un día antes de la cita. No cambia el estado (independiente
  * de la confirmación, que es el mismo día antes de la hora).
@@ -1355,6 +1515,16 @@ async function cancelAppointment(appointmentId) {
         return;
     }
 
+    if (esNoAsistida(appointment)) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Cita no asistida',
+            text: 'Estado terminal e inmutable: fue marcada automáticamente por el sistema y no admite modificaciones.',
+            confirmButtonColor: '#4b5563'
+        });
+        return;
+    }
+
     const info = normalizeAppointmentForDialogs(appointment);
 
     const { value: reason } = await Swal.fire({
@@ -1431,7 +1601,7 @@ async function cancelAppointment(appointmentId) {
             Swal.fire({
                 icon: 'error',
                 title: 'Error al cancelar',
-                text: 'No se pudo cancelar la cita.',
+                text: (error && error.message) ? String(error.message).slice(0, 400) : 'No se pudo cancelar la cita.',
                 confirmButtonColor: '#dc2626'
             });
         }
@@ -2142,14 +2312,11 @@ function updateAppointmentsTable(citas) {
                     <button onclick="viewAppointment(${cita.id})" class="sys-table-action sys-table-action-view" title="Ver detalles" aria-label="Ver detalles">
                         <i class="fas fa-eye text-sm"></i>
                     </button>
-                    <button onclick="editAppointment(${cita.id})" class="sys-table-action sys-table-action-edit" title="Editar" aria-label="Editar">
-                        <i class="fas fa-edit text-sm"></i>
-                    </button>
+                    ${(() => { const bloqueada = esNoAsistida(cita); return `<button ${bloqueada ? 'disabled' : `onclick="editAppointment(${cita.id})"`} class="sys-table-action sys-table-action-edit ${bloqueada ? 'opacity-40 cursor-not-allowed' : ''}" title="${bloqueada ? 'Cita no asistida: estado terminal e inmutable' : 'Editar'}" aria-label="Editar"><i class="fas fa-edit text-sm ${bloqueada ? 'text-gray-300' : ''}"></i></button>`; })()}
                     ${(() => { const ok = puedeConfirmarCita(cita); return `<button ${ok ? `onclick="confirmAppointment(${cita.id})"` : 'disabled'} class="sys-table-action ${ok ? 'sys-table-action-confirm' : 'opacity-40 cursor-not-allowed'}" title="${ok ? 'Confirmar cita (solo hoy, antes de su hora)' : 'La confirmación se habilita el mismo día de la cita, antes de su hora'}" aria-label="Confirmar cita"><i class="fas fa-check-circle text-sm ${ok ? 'text-emerald-600' : 'text-gray-300'}"></i></button>`; })()}
                     ${(() => { const ok = puedeEnviarRecordatorio(cita); const ya = cita.recordatorioEnviado === true; return `<button ${ok ? `onclick="sendReminderAppointment(${cita.id})"` : 'disabled'} class="sys-table-action ${ok ? 'sys-table-action-remind' : 'opacity-40 cursor-not-allowed'}" title="${ok ? (ya ? 'Reenviar recordatorio por correo (un día antes)' : 'Enviar recordatorio por correo (un día antes)') : 'El recordatorio se habilita únicamente un día antes de la cita'}" aria-label="Enviar recordatorio"><i class="fas fa-bell text-sm ${ok ? 'text-amber-500' : 'text-gray-300'}"></i></button>`; })()}
-                    <button onclick="deleteAppointment(${cita.id})" class="sys-table-action sys-table-action-delete" title="Eliminar" aria-label="Eliminar">
-                        <i class="fas fa-trash text-sm"></i>
-                    </button>
+                    ${(() => { const ok = puedeFinalizarCita(cita); return `<button ${ok ? `onclick="finalizeAppointment(${cita.id})"` : 'disabled'} class="sys-table-action ${ok ? 'sys-table-action-finish' : 'opacity-40 cursor-not-allowed'}" title="${ok ? 'Finalizar cita (odontólogo, tras la atención)' : 'Solo el odontólogo finaliza una cita confirmada pasada su fecha/hora'}" aria-label="Finalizar cita"><i class="fas fa-flag-checkered text-sm ${ok ? 'text-blue-600' : 'text-gray-300'}"></i></button>`; })()}
+                    ${(() => { const bloqueada = esNoAsistida(cita); return `<button ${bloqueada ? 'disabled' : `onclick="deleteAppointment(${cita.id})"`} class="sys-table-action sys-table-action-delete ${bloqueada ? 'opacity-40 cursor-not-allowed' : ''}" title="${bloqueada ? 'Cita no asistida: estado terminal e inmutable' : 'Eliminar'}" aria-label="Eliminar"><i class="fas fa-trash text-sm ${bloqueada ? 'text-gray-300' : ''}"></i></button>`; })()}
                 </div>
             </td>
         </tr>
@@ -2217,6 +2384,11 @@ function getStatusText(estado) {
  * Elimina una cita
  */
 async function deleteAppointment(citaId) {
+    const cached = (AppointmentsModule.cachedCitas || []).find(c => String(c.id) === String(citaId));
+    if (esNoAsistida(cached)) {
+        Swal.fire({ icon: 'info', title: 'Cita no asistida', text: 'Estado terminal e inmutable: fue marcada automáticamente por el sistema y no se puede eliminar.', confirmButtonColor: '#4b5563' });
+        return;
+    }
     const result = await Swal.fire({
         title: '¿Eliminar cita?',
         html: `
@@ -2268,7 +2440,7 @@ async function deleteAppointment(citaId) {
             await Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'No se pudo eliminar la cita',
+                text: (error && error.message) ? String(error.message).slice(0, 400) : 'No se pudo eliminar la cita',
                 confirmButtonColor: '#dc2626'
             });
         }
@@ -2479,11 +2651,14 @@ function claveFechaLocal(d) {
 
 /**
  * Regla del botón de confirmación: bloqueado por defecto,
- * se habilita el mismo día de la cita antes de su hora y en estado PENDIENTE.
+ * se habilita el mismo día de la cita antes de su hora y en estado
+ * PENDIENTE o REPROGRAMADA.
  */
 function puedeConfirmarCita(cita) {
     if (!cita) return false;
-    if (String(cita.estado || '').toUpperCase() !== 'PENDIENTE') return false;
+    const estado = String(cita.estado || '').toUpperCase();
+    if (estado !== 'PENDIENTE' && estado !== 'REPROGRAMADA') return false;
+    if (citaVencida(cita)) return false;
     const fechaStr = String(cita.fecha || cita.fechaCita || '').slice(0, 10);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) return false;
     if (fechaStr !== claveFechaLocal(new Date())) return false;
@@ -2495,14 +2670,56 @@ function puedeConfirmarCita(cita) {
 }
 
 /**
+ * Vencida = ya pasó 1 minuto desde la fecha/hora asignada.
+ * Sin fecha/hora válida no se considera vencida.
+ */
+function citaVencida(cita) {
+    if (!cita) return false;
+    const fechaStr = String(cita.fecha || cita.fechaCita || '').slice(0, 10);
+    const horaStr = String(cita.hora || cita.horaCita || '').slice(0, 5);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaStr) || !/^\d{2}:\d{2}$/.test(horaStr)) return false;
+    const turno = new Date(fechaStr + 'T' + horaStr + ':00');
+    if (isNaN(turno.getTime())) return false;
+    return Date.now() >= turno.getTime() + 60 * 1000;
+}
+
+/**
+ * Regla del botón Finalizar (lo realiza el odontólogo):
+ * estado CONFIRMADA y fecha/hora ya pasada.
+ */
+function puedeFinalizarCita(cita) {
+    if (!cita) return false;
+    if (String(cita.estado || '').toUpperCase() !== 'CONFIRMADA') return false;
+    const fechaStr = String(cita.fecha || cita.fechaCita || '').slice(0, 10);
+    const horaStr = String(cita.hora || cita.horaCita || '').slice(0, 5);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) return false;
+    const hoyStr = claveFechaLocal(new Date());
+    if (fechaStr < hoyStr) return true;
+    if (fechaStr > hoyStr) return false;
+    if (!/^\d{2}:\d{2}$/.test(horaStr)) return true;
+    const ahora = new Date();
+    const hhmmActual = String(ahora.getHours()).padStart(2, '0') + ':' + String(ahora.getMinutes()).padStart(2, '0');
+    return hhmmActual >= horaStr;
+}
+
+/**
+ * NO_ASISTIDA es terminal e inmutable: la marca automáticamente el sistema
+ * 1 minuto después de la fecha/hora sin asistencia. Sin acción manual:
+ * editar, cancelar y eliminar quedan bloqueados.
+ */
+function esNoAsistida(cita) {
+    return !!cita && String(cita.estado || '').toUpperCase() === 'NO_ASISTIDA';
+}
+
+/**
  * Regla del botón de recordatorio por correo: bloqueado por defecto,
  * se habilita únicamente un día antes de la cita (fecha == mañana)
- * y en estado PENDIENTE o CONFIRMADA. Independiente de la confirmación.
+ * y en estado PENDIENTE, CONFIRMADA o REPROGRAMADA. Independiente de la confirmación.
  */
 function puedeEnviarRecordatorio(cita) {
     if (!cita) return false;
     const estado = String(cita.estado || '').toUpperCase();
-    if (estado !== 'PENDIENTE' && estado !== 'CONFIRMADA') return false;
+    if (estado !== 'PENDIENTE' && estado !== 'CONFIRMADA' && estado !== 'REPROGRAMADA') return false;
     const fechaStr = String(cita.fecha || cita.fechaCita || '').slice(0, 10);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) return false;
     const manana = new Date();
@@ -2570,6 +2787,11 @@ window.editAppointment = editAppointment;
 window.deleteAppointment = deleteAppointment;
 window.confirmAppointment = confirmAppointment;
 window.confirmAppointmentFromModal = confirmAppointmentFromModal;
+window.finalizeAppointment = finalizeAppointment;
+window.finalizeAppointmentFromModal = finalizeAppointmentFromModal;
+window.citaVencida = citaVencida;
+window.esNoAsistida = esNoAsistida;
+window.puedeFinalizarCita = puedeFinalizarCita;
 window.sendReminderAppointment = sendReminderAppointment;
 window.sendReminderFromModal = sendReminderFromModal;
 window.puedeConfirmarCita = puedeConfirmarCita;

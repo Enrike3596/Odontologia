@@ -17,4 +17,7 @@ public interface Cita2Repository extends JpaRepository<Cita2, Long> {
 
     /** Citas de una fecha en ciertos estados (para recordatorios). */
     List<Cita2> findByFechaAndEstadoIn(LocalDate fecha, List<EstadoCitaEnum> estados);
+
+    /** Citas en ciertos estados (para el barrido automático de vencidas). */
+    List<Cita2> findByEstadoIn(List<EstadoCitaEnum> estados);
 }

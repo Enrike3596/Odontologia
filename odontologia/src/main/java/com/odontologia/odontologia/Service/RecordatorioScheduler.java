@@ -23,6 +23,8 @@ import com.odontologia.odontologia.Repository.Cita2Repository;
  * el correo de recordatorio de las citas del día siguiente que aún no
  * lo recibieron (recordatorioEnviado=false). Sin credenciales
  * (app.mail.enabled=false) el job no hace nada.
+ * Además marca cada minuto como NO_ASISTIDA toda cita
+ * PENDIENTE/CONFIRMADA/REPROGRAMADA que ya pasó su fecha/hora + 1 minuto.
  */
 @Component
 public class RecordatorioScheduler {
@@ -32,6 +34,9 @@ public class RecordatorioScheduler {
 
     @Autowired(required = false)
     private EmailService emailService;
+
+    @Autowired
+    private Cita2Service cita2Service;
 
     @Value("${app.mail.enabled:false}")
     private boolean enabled;
@@ -66,6 +71,24 @@ public class RecordatorioScheduler {
             } catch (Exception e) {
                 System.err.println("[Recordatorios] Fallo con cita " + c.getId() + ": " + e.getMessage());
             }
+        }
+    }
+
+    /**
+     * Barrido AUTOMÁTICO del sistema (única vía a NO_ASISTIDA):
+     * cada minuto marca como NO_ASISTIDA toda cita PENDIENTE/CONFIRMADA/REPROGRAMADA
+     * que ya pasó su fecha y horario (+ 1 minuto de tolerancia) sin atenderse.
+     * Una vez en NO_ASISTIDA la cita es inmutable.
+     */
+    @Scheduled(cron = "0 * * * * *")
+    public void marcarNoAsistidasVencidas() {
+        try {
+            int marcadas = cita2Service.marcarVencidasComoNoAsistidas();
+            if (marcadas > 0) {
+                System.out.println("[Citas] Marcadas como no asistidas (vencidas): " + marcadas);
+            }
+        } catch (Exception e) {
+            System.err.println("[Citas] Fallo el barrido de vencidas: " + e.getMessage());
         }
     }
 

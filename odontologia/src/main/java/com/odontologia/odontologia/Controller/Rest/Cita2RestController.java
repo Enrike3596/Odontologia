@@ -84,26 +84,22 @@ public class Cita2RestController {
         }
     }
 
-    // Finalizar cita: solo desde CONFIRMADA y después de la atención
+    // Finalizar cita: la realiza el odontólogo asignado, después de la atención.
+    // Body opcional: { "odontologoId": 3 } (debe coincidir con el asignado).
     @PostMapping("/citas/{id}/finalizar")
-    public ResponseEntity<?> finalizarCita(@PathVariable Long id) {
+    public ResponseEntity<?> finalizarCita(@PathVariable Long id, @RequestBody(required = false) Map<String, Object> body) {
         try {
-            return ResponseEntity.ok(cita2Service.finalizarCita(id));
+            Long odontologoId = null;
+            if (body != null && body.get("odontologoId") != null) {
+                try {
+                    odontologoId = Long.valueOf(String.valueOf(body.get("odontologoId")));
+                } catch (NumberFormatException e) {
+                    return ResponseEntity.badRequest().body(Map.of("message", "odontologoId inválido"));
+                }
+            }
+            return ResponseEntity.ok(cita2Service.finalizarCita(id, odontologoId));
         } catch (RuntimeException e) {
             String msg = e.getMessage() != null ? e.getMessage() : "No se pudo finalizar la cita";
-            HttpStatus status = msg.contains("no encontrada")
-                    ? HttpStatus.NOT_FOUND : HttpStatus.CONFLICT;
-            return ResponseEntity.status(status).body(Map.of("message", msg));
-        }
-    }
-
-    // Marcar no asistida: solo 1 minuto después de la hora asignada
-    @PostMapping("/citas/{id}/no-asistida")
-    public ResponseEntity<?> marcarNoAsistida(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(cita2Service.marcarNoAsistida(id));
-        } catch (RuntimeException e) {
-            String msg = e.getMessage() != null ? e.getMessage() : "No se pudo marcar la inasistencia";
             HttpStatus status = msg.contains("no encontrada")
                     ? HttpStatus.NOT_FOUND : HttpStatus.CONFLICT;
             return ResponseEntity.status(status).body(Map.of("message", msg));

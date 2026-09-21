@@ -7,7 +7,9 @@ package com.odontologia.odontologia.Enums;
  *   <li>CONFIRMADA: el paciente confirma el mismo día, antes de la hora.</li>
  *   <li>REPROGRAMADA: se cambió fecha/hora/odontólogo (vía actualizarCita).</li>
  *   <li>FINALIZADA: el paciente fue atendido (desde CONFIRMADA, ya pasada la hora).</li>
- *   <li>NO_ASISTIDA: pasó 1 minuto de la hora asignada sin asistencia.</li>
+ *   <li>NO_ASISTIDA: la marca AUTOMÁTICAMENTE el sistema 1 minuto después
+ *   de la fecha/hora asignada sin asistencia. Estado terminal e inmutable,
+ *   sin marcado manual.</li>
  *   <li>CANCELADA: la cita se cancela (estado terminal).</li>
  * </ul>
  * Terminales (no admiten más cambios de turno): CANCELADA, FINALIZADA, NO_ASISTIDA.

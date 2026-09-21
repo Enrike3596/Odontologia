@@ -642,6 +642,12 @@
               Enviar recordatorio
             </button>
             <p class="text-xs text-gray-500 w-full mt-2" id="recordatorioDetalleHint">El recordatorio por correo se habilita únicamente un día antes de la cita.</p>
+            <button id="btnFinalizarDetalle" class="sys-action-btn sys-action-primary" onclick="finalizeAppointmentFromModal()" disabled title="Solo el odontólogo asignado finaliza una cita confirmada pasada su fecha/hora">
+              <i class="fas fa-flag-checkered mr-2"></i>
+              Finalizar cita
+            </button>
+            <p class="text-xs text-gray-500 w-full mt-2" id="finalizarDetalleHint">La finalización la realiza el odontólogo tras la atención.</p>
+            <p class="text-xs text-gray-500 w-full mt-2" id="noAsistidaDetalleHint">Si la cita pasa su fecha y horario sin asistencia, el sistema la marcará NO_ASISTIDA automáticamente.</p>
             <button class="sys-action-btn sys-action-secondary" onclick="printAppointment()">
               <i class="fas fa-print mr-2"></i>
               Imprimir
