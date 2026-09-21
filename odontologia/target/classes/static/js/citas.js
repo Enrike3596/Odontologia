@@ -91,6 +91,16 @@ const CitasAPI = {
         return await response.json();
     },
 
+    // Agenda mensual de un odontólogo (días laborables + turnos del mes)
+    async getAgendaMensual(odontologoId, anio, mes) {
+        const response = await fetch(`${AppointmentsModule.apiBaseUrl}/agenda?odontologoId=${encodeURIComponent(odontologoId)}&anio=${anio}&mes=${mes}`);
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(extraerMensajeBackend(errorText) || 'No se pudo cargar la agenda mensual del odontólogo');
+        }
+        return await response.json();
+    },
+
     // Crear nueva cita
     async createCita(citaData) {
         try {
@@ -324,6 +334,234 @@ async function actualizarHorasDisponibles(preservarSeleccion) {
     }
 }
 
+/* =====================================================================
+ * Mini-calendario de fecha adaptado a la agenda del odontólogo elegido.
+ * Solo habilita los días que el médico labora (con turnos libres);
+ * los demás aparecen deshabilitados. Usa GET /api/agenda mensual.
+ * ===================================================================== */
+const CalendarioCita = {
+    odoId: '',
+    anio: 0,
+    mes: 0,
+    editingId: null,
+    cache: {} // "odoId-anio-mes" -> { porFecha: {...} } | { error: true }
+};
+
+const CAL_CITA_MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+const CAL_CITA_DOW = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+const CAL_CITA_DIAS_ORDEN = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+const CAL_CITA_DIAS_CORTO = { lunes: 'Lun', martes: 'Mar', miercoles: 'Mié', jueves: 'Jue', viernes: 'Vie', sabado: 'Sáb', domingo: 'Dom' };
+
+function calCitaSinTildes(s) {
+    return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+}
+
+/** Odontólogo seleccionado, buscado en la caché del módulo. */
+function calCitaOdontologo() {
+    const id = String(document.getElementById('odontologoId')?.value || '');
+    if (!id) return null;
+    return (AppointmentsModule.cachedOdontologos || []).find(o => String(o.id) === id) || { id };
+}
+
+/** Etiqueta legible de los días de trabajo ("Lun, Mié, Vie" o el texto original). */
+function calCitaEtiquetaDias(diasTrabajo) {
+    const txt = String(diasTrabajo || '').trim();
+    if (!txt) return '';
+    const encontrados = CAL_CITA_DIAS_ORDEN.filter(d => calCitaSinTildes(txt).includes(d));
+    if (encontrados.length > 0 && encontrados.length < 7) {
+        return encontrados.map(d => CAL_CITA_DIAS_CORTO[d]).join(', ');
+    }
+    if (encontrados.length === 7) return 'Lun a Dom';
+    return txt.length > 60 ? txt.slice(0, 60) + '…' : txt;
+}
+
+/** Hint bajo la fecha con los días que atiende el odontólogo elegido. */
+function actualizarHintDias() {
+    const hint = document.getElementById('fechaCitaHint');
+    const input = document.getElementById('fechaCita');
+    const odo = calCitaOdontologo();
+    if (!odo) {
+        if (hint) hint.textContent = 'Seleccione primero el odontólogo para ver sus días disponibles.';
+        if (input && !input.value) input.placeholder = 'Seleccione el odontólogo...';
+        return;
+    }
+    const etiqueta = calCitaEtiquetaDias(odo.diasTrabajo);
+    if (hint) {
+        hint.textContent = etiqueta
+            ? `El odontólogo atiende: ${etiqueta}. Solo esos días están disponibles en el calendario.`
+            : 'El odontólogo no tiene horario base registrado: solo días con apertura extra.';
+    }
+    if (input && !input.value) input.placeholder = 'Clic para elegir fecha...';
+}
+
+/** Al cambiar el odontólogo: refresca hint, valida la fecha elegida y recarga turnos. */
+async function onOdontologoChangeAgenda() {
+    actualizarHintDias();
+    const input = document.getElementById('fechaCita');
+    const odoId = String(document.getElementById('odontologoId')?.value || '');
+    CalendarioCita.odoId = odoId;
+    CalendarioCita.cache = {};
+    if (input && input.value && odoId) {
+        // Si la fecha elegida no es laborable para el nuevo odontólogo, se limpia
+        try {
+            const dia = await CitasAPI.getAgendaDia(odoId, input.value.slice(0, 10));
+            const turnos = dia.turnos || [];
+            if (!dia.laborable && turnos.length === 0) {
+                input.value = '';
+                input.placeholder = 'Clic para elegir fecha...';
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Fecha no disponible',
+                    text: `El odontólogo no labora el día elegido (${dia.diaSemana || ''}). Elija uno de sus días de atención.`,
+                    confirmButtonColor: '#3b82f6'
+                });
+            }
+        } catch (e) { /* si falla la agenda, se conserva la fecha y decide el backend */ }
+    }
+    if (CalendarioCita.abierto) renderCalendarioCita();
+    await actualizarHorasDisponibles();
+}
+
+/** Agenda mensual cacheada por odontólogo+mes. */
+async function calCitaMes(odoId, anio, mes) {
+    const key = `${odoId}-${anio}-${mes}`;
+    if (CalendarioCita.cache[key]) return CalendarioCita.cache[key];
+    try {
+        const dias = await CitasAPI.getAgendaMensual(odoId, anio, mes);
+        const porFecha = {};
+        (Array.isArray(dias) ? dias : []).forEach(d => {
+            const f = String(d.fecha || '').slice(0, 10);
+            if (/^\d{4}-\d{2}-\d{2}$/.test(f)) porFecha[f] = d;
+        });
+        CalendarioCita.cache[key] = { porFecha };
+    } catch (e) {
+        CalendarioCita.cache[key] = { error: true, porFecha: {} };
+    }
+    return CalendarioCita.cache[key];
+}
+
+/** Disponibilidad de un día: laborable (o con apertura extra) y con turnos libres. */
+function calCitaDisponibilidad(dia) {
+    const turnos = (dia && dia.turnos) || [];
+    if (!dia || (!dia.laborable && turnos.length === 0)) {
+        return { ok: false, motivo: 'El odontólogo no labora este día' };
+    }
+    const editingId = CalendarioCita.editingId;
+    const libres = turnos.filter(t => t.estado === 'LIBRE'
+        || (t.estado === 'OCUPADO' && editingId && String(t.citaId) === String(editingId)));
+    if (turnos.length > 0 && libres.length === 0) {
+        return { ok: false, motivo: 'Día completo (sin turnos libres)', lleno: true };
+    }
+    return { ok: true, libres: libres.length };
+}
+
+function calCitaAbrir() {
+    const odoId = String(document.getElementById('odontologoId')?.value || '');
+    if (!odoId) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Seleccione el odontólogo',
+            text: 'Primero elija el odontólogo: el calendario muestra solo los días que labora.',
+            confirmButtonColor: '#3b82f6'
+        });
+        return;
+    }
+    CalendarioCita.odoId = odoId;
+    const input = document.getElementById('fechaCita');
+    const base = (input && /^\d{4}-\d{2}-\d{2}$/.test(input.value.slice(0, 10)))
+        ? input.value.slice(0, 10) : claveFechaLocal(new Date());
+    CalendarioCita.anio = parseInt(base.slice(0, 4), 10);
+    CalendarioCita.mes = parseInt(base.slice(5, 7), 10);
+    CalendarioCita.abierto = true;
+    const panel = document.getElementById('calendarioCitaPanel');
+    if (panel) panel.classList.remove('hidden');
+    renderCalendarioCita();
+}
+
+function cerrarCalendarioCita() {
+    CalendarioCita.abierto = false;
+    const panel = document.getElementById('calendarioCitaPanel');
+    if (panel) panel.classList.add('hidden');
+}
+
+function calCitaCambiarMes(delta) {
+    let { anio, mes } = CalendarioCita;
+    mes += delta;
+    if (mes < 1) { mes = 12; anio -= 1; }
+    if (mes > 12) { mes = 1; anio += 1; }
+    const hoy = new Date();
+    const minKey = hoy.getFullYear() * 12 + hoy.getMonth();
+    const maxKey = minKey + 11;
+    const key = anio * 12 + (mes - 1);
+    if (key < minKey || key > maxKey) return;
+    CalendarioCita.anio = anio;
+    CalendarioCita.mes = mes;
+    renderCalendarioCita();
+}
+
+async function renderCalendarioCita() {
+    const panel = document.getElementById('calendarioCitaPanel');
+    if (!panel || !CalendarioCita.abierto) return;
+    const { anio, mes, odoId } = CalendarioCita;
+    const hoyStr = claveFechaLocal(new Date());
+    const selStr = String(document.getElementById('fechaCita')?.value || '').slice(0, 10);
+    panel.innerHTML = `
+        <div class="flex items-center justify-between mb-2">
+            <button type="button" onclick="calCitaCambiarMes(-1)" class="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded" aria-label="Mes anterior"><i class="fas fa-chevron-left text-xs"></i></button>
+            <span class="text-sm font-semibold text-gray-800">${CAL_CITA_MESES[mes - 1]} ${anio}</span>
+            <button type="button" onclick="calCitaCambiarMes(1)" class="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded" aria-label="Mes siguiente"><i class="fas fa-chevron-right text-xs"></i></button>
+        </div>
+        <div class="cal-cita-grid mb-1">${CAL_CITA_DOW.map(d => `<span class="cal-cita-dow">${d}</span>`).join('')}</div>
+        <div class="cal-cita-grid" id="calCitaDias"><span class="col-span-7 text-center text-xs text-gray-400 py-3">Cargando agenda...</span></div>
+        <p class="text-[11px] text-gray-500 mt-2"><span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1"></span>Disponible
+        <span class="inline-block w-2 h-2 rounded-full bg-amber-200 ml-2 mr-1"></span>Completo
+        <span class="inline-block w-2 h-2 rounded-full bg-gray-200 ml-2 mr-1"></span>No labora</p>`;
+    const mesData = await calCitaMes(odoId, anio, mes);
+    if (!CalendarioCita.abierto || CalendarioCita.anio !== anio || CalendarioCita.mes !== mes) return;
+    const grid = document.getElementById('calCitaDias');
+    if (!grid) return;
+    const primerOffset = (new Date(anio, mes - 1, 1).getDay() + 6) % 7; // lunes primero
+    const diasMes = new Date(anio, mes, 0).getDate();
+    let html = '';
+    for (let i = 0; i < primerOffset; i++) html += '<span></span>';
+    for (let d = 1; d <= diasMes; d++) {
+        const f = `${anio}-${String(mes).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const pasada = f < hoyStr;
+        const esSel = f === selStr;
+        if (pasada) {
+            html += `<span class="cal-cita-day cal-cita-day-off" title="Fecha pasada">${d}</span>`;
+            continue;
+        }
+        if (mesData.error) {
+            html += `<button type="button" onclick="elegirFechaCita('${f}')" class="cal-cita-day cal-cita-day-ok ${esSel ? 'cal-cita-day-sel' : ''}" title="Elegir ${f}">${d}</button>`;
+            continue;
+        }
+        const disp = calCitaDisponibilidad(mesData.porFecha[f]);
+        if (!disp.ok) {
+            const cls = disp.lleno ? 'cal-cita-day-full' : 'cal-cita-day-off';
+            html += `<span class="cal-cita-day ${cls}" title="${disp.motivo}">${d}</span>`;
+        } else {
+            html += `<button type="button" onclick="elegirFechaCita('${f}')" class="cal-cita-day cal-cita-day-ok ${esSel ? 'cal-cita-day-sel' : ''}" title="Elegir ${f} (${disp.libres} turno(s) libres)">${d}</button>`;
+        }
+    }
+    grid.innerHTML = html;
+    if (mesData.error) {
+        const hint = document.getElementById('fechaCitaHint');
+        if (hint) hint.textContent = 'No se pudo cargar la agenda del mes; verifique el día antes de agendar.';
+    }
+}
+
+/** El usuario elige un día laborable del calendario del odontólogo. */
+function elegirFechaCita(fechaStr) {
+    const input = document.getElementById('fechaCita');
+    if (input) {
+        input.value = fechaStr;
+        input.placeholder = fechaStr;
+    }
+    cerrarCalendarioCita();
+    actualizarHorasDisponibles();
+}
+
 // Inicialización del módulo
 document.addEventListener('DOMContentLoaded', function() {
     if (document.body.dataset.page === 'citas') {
@@ -381,16 +619,33 @@ function setupEventListeners() {
         });
     }
 
-    // Al cambiar odontólogo o fecha, recargar turnos libres de la agenda real
+    // Al cambiar odontólogo: validar fecha contra su agenda y recargar turnos libres
     const odoSel = document.getElementById('odontologoId');
     if (odoSel && !odoSel.dataset.agendaBound) {
         odoSel.dataset.agendaBound = '1';
-        odoSel.addEventListener('change', function () { actualizarHorasDisponibles(); });
+        odoSel.addEventListener('change', function () { onOdontologoChangeAgenda(); });
     }
     const fechaSel = document.getElementById('fechaCita');
     if (fechaSel && !fechaSel.dataset.agendaBound) {
         fechaSel.dataset.agendaBound = '1';
         fechaSel.addEventListener('change', function () { actualizarHorasDisponibles(); });
+        // El input es readonly: el clic abre el calendario con los días que labora el odontólogo
+        fechaSel.addEventListener('click', function () {
+            if (CalendarioCita.abierto) cerrarCalendarioCita();
+            else calCitaAbrir();
+        });
+    }
+    if (!document.body.dataset.calCitaBound) {
+        document.body.dataset.calCitaBound = '1';
+        // Clic fuera del calendario lo cierra (sin interferir con el modal)
+        document.addEventListener('click', function (e) {
+            if (!CalendarioCita.abierto) return;
+            const wrap = document.getElementById('fechaCitaWrap');
+            if (wrap && !wrap.contains(e.target)) cerrarCalendarioCita();
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && CalendarioCita.abierto) cerrarCalendarioCita();
+        });
     }
 
     // Mobile menu toggle
@@ -586,6 +841,13 @@ async function openNewAppointmentModal(editData = null) {
         // Mostrar modal
         modal.classList.remove('hidden');
 
+        // Mini-calendario: estado inicial según el odontólogo y la fecha del formulario
+        CalendarioCita.editingId = isEditMode ? AppointmentsModule.editingAppointmentId : null;
+        CalendarioCita.odoId = String(document.getElementById('odontologoId')?.value || '');
+        CalendarioCita.cache = {};
+        cerrarCalendarioCita();
+        actualizarHintDias();
+
         // Sincronizar horas con la agenda real (evita elegir un turno cerrado/ocupado)
         setupEventListeners();
         try {
@@ -647,6 +909,7 @@ function closeNewAppointmentModal() {
     // Resetear modo de edición
     AppointmentsModule.editMode = false;
     AppointmentsModule.editingAppointmentId = null;
+    cerrarCalendarioCita();
 }
 
 /**
@@ -2553,6 +2816,14 @@ async function onTipoCitaChange() {
     const tipoSelect = document.getElementById('tipoCitaId');
     const nombre = tipoSelect?.selectedOptions?.[0]?.textContent || '';
     await filtrarOdontologosPorEspecialidad(nombre, false);
+    // Sin odontólogo elegido no hay calendario: se refresca el hint de días
+    CalendarioCita.odoId = '';
+    CalendarioCita.cache = {};
+    cerrarCalendarioCita();
+    const fechaInput = document.getElementById('fechaCita');
+    if (fechaInput && !AppointmentsModule.editMode) fechaInput.value = '';
+    actualizarHintDias();
+    await actualizarHorasDisponibles();
 }
 
 /** Asegura que un paciente exista como opción del select (edición). */
@@ -2800,6 +3071,9 @@ window.buscarPacientePorCedula = buscarPacientePorCedula;
 window.onTipoCitaChange = onTipoCitaChange;
 window.actualizarHorasDisponibles = actualizarHorasDisponibles;
 window.filtrarOdontologosPorEspecialidad = filtrarOdontologosPorEspecialidad;
+window.calCitaCambiarMes = calCitaCambiarMes;
+window.elegirFechaCita = elegirFechaCita;
+window.cerrarCalendarioCita = cerrarCalendarioCita;
 window.cancelAppointment = cancelAppointment;
 window.openCalendarView = openCalendarView;
 window.printAppointment = printAppointment;
