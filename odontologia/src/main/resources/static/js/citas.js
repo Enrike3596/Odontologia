@@ -665,6 +665,28 @@ function setupEventListeners() {
 }
 
 /**
+ * Bloqueo de campos en modo edición: solo quedan habilitados
+ * "Asignación de Profesional" (tipoCitaId, odontologoId, consultorio) y
+ * "Programación de la Cita" (fechaCita, horaCita, duracion).
+ * Paciente (cedulaPaciente, pacienteId, btnBuscarPaciente) y
+ * "Detalles Adicionales" (motivoConsulta, estado, prioridad,
+ * enviarRecordatorio) quedan bloqueados. En creación todo habilitado.
+ */
+const CAMPOS_BLOQ_EDIT_CITA = [
+    'cedulaPaciente', 'pacienteId', 'btnBuscarPaciente',
+    'motivoConsulta', 'estado', 'prioridad', 'enviarRecordatorio'
+];
+
+function aplicarBloqueoEdicionCita(isEdit) {
+    CAMPOS_BLOQ_EDIT_CITA.forEach(function (id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.disabled = !!isEdit;
+        el.title = isEdit ? 'Campo bloqueado en edición: solo Profesional y Programación son editables' : '';
+    });
+}
+
+/**
  * Abre el modal para crear una nueva cita
  */
 async function openNewAppointmentModal(editData = null) {
@@ -856,6 +878,8 @@ async function openNewAppointmentModal(editData = null) {
         CalendarioCita.cache = {};
         cerrarCalendarioCita();
         actualizarHintDias();
+        // En edición solo Profesional + Programación editables; en creación todo
+        aplicarBloqueoEdicionCita(isEditMode);
 
         // Sincronizar horas con la agenda real (evita elegir un turno cerrado/ocupado)
         setupEventListeners();
@@ -919,6 +943,7 @@ function closeNewAppointmentModal() {
     AppointmentsModule.editMode = false;
     AppointmentsModule.editingAppointmentId = null;
     cerrarCalendarioCita();
+    aplicarBloqueoEdicionCita(false);
 }
 
 /**
@@ -931,6 +956,10 @@ async function handleNewAppointmentSubmit(e) {
     if (form.dataset.submitting === '1') return;
     form.dataset.submitting = '1';
 
+    // Los controles disabled no viajan en FormData: en edición se rehabilitan
+    // solo para leer sus valores (al final se reaplica el bloqueo).
+    form.querySelectorAll('[disabled]').forEach(function (el) { el.disabled = false; });
+
     const formData = new FormData(form);
     const appointmentData = Object.fromEntries(formData);
 
@@ -939,6 +968,7 @@ async function handleNewAppointmentSubmit(e) {
     if (!validation.isValid) {
         showValidationError(validation.errors);
         delete form.dataset.submitting;
+        if (AppointmentsModule.editMode) aplicarBloqueoEdicionCita(true);
         return;
     }
 
@@ -1133,6 +1163,8 @@ async function handleNewAppointmentSubmit(e) {
         });
     } finally {
         delete form.dataset.submitting;
+        // Si se sigue en edición (error o retorno anticipado), se mantiene el bloqueo
+        if (AppointmentsModule.editMode) aplicarBloqueoEdicionCita(true);
     }
 }
 
