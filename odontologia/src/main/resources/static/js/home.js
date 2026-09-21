@@ -779,13 +779,6 @@ async function handleQuickAppointmentSubmit(e) {
             }
         });
 
-        var emailSolicitanteQA = null;
-        try {
-            var sesionRawQA = localStorage.getItem('clinica.session') || sessionStorage.getItem('clinica.session');
-            var sesionQA = sesionRawQA ? JSON.parse(sesionRawQA) : null;
-            emailSolicitanteQA = (sesionQA && sesionQA.email) || null;
-        } catch (e) { /* sesión no accesible */ }
-
         const response = await fetch('/api/citas', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -798,8 +791,7 @@ async function handleQuickAppointmentSubmit(e) {
                 duracion: 30,
                 observaciones: motivo,
                 estado: 'PENDIENTE',
-                enviarRecordatorio: true,
-                emailSolicitante: emailSolicitanteQA
+                enviarRecordatorio: true
             })
         });
 

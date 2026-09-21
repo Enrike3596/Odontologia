@@ -935,18 +935,8 @@ async function handleNewAppointmentSubmit(e) {
         const isEdit = AppointmentsModule.editMode;
 
         // Preparar datos para la API (el backend espera objetos, no IDs)
-        // enviarRecordatorio: checkbox del formulario (punto 2: correos).
-        // emailSolicitante: email del usuario en sesión para la copia informativa.
+        // enviarRecordatorio: checkbox del formulario (el correo solo llega al paciente).
         var enviarRecordatorioEl = document.getElementById('enviarRecordatorio');
-        var sesionRaw = null;
-        try {
-            sesionRaw = localStorage.getItem('clinica.session') || sessionStorage.getItem('clinica.session');
-        } catch (e) { /* sin acceso a storage */ }
-        var emailSolicitante = null;
-        try {
-            var sesion = sesionRaw ? JSON.parse(sesionRaw) : null;
-            emailSolicitante = (sesion && sesion.email) || null;
-        } catch (e) { /* sesión no parseable */ }
         const citaData = {
             paciente: { id: parseInt(appointmentData.pacienteId) },
             odontologo: { id: parseInt(appointmentData.odontologoId) },
@@ -955,8 +945,7 @@ async function handleNewAppointmentSubmit(e) {
             hora: appointmentData.horaCita,
             observaciones: appointmentData.motivoConsulta || appointmentData.observaciones || '',
             estado: appointmentData.estado || 'PENDIENTE',
-            enviarRecordatorio: enviarRecordatorioEl ? enviarRecordatorioEl.checked : true,
-            emailSolicitante: emailSolicitante
+            enviarRecordatorio: enviarRecordatorioEl ? enviarRecordatorioEl.checked : true
         };
 
         // En modo edición, agregar el ID de la cita

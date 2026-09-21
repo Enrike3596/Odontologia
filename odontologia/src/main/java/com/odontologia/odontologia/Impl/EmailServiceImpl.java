@@ -39,22 +39,16 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     @Async
-    public void notificarCitaAgendada(Cita2Dto cita, Boolean enviarRecordatorio, String emailSolicitante) {
+    public void notificarCitaAgendada(Cita2Dto cita, Boolean enviarRecordatorio) {
         boolean optIn = enviarRecordatorio == null || Boolean.TRUE.equals(enviarRecordatorio);
         if (!optIn) {
             return;
         }
-        // 1) Confirmación al paciente
+        // Único destinatario: el paciente al que se le asignó la cita
         String emailPaciente = cita.getPaciente() != null ? cita.getPaciente().getEmail() : null;
         if (esEmailValido(emailPaciente)) {
             enviarSeguro(emailPaciente.trim(), "Confirmación de cita odontológica",
                     "email/confirmacion-cita", contextoCita(cita));
-        }
-        // 2) Copia informativa al usuario que agenda (para no olvidar la cita)
-        if (esEmailValido(emailSolicitante)
-                && (emailPaciente == null || !emailSolicitante.trim().equalsIgnoreCase(emailPaciente.trim()))) {
-            enviarSeguro(emailSolicitante.trim(), "Cita asignada: " + nombrePaciente(cita),
-                    "email/recordatorio-cita", contextoCita(cita));
         }
     }
 

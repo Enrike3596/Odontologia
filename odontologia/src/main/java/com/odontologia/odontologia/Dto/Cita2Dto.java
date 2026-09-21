@@ -21,8 +21,6 @@ public class Cita2Dto {
     private String observaciones;
     /** Indica si ya se envió el recordatorio por correo (solo informativo para la UI). */
     private Boolean recordatorioEnviado;
-    /** Opt-in del formulario: enviar correos de confirmación/recordatorio. */
+    /** Opt-in del formulario: enviar correos de confirmación/recordatorio al paciente. */
     private Boolean enviarRecordatorio;
-    /** Email del usuario que agenda (desde la sesión) para la copia informativa. */
-    private String emailSolicitante;
 }

@@ -72,7 +72,7 @@ public class Cita2ServiceImpl implements Cita2Service{
 				cita.getOdontologo().getId(), cita.getFecha(), cita.getHora());
 		Cita2 guardada = citaRepository.save(cita);
 		Cita2Dto resultado = convertirEntityADto(guardada);
-		notificarPorCorreo(resultado, citaDto.getEnviarRecordatorio(), citaDto.getEmailSolicitante());
+		notificarPorCorreo(resultado, citaDto.getEnviarRecordatorio());
 		return resultado;
 	}
 
@@ -163,15 +163,15 @@ public class Cita2ServiceImpl implements Cita2Service{
 	}
 
 	/**
-	 * Dispara los correos de confirmación/recordatorio sin romper el flujo:
+	 * Dispara el correo de confirmación al paciente sin romper el flujo:
 	 * cualquier fallo de correo solo se registra en log.
 	 */
-	private void notificarPorCorreo(Cita2Dto guardada, Boolean enviarRecordatorio, String emailSolicitante) {
+	private void notificarPorCorreo(Cita2Dto guardada, Boolean enviarRecordatorio) {
 		if (emailService == null) {
 			return;
 		}
 		try {
-			emailService.notificarCitaAgendada(guardada, enviarRecordatorio, emailSolicitante);
+			emailService.notificarCitaAgendada(guardada, enviarRecordatorio);
 		} catch (Exception e) {
 			// No interrumpir la creación de la cita por fallos de correo
 			System.err.println("[Citas] No se pudo enviar el correo de la cita " + guardada.getId() + ": " + e.getMessage());

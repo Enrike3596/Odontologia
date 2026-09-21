@@ -9,11 +9,10 @@ import com.odontologia.odontologia.Dto.Cita2Dto;
 public interface EmailService {
 
     /**
-     * Correos al asignar una cita:
-     * 1) confirmación al email del paciente (si tiene y el opt-in lo permite),
-     * 2) copia informativa al email del usuario que agenda (si se proveyó).
+     * Confirmación al asignar una cita: solo al email del paciente
+     * (si tiene y el opt-in lo permite). Nadie más recibe copia.
      */
-    void notificarCitaAgendada(Cita2Dto cita, Boolean enviarRecordatorio, String emailSolicitante);
+    void notificarCitaAgendada(Cita2Dto cita, Boolean enviarRecordatorio);
 
     /** Recordatorio de una cita próxima (job programado). */
     void enviarRecordatorio(Cita2Dto cita);

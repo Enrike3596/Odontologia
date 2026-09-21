@@ -178,9 +178,8 @@ Vistas MVC: `/`, `/dashboard` (home), `/inicio` (landing pública), `/login`, `/
 - Seguridad: enlace "Agenda Médica" oculto a no-admin (`user-session.js` + `data-require-admin`) y `Agenda.html` redirige a `/dashboard` si la sesión no es Administrador.
 
 ### 2. Correos de confirmación y recordatorio (Gmail SMTP)
-- Al asignar una cita se envían (asíncronos, nunca bloquean la creación):
-  1. **Confirmación al paciente** (`templates/email/confirmacion-cita.html`) si tiene email y el checkbox "Enviar confirmación y recordatorio" está marcado.
-  2. **Copia informativa al usuario que agenda** (`templates/email/recordatorio-cita.html`) usando el email de la sesión, para no olvidar la cita.
+- Al asignar una cita se envía (asíncrono, nunca bloquea la creación):
+  1. **Confirmación únicamente al paciente** (`templates/email/confirmacion-cita.html`) si tiene email y el checkbox "Enviar confirmación y recordatorio" está marcado. Nadie más recibe copia (ni el administrador ni quien agenda).
 - Job diario 07:00 (`RecordatorioScheduler`): recordatorio de las citas de mañana (`PENDIENTE`/`CONFIRMADA`), marcado con `citas.recordatorio_enviado` para no duplicar.
 - **Paso final para activar** (credenciales pendientes): en `odontologia/src/main/resources/application.properties` descomentar el bloque `spring.mail.*`, colocar la cuenta Gmail, la **contraseña de aplicación** (Google > Seguridad > Verificación en 2 pasos > Contraseñas de aplicaciones) y `app.mail.from`, y poner `app.mail.enabled=true`. Sin esto, el sistema funciona igual pero solo registra en log.
 
