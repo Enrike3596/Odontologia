@@ -15,7 +15,7 @@ import com.odontologia.odontologia.Dto.OdontologoDto;
 import com.odontologia.odontologia.Dto.Paciente2Dto;
 import com.odontologia.odontologia.Dto.TipoCitaDto;
 import com.odontologia.odontologia.Entity.Cita2;
-import com.odontologia.odontologia.Entity.EstadoCitaEnum;
+import com.odontologia.odontologia.Enums.EstadoCitaEnum;
 import com.odontologia.odontologia.Repository.Cita2Repository;
 
 /**

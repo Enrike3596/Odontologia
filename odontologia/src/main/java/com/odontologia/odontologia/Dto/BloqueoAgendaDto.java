@@ -3,7 +3,7 @@ package com.odontologia.odontologia.Dto;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-import com.odontologia.odontologia.Entity.TipoMovimientoAgenda;
+import com.odontologia.odontologia.Enums.TipoMovimientoAgenda;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

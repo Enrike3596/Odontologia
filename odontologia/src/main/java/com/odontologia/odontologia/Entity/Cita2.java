@@ -3,6 +3,8 @@ package com.odontologia.odontologia.Entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import com.odontologia.odontologia.Enums.EstadoCitaEnum;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 

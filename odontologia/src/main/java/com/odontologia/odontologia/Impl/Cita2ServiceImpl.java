@@ -11,6 +11,7 @@ import com.odontologia.odontologia.Dto.OdontologoDto;
 import com.odontologia.odontologia.Dto.Paciente2Dto;
 import com.odontologia.odontologia.Dto.TipoCitaDto;
 import com.odontologia.odontologia.Entity.Cita2;
+import com.odontologia.odontologia.Enums.EstadoCitaEnum;
 import com.odontologia.odontologia.Entity.Odontologo;
 import com.odontologia.odontologia.Entity.Paciente2;
 import com.odontologia.odontologia.Entity.TipoCita;
@@ -62,7 +63,7 @@ public class Cita2ServiceImpl implements Cita2Service{
 	public Cita2Dto crearCita(Cita2Dto citaDto) {
 		Cita2 cita = convertirDtoAEntity(citaDto);
 		if (cita.getEstado() == null) {
-			cita.setEstado(com.odontologia.odontologia.Entity.EstadoCitaEnum.PENDIENTE);
+			cita.setEstado(EstadoCitaEnum.PENDIENTE);
 		}
 		if (cita.getHora() != null) {
 			cita.setHora(cita.getHora().withSecond(0).withNano(0));
@@ -166,11 +167,11 @@ public class Cita2ServiceImpl implements Cita2Service{
 	public Cita2Dto confirmarCita(Long id) {
 		Cita2 cita = citaRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Cita no encontrada con ID: " + id));
-		if (cita.getEstado() == com.odontologia.odontologia.Entity.EstadoCitaEnum.CANCELADA
-				|| cita.getEstado() == com.odontologia.odontologia.Entity.EstadoCitaEnum.COMPLETADA) {
+		if (cita.getEstado() == EstadoCitaEnum.CANCELADA
+				|| cita.getEstado() == EstadoCitaEnum.COMPLETADA) {
 			throw new RuntimeException("Solo se pueden confirmar citas pendientes");
 		}
-		if (cita.getEstado() == com.odontologia.odontologia.Entity.EstadoCitaEnum.CONFIRMADA) {
+		if (cita.getEstado() == EstadoCitaEnum.CONFIRMADA) {
 			return convertirEntityADto(cita);
 		}
 		// Regla: la confirmación se realiza el mismo día, antes de la hora de la cita
@@ -182,7 +183,7 @@ public class Cita2ServiceImpl implements Cita2Service{
 				&& !java.time.LocalTime.now().isBefore(cita.getHora().withSecond(0).withNano(0))) {
 			throw new RuntimeException("La cita solo puede confirmarse antes de su hora (" + cita.getHora() + ")");
 		}
-		cita.setEstado(com.odontologia.odontologia.Entity.EstadoCitaEnum.CONFIRMADA);
+		cita.setEstado(EstadoCitaEnum.CONFIRMADA);
 		cita = citaRepository.save(cita);
 		return convertirEntityADto(cita);
 	}
@@ -192,8 +193,8 @@ public class Cita2ServiceImpl implements Cita2Service{
 	public Cita2Dto enviarRecordatorio(Long id) {
 		Cita2 cita = citaRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Cita no encontrada con ID: " + id));
-		if (cita.getEstado() == com.odontologia.odontologia.Entity.EstadoCitaEnum.CANCELADA
-				|| cita.getEstado() == com.odontologia.odontologia.Entity.EstadoCitaEnum.COMPLETADA) {
+		if (cita.getEstado() == EstadoCitaEnum.CANCELADA
+				|| cita.getEstado() == EstadoCitaEnum.COMPLETADA) {
 			throw new RuntimeException("Solo se puede enviar recordatorio de citas pendientes o confirmadas");
 		}
 		// Regla: el recordatorio solo se realiza un día antes de la cita

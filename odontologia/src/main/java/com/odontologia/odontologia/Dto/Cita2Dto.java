@@ -1,6 +1,6 @@
 package com.odontologia.odontologia.Dto;
 
-import com.odontologia.odontologia.Entity.EstadoCitaEnum;
+import com.odontologia.odontologia.Enums.EstadoCitaEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -1,4 +1,4 @@
-package com.odontologia.odontologia.Entity;
+package com.odontologia.odontologia.Enums;
 
 /**
  * Catálogo cerrado de tipos de documento (DIAN / Registraduría).

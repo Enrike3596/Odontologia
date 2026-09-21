@@ -1,4 +1,4 @@
-package com.odontologia.odontologia.Entity;
+package com.odontologia.odontologia.Enums;
 
 /**
  * Tipo de movimiento manual sobre la agenda del odontólogo.

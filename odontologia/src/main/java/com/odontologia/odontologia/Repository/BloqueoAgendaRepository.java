@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import com.odontologia.odontologia.Entity.BloqueoAgenda;
-import com.odontologia.odontologia.Entity.TipoMovimientoAgenda;
+import com.odontologia.odontologia.Enums.TipoMovimientoAgenda;
 
 @Repository
 public interface BloqueoAgendaRepository extends JpaRepository<BloqueoAgenda, Long> {

@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import com.odontologia.odontologia.Entity.Cita2;
-import com.odontologia.odontologia.Entity.EstadoCitaEnum;
+import com.odontologia.odontologia.Enums.EstadoCitaEnum;
 
 @Repository
 public interface Cita2Repository extends JpaRepository<Cita2, Long> {

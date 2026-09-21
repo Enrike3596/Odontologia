@@ -23,7 +23,7 @@ import com.odontologia.odontologia.Dto.SlotAgendaDto;
 import com.odontologia.odontologia.Entity.BloqueoAgenda;
 import com.odontologia.odontologia.Entity.Cita2;
 import com.odontologia.odontologia.Entity.Odontologo;
-import com.odontologia.odontologia.Entity.TipoMovimientoAgenda;
+import com.odontologia.odontologia.Enums.TipoMovimientoAgenda;
 import com.odontologia.odontologia.Repository.BloqueoAgendaRepository;
 import com.odontologia.odontologia.Repository.Cita2Repository;
 import com.odontologia.odontologia.Repository.OdontologoRepository;

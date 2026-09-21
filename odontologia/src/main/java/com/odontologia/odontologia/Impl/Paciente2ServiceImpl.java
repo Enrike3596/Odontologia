@@ -7,10 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.odontologia.odontologia.Dto.Paciente2Dto;
-import com.odontologia.odontologia.Entity.Genero;
+import com.odontologia.odontologia.Enums.Genero;
 import com.odontologia.odontologia.Entity.Paciente2;
-import com.odontologia.odontologia.Entity.Parentesco;
-import com.odontologia.odontologia.Entity.TipoDocumento;
+import com.odontologia.odontologia.Enums.Parentesco;
+import com.odontologia.odontologia.Enums.TipoDocumento;
 import com.odontologia.odontologia.Repository.Paciente2Repository;
 import com.odontologia.odontologia.Service.Paciente2Service;
 

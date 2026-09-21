@@ -8,9 +8,9 @@ import org.springframework.stereotype.Service;
 
 import com.odontologia.odontologia.Dto.RolDto;
 import com.odontologia.odontologia.Dto.UsuarioDto;
-import com.odontologia.odontologia.Entity.Genero;
+import com.odontologia.odontologia.Enums.Genero;
 import com.odontologia.odontologia.Entity.Rol;
-import com.odontologia.odontologia.Entity.TipoDocumento;
+import com.odontologia.odontologia.Enums.TipoDocumento;
 import com.odontologia.odontologia.Entity.Usuario;
 import com.odontologia.odontologia.Repository.PasswordResetTokenRepository;
 import com.odontologia.odontologia.Repository.RolRepository;

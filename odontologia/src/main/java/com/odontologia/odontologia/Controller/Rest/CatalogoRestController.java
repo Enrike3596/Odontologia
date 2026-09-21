@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.odontologia.odontologia.Entity.EstadoCitaEnum;
-import com.odontologia.odontologia.Entity.Genero;
-import com.odontologia.odontologia.Entity.Parentesco;
-import com.odontologia.odontologia.Entity.TipoDocumento;
+import com.odontologia.odontologia.Enums.EstadoCitaEnum;
+import com.odontologia.odontologia.Enums.Genero;
+import com.odontologia.odontologia.Enums.Parentesco;
+import com.odontologia.odontologia.Enums.TipoDocumento;
 
 /**
  * Catálogos centrales del sistema (punto 4 del plan de acción).
