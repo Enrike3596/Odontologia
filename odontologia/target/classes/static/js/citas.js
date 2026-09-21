@@ -2185,20 +2185,21 @@ async function loadAppointments() {
 
         console.log('✅ Citas cargadas exitosamente:', citas.length, 'citas encontradas');
 
-        // Paginación real del lado cliente
+        // Paginación real del lado cliente (por paciente: una fila por paciente)
         TablePager.register('citas', function (page, pageSize) {
             if (pageSize) AppointmentsModule.pagination.itemsPerPage = pageSize;
             AppointmentsModule.pagination.currentPage = page;
-            const pg = TablePager.paginate(getFilteredCitas(), page, AppointmentsModule.pagination.itemsPerPage);
+            const grupos = agruparCitasPorPaciente(getFilteredCitas());
+            const pg = TablePager.paginate(grupos, page, AppointmentsModule.pagination.itemsPerPage);
             AppointmentsModule.pagination.currentPage = pg.page;
             updateAppointmentsTable(pg.rows);
             TablePager.renderBar('citasPager', pg, 'citas');
         });
-        const citasPager = TablePager.paginate(getFilteredCitas(), AppointmentsModule.pagination.currentPage, AppointmentsModule.pagination.itemsPerPage);
+        const citasPager = TablePager.paginate(agruparCitasPorPaciente(getFilteredCitas()), AppointmentsModule.pagination.currentPage, AppointmentsModule.pagination.itemsPerPage);
         AppointmentsModule.pagination.currentPage = citasPager.page;
         AppointmentsModule.pagination.totalItems = citasPager.total;
 
-        // Actualizar la tabla de citas
+        // Actualizar la tabla de citas (una fila por paciente)
         updateAppointmentsTable(citasPager.rows);
         TablePager.renderBar('citasPager', citasPager, 'citas');
 
@@ -2297,8 +2298,8 @@ function getFilteredCitas() {
 }
 
 function renderCitasFiltradas() {
-    const filtered = getFilteredCitas();
-    const pager = TablePager.paginate(filtered, AppointmentsModule.pagination.currentPage, AppointmentsModule.pagination.itemsPerPage);
+    const grupos = agruparCitasPorPaciente(getFilteredCitas());
+    const pager = TablePager.paginate(grupos, AppointmentsModule.pagination.currentPage, AppointmentsModule.pagination.itemsPerPage);
     AppointmentsModule.pagination.currentPage = pager.page;
     AppointmentsModule.pagination.totalItems = pager.total;
     updateAppointmentsTable(pager.rows);
@@ -2561,72 +2562,263 @@ function debounce(func, wait) {
 }
 
 /**
- * Actualiza la tabla de citas con los datos del servidor
+ * Agrupa citas por paciente: la tabla muestra una sola fila por paciente.
+ * Ordena por próxima cita (los sin próximas al final).
  */
-function updateAppointmentsTable(citas) {
+function agruparCitasPorPaciente(citas) {
+    const list = Array.isArray(citas) ? citas : [];
+    const hoyStr = claveFechaLocal(new Date());
+    const mapa = {};
+    const orden = [];
+    list.forEach(function (cita) {
+        const pid = String((cita.paciente && cita.paciente.id) || 'sin-id');
+        if (!mapa[pid]) {
+            mapa[pid] = { pacienteId: pid, paciente: cita.paciente || {}, citas: [] };
+            orden.push(pid);
+        }
+        mapa[pid].citas.push(cita);
+    });
+    const grupos = orden.map(function (pid) {
+        const g = mapa[pid];
+        g.citas.sort(function (a, b) {
+            const fa = String(a.fecha || '') + ' ' + String(a.hora || '');
+            const fb = String(b.fecha || '') + ' ' + String(b.hora || '');
+            return fb.localeCompare(fa);
+        });
+        g.total = g.citas.length;
+        const futuras = g.citas.filter(function (c) {
+            const est = String(c.estado || '').toUpperCase();
+            return (est === 'PENDIENTE' || est === 'CONFIRMADA' || est === 'REPROGRAMADA')
+                && String(c.fecha || '').slice(0, 10) >= hoyStr;
+        }).sort(function (a, b) {
+            return String(a.fecha || '').localeCompare(String(b.fecha || ''));
+        });
+        g.proxima = futuras.length ? futuras[0] : null;
+        return g;
+    });
+    grupos.sort(function (a, b) {
+        const fa = a.proxima ? String(a.proxima.fecha || '') : '';
+        const fb = b.proxima ? String(b.proxima.fecha || '') : '';
+        if (fa && fb) return fa.localeCompare(fb);
+        if (fa) return -1;
+        if (fb) return 1;
+        return 0;
+    });
+    return grupos;
+}
+
+/**
+ * Actualiza la tabla con una fila por paciente (ver historial en el detalle)
+ */
+function updateAppointmentsTable(grupos) {
     const tableBody = document.querySelector('#citasTable tbody');
     if (!tableBody) return;
 
-    if (citas.length === 0) {
+    if (!grupos || grupos.length === 0) {
         tableBody.innerHTML = `
             <tr>
                 <td colspan="6" class="text-center py-8 text-gray-500">
                     <i class="fas fa-calendar-times text-4xl mb-3 text-gray-300"></i>
-                    <p>No se encontraron citas</p>
+                    <p>No se encontraron pacientes</p>
                 </td>
             </tr>
         `;
         return;
     }
 
-    tableBody.innerHTML = citas.map(cita => `
+    tableBody.innerHTML = grupos.map(grupo => {
+        const p = grupo.paciente || {};
+        const prox = grupo.proxima;
+        const nombre = ((p.nombres || '') + ' ' + (p.apellidos || '')).trim() || 'Sin nombre';
+        const estadoBadge = prox
+            ? `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(prox.estado)}">${getStatusText(prox.estado)}</span>`
+            : `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-500">Sin citas activas</span>`;
+        return `
         <tr class="hover:bg-gray-50">
             <td class="px-4 py-4 whitespace-nowrap">
                 <div class="flex items-center">
                     <div class="flex-shrink-0 h-10 w-10">
-                        ${getPatientProfileImage(cita.paciente.genero, 'h-10 w-10')}
+                        ${getPatientProfileImage(p.genero, 'h-10 w-10')}
                     </div>
                     <div class="ml-4">
-                        <div class="text-sm font-medium text-gray-900">
-                            ${cita.paciente.nombres} ${cita.paciente.apellidos}
-                        </div>
-                        <div class="text-sm text-gray-500">${cita.paciente.email || ''}</div>
-                        <div class="md:hidden text-xs text-gray-400 mt-1">
-                            Dr. ${cita.odontologo.nombre} • ${cita.tipoCita.nombre}
-                        </div>
+                        <div class="text-sm font-medium text-gray-900">${nombre}</div>
+                        <div class="text-sm text-gray-500">${p.documento ? 'CC ' + p.documento : (p.email || '')}</div>
                     </div>
                 </div>
             </td>
             <td class="px-4 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">${formatDate(cita.fecha)}</div>
-                <div class="text-sm text-gray-500">${cita.hora}</div>
+                ${prox
+                    ? `<div class="text-sm text-gray-900">${formatDate(prox.fecha)}</div><div class="text-sm text-gray-500">${String(prox.hora || '').slice(0, 5)}</div>`
+                    : `<div class="text-sm text-gray-400">Sin próximas citas</div>`}
             </td>
             <td class="px-4 py-4 whitespace-nowrap hidden md:table-cell">
-                <div class="text-sm text-gray-900">${cita.odontologo.nombre} ${cita.odontologo.apellido}</div>
-                <div class="text-sm text-gray-500">Dr. ${cita.odontologo.matricula}</div>
+                ${prox && prox.odontologo
+                    ? `<div class="text-sm text-gray-900">${prox.odontologo.nombre || ''} ${prox.odontologo.apellido || ''}</div><div class="text-sm text-gray-500">${prox.tipoCita ? prox.tipoCita.nombre : ''}</div>`
+                    : `<div class="text-sm text-gray-400">—</div>`}
             </td>
             <td class="px-4 py-4 whitespace-nowrap hidden lg:table-cell">
-                <span class="text-sm text-gray-900">${cita.tipoCita.nombre}</span>
+                <span class="text-sm text-gray-900">${grupo.total} cita${grupo.total === 1 ? '' : 's'}</span>
             </td>
             <td class="px-4 py-4 whitespace-nowrap">
-                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(cita.estado)}">
-                    ${getStatusText(cita.estado)}
-                </span>
+                ${estadoBadge}
             </td>
             <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div class="sys-table-actions">
-                    <button onclick="viewAppointment(${cita.id})" class="sys-table-action sys-table-action-view" title="Ver detalles" aria-label="Ver detalles">
+                    <button onclick="viewHistorialPaciente('${grupo.pacienteId}')" class="sys-table-action sys-table-action-view" title="Ver historial de citas del paciente" aria-label="Ver historial">
                         <i class="fas fa-eye text-sm"></i>
                     </button>
-                    ${(() => { const bloqueada = esNoAsistida(cita); return `<button ${bloqueada ? 'disabled' : `onclick="editAppointment(${cita.id})"`} class="sys-table-action sys-table-action-edit ${bloqueada ? 'opacity-40 cursor-not-allowed' : ''}" title="${bloqueada ? 'Cita no asistida: estado terminal e inmutable' : 'Editar'}" aria-label="Editar"><i class="fas fa-edit text-sm ${bloqueada ? 'text-gray-300' : ''}"></i></button>`; })()}
-                    ${(() => { const ok = puedeConfirmarCita(cita); return `<button ${ok ? `onclick="confirmAppointment(${cita.id})"` : 'disabled'} class="sys-table-action ${ok ? 'sys-table-action-confirm' : 'opacity-40 cursor-not-allowed'}" title="${ok ? 'Confirmar cita (solo hoy, antes de su hora)' : 'La confirmación se habilita el mismo día de la cita, antes de su hora'}" aria-label="Confirmar cita"><i class="fas fa-check-circle text-sm ${ok ? 'text-emerald-600' : 'text-gray-300'}"></i></button>`; })()}
-                    ${(() => { const ok = puedeEnviarRecordatorio(cita); const ya = cita.recordatorioEnviado === true; return `<button ${ok ? `onclick="sendReminderAppointment(${cita.id})"` : 'disabled'} class="sys-table-action ${ok ? 'sys-table-action-remind' : 'opacity-40 cursor-not-allowed'}" title="${ok ? (ya ? 'Reenviar recordatorio por correo (un día antes)' : 'Enviar recordatorio por correo (un día antes)') : 'El recordatorio se habilita únicamente un día antes de la cita'}" aria-label="Enviar recordatorio"><i class="fas fa-bell text-sm ${ok ? 'text-amber-500' : 'text-gray-300'}"></i></button>`; })()}
-                    ${(() => { const ok = puedeFinalizarCita(cita); return `<button ${ok ? `onclick="finalizeAppointment(${cita.id})"` : 'disabled'} class="sys-table-action ${ok ? 'sys-table-action-finish' : 'opacity-40 cursor-not-allowed'}" title="${ok ? 'Finalizar cita (odontólogo, tras la atención)' : 'Solo el odontólogo finaliza una cita confirmada pasada su fecha/hora'}" aria-label="Finalizar cita"><i class="fas fa-flag-checkered text-sm ${ok ? 'text-blue-600' : 'text-gray-300'}"></i></button>`; })()}
-                    ${(() => { const bloqueada = esNoAsistida(cita); return `<button ${bloqueada ? 'disabled' : `onclick="deleteAppointment(${cita.id})"`} class="sys-table-action sys-table-action-delete ${bloqueada ? 'opacity-40 cursor-not-allowed' : ''}" title="${bloqueada ? 'Cita no asistida: estado terminal e inmutable' : 'Eliminar'}" aria-label="Eliminar"><i class="fas fa-trash text-sm ${bloqueada ? 'text-gray-300' : ''}"></i></button>`; })()}
+                    <button onclick="agendarCitaPaciente('${grupo.pacienteId}')" class="sys-table-action sys-table-action-confirm" title="Agendar nueva cita a este paciente" aria-label="Agendar cita">
+                        <i class="fas fa-calendar-plus text-sm text-emerald-600"></i>
+                    </button>
                 </div>
             </td>
-        </tr>
-    `).join('');
+        </tr>`;
+    }).join('');
+}
+
+/** Paciente del historial abierto (para "Agendar cita" desde el modal). */
+let historialPacienteId = null;
+
+/**
+ * Modal de historial: todas las citas odontológicas del paciente con sus estados.
+ * El detalle individual de cada cita se abre con viewAppointment (modal existente).
+ */
+async function viewHistorialPaciente(pacienteId) {
+    const todas = (AppointmentsModule.cachedCitas || []).filter(c =>
+        String(c.paciente && c.paciente.id) === String(pacienteId));
+    if (todas.length === 0) {
+        try {
+            const frescas = await CitasAPI.getAllCitas();
+            AppointmentsModule.cachedCitas = Array.isArray(frescas) ? frescas : [];
+        } catch (e) { /* sin red: se informa abajo */ }
+    }
+    const citas = (AppointmentsModule.cachedCitas || []).filter(c =>
+        String(c.paciente && c.paciente.id) === String(pacienteId));
+    if (citas.length === 0) {
+        Swal.fire({ icon: 'info', title: 'Sin citas', text: 'El paciente no tiene citas registradas.', confirmButtonColor: '#3b82f6' });
+        return;
+    }
+    historialPacienteId = pacienteId;
+    const p = citas[0].paciente || {};
+    const nombre = ((p.nombres || '') + ' ' + (p.apellidos || '')).trim() || 'Paciente';
+    document.getElementById('viewHistorialTitle').textContent = `Historial de citas`;
+    document.getElementById('viewHistorialPatient').textContent = nombre;
+    document.getElementById('viewHistorialDoc').textContent =
+        (p.documento ? 'CC ' + p.documento + ' · ' : '') + (p.telefono || p.email || '');
+    document.getElementById('viewHistorialCount').textContent = `${citas.length} cita${citas.length === 1 ? '' : 's'} registrada${citas.length === 1 ? '' : 's'}`;
+    document.getElementById('viewHistorialAvatar').innerHTML = getPatientProfileImage(p.genero);
+
+    citas.sort(function (a, b) {
+        return String(b.fecha || '').localeCompare(String(a.fecha || ''));
+    });
+    document.getElementById('viewHistorialList').innerHTML = citas.map(function (c) {
+        const odo = c.odontologo ? (`Dr. ${(c.odontologo.nombre || '')} ${(c.odontologo.apellido || '')}`.trim()) : 'Por asignar';
+        const bloqueada = esNoAsistida(c);
+        return `
+        <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+            <div class="flex items-center gap-3">
+                <div class="text-center w-12">
+                    <div class="text-lg font-bold text-gray-800">${String(c.fecha || '').slice(8, 10) || '—'}</div>
+                    <div class="text-[11px] text-gray-500">${formatDate(c.fecha).split(' ').slice(0, 2).join(' ')}</div>
+                </div>
+                <div>
+                    <div class="text-sm font-medium text-gray-900">${formatDate(c.fecha)} a las ${String(c.hora || '').slice(0, 5)}</div>
+                    <div class="text-xs text-gray-500">${c.tipoCita ? c.tipoCita.nombre + ' · ' : ''}${odo}</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(c.estado)}">${getStatusText(c.estado)}</span>
+                <button onclick="verCitaDesdeHistorial(${c.id})" class="sys-table-action sys-table-action-view" title="Ver detalle de la cita (confirmar, finalizar, cancelar, imprimir)" aria-label="Ver detalle">
+                    <i class="fas fa-eye text-sm"></i>
+                </button>
+                <button ${bloqueada ? 'disabled' : `onclick="editarCitaDesdeHistorial(${c.id})"`} class="sys-table-action sys-table-action-edit ${bloqueada ? 'opacity-40 cursor-not-allowed' : ''}" title="${bloqueada ? 'Cita no asistida: estado terminal e inmutable' : 'Editar cita'}" aria-label="Editar cita">
+                    <i class="fas fa-edit text-sm ${bloqueada ? 'text-gray-300' : ''}"></i>
+                </button>
+                <button ${bloqueada ? 'disabled' : `onclick="eliminarCitaDesdeHistorial(${c.id})"`} class="sys-table-action sys-table-action-delete ${bloqueada ? 'opacity-40 cursor-not-allowed' : ''}" title="${bloqueada ? 'Cita no asistida: estado terminal e inmutable' : 'Eliminar cita'}" aria-label="Eliminar cita">
+                    <i class="fas fa-trash text-sm ${bloqueada ? 'text-gray-300' : ''}"></i>
+                </button>
+            </div>
+        </div>`;
+    }).join('');
+
+    const modal = document.getElementById('viewHistorialModal');
+    modal.classList.remove('hidden');
+    setTimeout(() => { modal.classList.add('show'); }, 10);
+}
+
+/** Abre el detalle de una cita desde el historial (reutiliza el modal existente). */
+async function verCitaDesdeHistorial(citaId) {
+    closeHistorialModal(true);
+    await viewAppointment(citaId);
+}
+
+/** Edita una cita desde el historial (cierra el historial y abre el formulario). */
+async function editarCitaDesdeHistorial(citaId) {
+    closeHistorialModal(true);
+    await editAppointment(citaId);
+}
+
+/** Elimina una cita desde el historial y refresca la lista. */
+async function eliminarCitaDesdeHistorial(citaId) {
+    await deleteAppointment(citaId); // ya recarga la tabla y la caché al confirmar
+    if (!historialPacienteId) return;
+    const restantes = (AppointmentsModule.cachedCitas || []).filter(c =>
+        String(c.paciente && c.paciente.id) === String(historialPacienteId));
+    if (restantes.length === 0) {
+        closeHistorialModal();
+        return;
+    }
+    await viewHistorialPaciente(historialPacienteId);
+}
+
+/**
+ * Cierra el modal de historial del paciente
+ */
+function closeHistorialModal(instantaneo) {
+    const modal = document.getElementById('viewHistorialModal');
+    if (!modal) return;
+    if (instantaneo) {
+        modal.classList.add('hidden');
+        modal.classList.remove('show');
+        return;
+    }
+    modal.classList.remove('show');
+    setTimeout(() => { modal.classList.add('hidden'); }, 300);
+    historialPacienteId = null;
+}
+
+/** Agendar cita al paciente del historial abierto. */
+async function agendarCitaPacienteDesdeHistorial() {
+    if (!historialPacienteId || historialPacienteId === 'sin-id') {
+        Swal.fire({ icon: 'warning', title: 'Sin paciente', confirmButtonColor: '#f59e0b' });
+        return;
+    }
+    await agendarCitaPaciente(historialPacienteId);
+}
+
+/** Abre el modal de nueva cita con el paciente precargado. */
+async function agendarCitaPaciente(pacienteId) {
+    closeHistorialModal(true);
+    await openNewAppointmentModal(null);
+    try {
+        let paciente = null;
+        try {
+            const resp = await fetch(`${AppointmentsModule.apiBaseUrl}/pacientes/${encodeURIComponent(pacienteId)}`);
+            if (resp.ok) paciente = await resp.json();
+        } catch (e) { /* respaldo: caché de citas */ }
+        if (!paciente) {
+            const ref = (AppointmentsModule.cachedCitas || []).find(c =>
+                String(c.paciente && c.paciente.id) === String(pacienteId));
+            paciente = ref ? ref.paciente : null;
+        }
+        if (!paciente) return;
+        const cedulaInput = document.getElementById('cedulaPaciente');
+        if (cedulaInput) cedulaInput.value = paciente.documento || '';
+        await ensurePacienteOption(paciente.id, paciente);
+        const sel = document.getElementById('pacienteId');
+        if (sel) sel.value = paciente.id;
+        mostrarPacientePreview(paciente);
+    } catch (e) { /* el usuario completa el paciente manualmente */ }
 }
 
 /**
@@ -3097,6 +3289,13 @@ window.openNewAppointmentModal = openNewAppointmentModal;
 window.closeNewAppointmentModal = closeNewAppointmentModal;
 window.viewAppointment = viewAppointment;
 window.closeViewAppointmentModal = closeViewAppointmentModal;
+window.viewHistorialPaciente = viewHistorialPaciente;
+window.closeHistorialModal = closeHistorialModal;
+window.verCitaDesdeHistorial = verCitaDesdeHistorial;
+window.editarCitaDesdeHistorial = editarCitaDesdeHistorial;
+window.eliminarCitaDesdeHistorial = eliminarCitaDesdeHistorial;
+window.agendarCitaPaciente = agendarCitaPaciente;
+window.agendarCitaPacienteDesdeHistorial = agendarCitaPacienteDesdeHistorial;
 window.editAppointment = editAppointment;
 window.deleteAppointment = deleteAppointment;
 window.confirmAppointment = confirmAppointment;
@@ -3132,7 +3331,8 @@ window.clearFilters = clearFilters;
 (function () {
     var ACTION_MODALS = [
         { id: 'newAppointmentModal', close: closeNewAppointmentModal },
-        { id: 'viewAppointmentModal', close: closeViewAppointmentModal }
+        { id: 'viewAppointmentModal', close: closeViewAppointmentModal },
+        { id: 'viewHistorialModal', close: closeHistorialModal }
     ];
 
     function modalIsOpen(modal) {
