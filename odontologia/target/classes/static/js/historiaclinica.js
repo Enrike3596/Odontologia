@@ -1102,15 +1102,17 @@ function updateRecordsTable(historias) {
                 <div class="text-sm text-gray-900">${historia.observaciones || '-'}</div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button onclick="viewRecord(${historia.id})" class="sys-table-action sys-table-action-view" title="Ver detalles" aria-label="Ver detalles">
-                    <i class="fas fa-eye"></i>
-                </button>
-                <button onclick="editRecord(${historia.id})" class="text-yellow-600 hover:text-yellow-900 mr-3">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button onclick="deleteRecord(${historia.id})" class="sys-table-action sys-table-action-delete" title="Eliminar" aria-label="Eliminar">
-                    <i class="fas fa-trash"></i>
-                </button>
+                <div class="sys-table-actions">
+                    <button onclick="viewRecord(${historia.id})" class="sys-table-action sys-table-action-view" title="Ver detalles" aria-label="Ver detalles">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button onclick="editRecord(${historia.id})" class="sys-table-action sys-table-action-edit" title="Editar" aria-label="Editar">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="deleteRecord(${historia.id})" class="sys-table-action sys-table-action-delete" title="Eliminar" aria-label="Eliminar">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
             </td>
         </tr>
     `).join('');

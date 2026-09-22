@@ -288,6 +288,155 @@ ALTER TABLE tipos_cita ADD CONSTRAINT tipos_cita_nombre_check
 -- ============================================
 -- CONSULTAS DE VERIFICACION
 -- ============================================
+
+-- ============================================
+-- DATOS DE PRUEBA: 100 REGISTROS POR MODULO
+-- Excluye usuarios para no alterar cuentas ni credenciales.
+-- Es idempotente: los identificadores naturales DEMO-* evitan duplicados
+-- al ejecutar nuevamente este script.
+-- Los tipos de cita conservan sus 11 valores oficiales del catalogo.
+-- ============================================
+
+-- 100 pacientes con todos los campos funcionales diligenciados.
+INSERT INTO pacientes
+    (nombres, apellidos, tipo_documento, documento, fecha_nacimiento, genero,
+     email, telefono, direccion, contacto_emergencia_nombre,
+     contacto_emergencia_parentesco, contacto_emergencia_telefono,
+     alergias, medicamentos, observaciones)
+SELECT
+    'Paciente ' || LPAD(n::text, 3, '0'),
+    'Demo',
+    CASE WHEN n % 2 = 0 THEN 'CC' ELSE 'TI' END,
+    'DEMO-PAC-' || LPAD(n::text, 4, '0'),
+    CURRENT_DATE - ((18 + (n % 50)) * 365 + n),
+    CASE WHEN n % 3 = 0 THEN 'O' WHEN n % 2 = 0 THEN 'F' ELSE 'M' END,
+    'paciente.demo.' || LPAD(n::text, 3, '0') || '@example.com',
+    '300' || LPAD((1000000 + n)::text, 7, '0'),
+    'Calle Demo #' || n || '-10',
+    'Contacto Emergencia ' || LPAD(n::text, 3, '0'),
+    CASE WHEN n % 2 = 0 THEN 'Madre' ELSE 'Padre' END,
+    '310' || LPAD((2000000 + n)::text, 7, '0'),
+    CASE WHEN n % 4 = 0 THEN 'Alergia estacional' ELSE 'Ninguna conocida' END,
+    CASE WHEN n % 5 = 0 THEN 'Ninguno' ELSE 'No registra' END,
+    'Registro de demostracion ' || LPAD(n::text, 3, '0')
+FROM generate_series(1, 100) AS serie(n)
+ON CONFLICT (documento) DO NOTHING;
+
+-- 100 odontologos con informacion profesional y horario semanal completo.
+INSERT INTO odontologos
+    (nombre, apellido, matricula, tipo_documento, documento, fecha_nacimiento,
+     genero, email, telefono, direccion, universidad, ano_graduacion,
+     experiencia, especialidades, contacto_emergencia_nombre,
+     contacto_emergencia_parentesco, contacto_emergencia_telefono,
+     dias_trabajo, hora_inicio, hora_fin, observaciones)
+SELECT
+    'Odontologo ' || LPAD(n::text, 3, '0'),
+    'Demo',
+    'DEMO-ODO-' || LPAD(n::text, 4, '0'),
+    'CC',
+    'DEMO-ODO-DOC-' || LPAD(n::text, 4, '0'),
+    CURRENT_DATE - ((28 + (n % 30)) * 365 + n),
+    CASE WHEN n % 2 = 0 THEN 'F' ELSE 'M' END,
+    'odontologo.demo.' || LPAD(n::text, 3, '0') || '@example.com',
+    '320' || LPAD((3000000 + n)::text, 7, '0'),
+    'Carrera Demo #' || n || '-20',
+    'Universidad Odontologica Demo',
+    2000 + (n % 20),
+    3 + (n % 18),
+    CASE (n % 5)
+        WHEN 0 THEN 'Odontología General'
+        WHEN 1 THEN 'Ortodoncia'
+        WHEN 2 THEN 'Endodoncia'
+        WHEN 3 THEN 'Periodoncia'
+        ELSE 'Odontopediatría'
+    END,
+    'Contacto Odontologo ' || LPAD(n::text, 3, '0'),
+    CASE WHEN n % 2 = 0 THEN 'Pareja' ELSE 'Hermano' END,
+    '315' || LPAD((4000000 + n)::text, 7, '0'),
+    'Lunes-Domingo',
+    '08:00',
+    '18:00',
+    'Odontologo de demostracion ' || LPAD(n::text, 3, '0')
+FROM generate_series(1, 100) AS serie(n)
+ON CONFLICT (matricula) DO NOTHING;
+
+-- 100 historias clinicas, una por cada paciente de demostracion.
+INSERT INTO historias_clinicas (paciente_id, antecedentes, alergias, medicamentos)
+SELECT p.id,
+       'Antecedentes de demostracion para paciente ' || p.documento,
+       CASE WHEN RIGHT(p.documento, 1)::integer % 4 = 0 THEN 'Alergia estacional' ELSE 'Ninguna conocida' END,
+       CASE WHEN RIGHT(p.documento, 1)::integer % 5 = 0 THEN 'Ninguno' ELSE 'No registra' END
+FROM pacientes p
+WHERE p.documento LIKE 'DEMO-PAC-%'
+  AND NOT EXISTS (
+      SELECT 1 FROM historias_clinicas h WHERE h.paciente_id = p.id
+  );
+
+-- 100 citas futuras, relacionadas con pacientes, odontologos y catalogo valido.
+-- Cada cita usa una fecha/hora distinta para facilitar pruebas de agenda.
+INSERT INTO citas
+    (paciente_id, odontologo_id, tipo_cita_id, historia_clinica_id,
+     fecha, hora, estado, observaciones, recordatorio_enviado)
+SELECT p.id,
+       o.id,
+       t.id,
+       h.id,
+       CURRENT_DATE + serie.n,
+       (TIME '08:00' + ((serie.n - 1) % 20) * INTERVAL '30 minutes'),
+       CASE (serie.n % 4)
+           WHEN 0 THEN 'CONFIRMADA'
+           WHEN 1 THEN 'PENDIENTE'
+           WHEN 2 THEN 'REPROGRAMADA'
+           ELSE 'PENDIENTE'
+       END,
+       'Cita de demostracion ' || LPAD(serie.n::text, 3, '0'),
+       FALSE
+FROM generate_series(1, 100) AS serie(n)
+JOIN pacientes p ON p.documento = 'DEMO-PAC-' || LPAD(serie.n::text, 4, '0')
+JOIN odontologos o ON o.matricula = 'DEMO-ODO-' || LPAD(serie.n::text, 4, '0')
+JOIN tipos_cita t ON t.nombre = CASE (serie.n % 5)
+    WHEN 0 THEN 'Odontología General'
+    WHEN 1 THEN 'Ortodoncia'
+    WHEN 2 THEN 'Endodoncia'
+    WHEN 3 THEN 'Periodoncia'
+    ELSE 'Odontopediatría'
+END
+JOIN historias_clinicas h ON h.paciente_id = p.id
+WHERE NOT EXISTS (
+    SELECT 1 FROM citas c
+    WHERE c.observaciones = 'Cita de demostracion ' || LPAD(serie.n::text, 3, '0')
+);
+
+-- 100 movimientos de agenda para probar aperturas extra y bloqueos.
+INSERT INTO bloqueos_agenda
+    (odontologo_id, fecha, hora_inicio, hora_fin, tipo, motivo, activo)
+SELECT o.id,
+       CURRENT_DATE + (serie.n + 2),
+       CASE WHEN serie.n % 2 = 0 THEN TIME '12:00' ELSE NULL END,
+       CASE WHEN serie.n % 2 = 0 THEN TIME '13:00' ELSE NULL END,
+       CASE WHEN serie.n % 2 = 0 THEN 'BLOQUEO' ELSE 'APERTURA_EXTRA' END,
+       CASE WHEN serie.n % 2 = 0
+            THEN 'Bloqueo de demostracion ' || LPAD(serie.n::text, 3, '0')
+            ELSE 'Apertura extra de demostracion ' || LPAD(serie.n::text, 3, '0')
+       END,
+       TRUE
+FROM generate_series(1, 100) AS serie(n)
+JOIN odontologos o ON o.matricula = 'DEMO-ODO-' || LPAD(((serie.n - 1) % 100 + 1)::text, 4, '0')
+WHERE NOT EXISTS (
+    SELECT 1 FROM bloqueos_agenda b
+    WHERE b.motivo IN (
+        'Bloqueo de demostracion ' || LPAD(serie.n::text, 3, '0'),
+        'Apertura extra de demostracion ' || LPAD(serie.n::text, 3, '0')
+    )
+);
+
+-- Sincronizar secuencias después de cargar los datos de demostración.
+SELECT setval(pg_get_serial_sequence('pacientes', 'id'), (SELECT COALESCE(MAX(id), 1) FROM pacientes));
+SELECT setval(pg_get_serial_sequence('odontologos', 'id'), (SELECT COALESCE(MAX(id), 1) FROM odontologos));
+SELECT setval(pg_get_serial_sequence('historias_clinicas', 'id'), (SELECT COALESCE(MAX(id), 1) FROM historias_clinicas));
+SELECT setval(pg_get_serial_sequence('citas', 'id'), (SELECT COALESCE(MAX(id), 1) FROM citas));
+SELECT setval(pg_get_serial_sequence('bloqueos_agenda', 'id'), (SELECT COALESCE(MAX(id), 1) FROM bloqueos_agenda));
+
 -- Login disponible:
 SELECT id, nombres, apellidos, email, username, activo, rol_id FROM usuarios;
 -- Citas con paciente y odontologo:
@@ -297,3 +446,22 @@ FROM citas c
 JOIN pacientes p ON p.id = c.paciente_id
 JOIN odontologos o ON o.id = c.odontologo_id
 ORDER BY c.fecha, c.hora;
+
+-- Conteos de verificacion de los datos de demostracion (esperado: 100 cada uno).
+SELECT 'pacientes_demo' AS modulo, COUNT(*) AS registros
+FROM pacientes WHERE documento LIKE 'DEMO-PAC-%'
+UNION ALL
+SELECT 'odontologos_demo', COUNT(*)
+FROM odontologos WHERE matricula LIKE 'DEMO-ODO-%'
+UNION ALL
+SELECT 'historias_demo', COUNT(*)
+FROM historias_clinicas h
+JOIN pacientes p ON p.id = h.paciente_id
+WHERE p.documento LIKE 'DEMO-PAC-%'
+UNION ALL
+SELECT 'citas_demo', COUNT(*)
+FROM citas WHERE observaciones LIKE 'Cita de demostracion %'
+UNION ALL
+SELECT 'agenda_demo', COUNT(*)
+FROM bloqueos_agenda
+WHERE motivo LIKE '%de demostracion %';
