@@ -2608,6 +2608,32 @@ function agruparCitasPorPaciente(citas) {
 }
 
 /**
+ * Cita del grupo lista para confirmar (la primera confirmable por fecha).
+ * Permite confirmar directo desde la fila del paciente sin abrir modales.
+ */
+function citaConfirmableGrupo(grupo) {
+    const candidatas = (grupo.citas || []).filter(function (c) {
+        try { return puedeConfirmarCita(c); } catch (e) { return false; }
+    }).sort(function (a, b) {
+        return String(a.fecha || '').localeCompare(String(b.fecha || ''));
+    });
+    return candidatas.length ? candidatas[0] : null;
+}
+
+/**
+ * Cita del grupo lista para recordatorio por correo (la primera que aplica).
+ * Permite enviar directo desde la fila del paciente sin abrir modales.
+ */
+function citaRecordableGrupo(grupo) {
+    const candidatas = (grupo.citas || []).filter(function (c) {
+        try { return puedeEnviarRecordatorio(c); } catch (e) { return false; }
+    }).sort(function (a, b) {
+        return String(a.fecha || '').localeCompare(String(b.fecha || ''));
+    });
+    return candidatas.length ? candidatas[0] : null;
+}
+
+/**
  * Actualiza la tabla con una fila por paciente (ver historial en el detalle)
  */
 function updateAppointmentsTable(grupos) {
@@ -2670,6 +2696,8 @@ function updateAppointmentsTable(grupos) {
                     <button onclick="agendarCitaPaciente('${grupo.pacienteId}')" class="sys-table-action sys-table-action-confirm" title="Agendar nueva cita a este paciente" aria-label="Agendar cita">
                         <i class="fas fa-calendar-plus text-sm text-emerald-600"></i>
                     </button>
+                    ${(() => { const c = citaConfirmableGrupo(grupo); return `<button ${c ? `onclick="confirmAppointment(${c.id})"` : 'disabled'} class="sys-table-action ${c ? 'sys-table-action-confirm' : 'opacity-40 cursor-not-allowed'}" title="${c ? `Confirmar cita del ${formatDate(c.fecha)} a las ${String(c.hora || '').slice(0, 5)} (solo hoy, antes de su hora)` : 'Sin citas por confirmar (solo hoy, antes de su hora)'}" aria-label="Confirmar cita"><i class="fas fa-check-circle text-sm ${c ? 'text-emerald-600' : 'text-gray-300'}"></i></button>`; })()}
+                    ${(() => { const c = citaRecordableGrupo(grupo); const ya = c && c.recordatorioEnviado === true; return `<button ${c ? `onclick="sendReminderAppointment(${c.id})"` : 'disabled'} class="sys-table-action ${c ? 'sys-table-action-remind' : 'opacity-40 cursor-not-allowed'}" title="${c ? ((ya ? 'Reenviar' : 'Enviar') + ` recordatorio de la cita del ${formatDate(c.fecha)}`) : 'Sin citas para recordar (solo un día antes)'}" aria-label="Enviar recordatorio"><i class="fas fa-bell text-sm ${c ? 'text-amber-500' : 'text-gray-300'}"></i></button>`; })()}
                 </div>
             </td>
         </tr>`;
