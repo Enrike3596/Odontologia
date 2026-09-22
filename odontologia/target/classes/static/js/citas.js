@@ -597,8 +597,6 @@ function initializeAppointmentsModule() {
     setupFilters();
 
     // Actualizar fecha actual
-    updateCurrentDate();
-
     // Mostrar mensaje de bienvenida
     showWelcomeMessage();
 }
@@ -1577,7 +1575,6 @@ async function confirmAppointment(appointmentId) {
 
             // Recargar lista
             await loadAppointments();
-            updateTodayTimeline();
 
         } catch (error) {
             console.error('Error al confirmar cita:', error);
@@ -1655,7 +1652,6 @@ async function finalizeAppointment(appointmentId) {
         await CitasAPI.finalizarCita(appointmentId, odontologoId);
         await Swal.fire({ icon: 'success', title: 'Cita finalizada', text: `La cita de ${info.pacienteNombre} fue finalizada por el odontólogo.`, confirmButtonColor: '#2563eb' });
         await loadAppointments();
-        updateTodayTimeline();
     } catch (error) {
         Swal.fire({ icon: 'error', title: 'Error al finalizar', text: (error && error.message) || 'No se pudo finalizar la cita.', confirmButtonColor: '#dc2626' });
     }
@@ -1774,7 +1770,6 @@ async function sendReminderAppointment(appointmentId) {
             });
 
             await loadAppointments();
-            updateTodayTimeline();
 
         } catch (error) {
             console.error('Error al enviar recordatorio:', error);
@@ -1899,7 +1894,6 @@ async function cancelAppointment(appointmentId) {
 
             // Recargar lista
             await loadAppointments();
-            updateTodayTimeline();
 
         } catch (error) {
             console.error('Error al cancelar cita:', error);
@@ -2017,138 +2011,6 @@ function printCitaById(citaId) {
 }
 
 /**
- * Navegación de fechas
- */
-function goToPreviousDay() {
-    AppointmentsModule.currentDate.setDate(AppointmentsModule.currentDate.getDate() - 1);
-    updateCurrentDate();
-    updateTodayTimeline();
-}
-
-function goToNextDay() {
-    AppointmentsModule.currentDate.setDate(AppointmentsModule.currentDate.getDate() + 1);
-    updateCurrentDate();
-    updateTodayTimeline();
-}
-
-function goToToday() {
-    AppointmentsModule.currentDate = new Date();
-    updateCurrentDate();
-    updateTodayTimeline();
-}
-
-/**
- * Actualizar fecha actual mostrada
- */
-function updateCurrentDate() {
-    const dateElement = document.getElementById('todayDate');
-    if (dateElement) {
-        dateElement.textContent = formatDateLong(AppointmentsModule.currentDate);
-    }
-}
-
-/**
- * Actualizar timeline del día
- */
-async function updateTodayTimeline() {
-    console.log('📅 Actualizando timeline del día:', AppointmentsModule.currentDate);
-
-    const timelineContainer = document.getElementById('todayTimeline');
-    if (!timelineContainer) return;
-
-    try {
-        // Mostrar loading
-        timelineContainer.innerHTML = `
-            <div class="text-center py-8 text-gray-500">
-                <i class="fas fa-spinner fa-spin text-3xl mb-3"></i>
-                <p>Cargando citas del día...</p>
-            </div>
-        `;
-
-        // Obtener todas las citas
-        const allCitas = await CitasAPI.getAllCitas();
-
-        // Filtrar citas del día actual
-        const today = AppointmentsModule.currentDate.toISOString().split('T')[0]; // YYYY-MM-DD
-        const citasDelDia = allCitas.filter(cita => {
-            const citaFecha = new Date(cita.fecha).toISOString().split('T')[0];
-            return citaFecha === today;
-        });
-
-        // Ordenar por hora
-        citasDelDia.sort((a, b) => {
-            const horaA = a.hora || '00:00';
-            const horaB = b.hora || '00:00';
-            return horaA.localeCompare(horaB);
-        });
-
-        if (citasDelDia.length === 0) {
-            timelineContainer.innerHTML = `
-                <div class="text-center py-8 text-gray-500">
-                    <i class="fas fa-calendar-alt text-3xl mb-3"></i>
-                    <p>No hay citas programadas para este día</p>
-                    <button class="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors" onclick="openNewAppointmentModal()">
-                        <i class="fas fa-plus mr-2"></i>
-                        Programar Nueva Cita
-                    </button>
-                </div>
-            `;
-            return;
-        }
-
-        // Generar HTML para las citas
-        const citasHTML = citasDelDia.map(cita => {
-            const statusColor = getStatusColor(cita.estado);
-            const statusText = getStatusText(cita.estado);
-            const hora = formatTime(cita.hora);
-            const tipoCitaIcon = getTipoCitaIcon(cita.tipoCita?.nombre || '');
-
-            return `
-                <div class="flex items-center p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
-                    <div class="flex-shrink-0 text-center mr-4">
-                        <div class="text-sm font-semibold text-gray-700">${hora.time}</div>
-                        <div class="text-xs text-gray-600">${hora.period}</div>
-                    </div>
-                    <div class="flex-1">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h4 class="font-medium text-gray-900">${cita.paciente?.nombres || 'N/A'} ${cita.paciente?.apellidos || ''}</h4>
-                                <p class="text-sm text-gray-600">
-                                    <i class="${tipoCitaIcon} mr-1 text-emerald-500"></i>
-                                    ${cita.tipoCita?.nombre || 'Consulta General'}
-                                </p>
-                                <p class="text-xs text-gray-500 mt-1">
-                                    <i class="fas fa-user-md mr-1"></i>
-                                    Dr. ${cita.odontologo?.nombre || 'N/A'} ${cita.odontologo?.apellido || ''}
-                                </p>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="px-2 py-1 text-xs font-medium rounded-full ${statusColor}">${statusText}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        timelineContainer.innerHTML = citasHTML;
-
-    } catch (error) {
-        console.error('Error al cargar timeline del día:', error);
-        timelineContainer.innerHTML = `
-            <div class="text-center py-8 text-red-500">
-                <i class="fas fa-exclamation-triangle text-3xl mb-3"></i>
-                <p>Error al cargar las citas del día</p>
-                <button class="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors" onclick="updateTodayTimeline()">
-                    <i class="fas fa-redo mr-2"></i>
-                    Reintentar
-                </button>
-            </div>
-        `;
-    }
-}
-
-/**
  * Carga la lista de citas
  */
 async function loadAppointments() {
@@ -2205,9 +2067,6 @@ async function loadAppointments() {
 
         // Actualizar estadísticas
         updateAppointmentStats(citas);
-
-        // Actualizar timeline del día
-        await updateTodayTimeline();
 
         return citas;
 
@@ -3348,9 +3207,6 @@ window.cancelAppointment = cancelAppointment;
 window.openCalendarView = openCalendarView;
 window.printAppointment = printAppointment;
 window.printCitaById = printCitaById;
-window.goToPreviousDay = goToPreviousDay;
-window.goToNextDay = goToNextDay;
-window.goToToday = goToToday;
 window.toggleFilters = toggleFilters;
 window.applyFilters = applyFilters;
 window.clearFilters = clearFilters;
